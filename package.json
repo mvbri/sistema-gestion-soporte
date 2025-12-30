@@ -1,0 +1,19 @@
+{
+  "name": "sistema-gestion-soporte",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de soporte técnico e incidencias - Alcaldía Angostura del Orinoco",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
+

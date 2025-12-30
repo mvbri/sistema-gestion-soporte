@@ -1,0 +1,57 @@
+// Componente principal de la aplicación
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider } from './contexts/AuthContext.tsx';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { RequestPasswordRecovery } from './pages/RequestPasswordRecovery';
+import { ResetPassword } from './pages/ResetPassword';
+import { EmailAlreadyVerified } from './pages/EmailAlreadyVerified';
+import { RequestVerification } from './pages/RequestVerification';
+import { Dashboard } from './pages/Dashboard';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Register />} />
+          <Route path="/verificar-email" element={<VerifyEmail />} />
+          <Route path="/email-ya-verificado" element={<EmailAlreadyVerified />} />
+          <Route path="/solicitar-verificacion" element={<RequestVerification />} />
+          <Route path="/recuperar-password" element={<RequestPasswordRecovery />} />
+          <Route path="/restablecer-password" element={<ResetPassword />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
+
+
