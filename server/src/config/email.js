@@ -8,7 +8,7 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true', // true para SSL/TLS, false para STARTTLS
+    secure: process.env.EMAIL_SECURE === 'true',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -98,6 +98,47 @@ export const enviarEmailRecuperacion = async (email, token, name) => {
         return true;
     } catch (error) {
         console.error('Error al enviar email de recuperación:', error);
+        throw error;
+    }
+};
+
+export const enviarEmailAsignacion = async (email, name, ticketTitulo, ticketId) => {
+    const url = `${process.env.FRONTEND_URL}/tickets/${ticketId}`;
+    
+    const mailOptions = {
+        from: process.env.EMAIL_FROM,
+        to: email,
+        subject: 'Nuevo Ticket Asignado - Sistema de Soporte Técnico',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2563eb;">Nuevo Ticket Asignado</h2>
+                <p>Hola ${name},</p>
+                <p>Se te ha asignado un nuevo ticket de soporte técnico.</p>
+                <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin: 0;"><strong>Título:</strong> ${ticketTitulo}</p>
+                    <p style="margin: 5px 0 0 0;"><strong>ID del Ticket:</strong> ${ticketId}</p>
+                </div>
+                <p style="margin: 30px 0;">
+                    <a href="${url}" 
+                       style="background-color: #2563eb; color: white; padding: 12px 24px; 
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Ver Ticket
+                    </a>
+                </p>
+                <p>O copia y pega este enlace en tu navegador:</p>
+                <p style="color: #666; word-break: break-all;">${url}</p>
+                <p style="margin-top: 30px; color: #666; font-size: 12px;">
+                    Por favor, revisa el ticket y actualiza su estado según corresponda.
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return true;
+    } catch (error) {
+        console.error('Error al enviar email de asignación:', error);
         throw error;
     }
 };

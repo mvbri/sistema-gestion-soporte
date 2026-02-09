@@ -35,7 +35,7 @@ aplicacion/
 
 1. Instalar dependencias de todos los proyectos:
 ```bash
-npm run install:all
+npm install
 ```
 
 2. Configurar variables de entorno:
@@ -66,6 +66,6 @@ npm run dev
 - `npm run dev` - Inicia frontend y backend en modo desarrollo
 - `npm run dev:server` - Solo backend
 - `npm run dev:client` - Solo frontend
-- `npm run install:all` - Instala todas las dependencias
+- `npm install` - Instala todas las dependencias
 
 

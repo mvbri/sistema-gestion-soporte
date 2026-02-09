@@ -67,11 +67,41 @@ export const Dashboard: React.FC = () => {
                 <p className="text-gray-900 capitalize">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                Esta es la Fase 1 del sistema: Autenticación y Registro.
-                Los módulos adicionales se implementarán en las siguientes fases.
-              </p>
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate('/tickets')}
+                className="p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <h3 className="font-bold text-lg mb-2">Ver Tickets</h3>
+                <p className="text-sm">Gestiona y visualiza todos los tickets</p>
+              </button>
+              {user?.role === 'end_user' && (
+                <button
+                  onClick={() => navigate('/tickets/crear')}
+                  className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <h3 className="font-bold text-lg mb-2">Crear Ticket</h3>
+                  <p className="text-sm">Reporta un nuevo incidente</p>
+                </button>
+              )}
+              {user?.role === 'administrator' && (
+                <>
+                  <button
+                    onClick={() => navigate('/tickets/dashboard')}
+                    className="p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    <h3 className="font-bold text-lg mb-2">Dashboard</h3>
+                    <p className="text-sm">Estadísticas y métricas del sistema</p>
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/config')}
+                    className="p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    <h3 className="font-bold text-lg mb-2">Configuración</h3>
+                    <p className="text-sm">Gestionar categorías y prioridades</p>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { generarToken } from '../utils/jwt.js';
 import { generarTokenVerificacion } from '../utils/crypto.js';
 import { enviarEmailVerificacion, enviarEmailRecuperacion } from '../config/email.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
+import { query } from '../config/database.js';
 
 // Registro de nuevo usuario
 export const register = async (req, res) => {
@@ -132,23 +133,69 @@ export const login = async (req, res) => {
 // Verificar email (2FA)
 export const verifyEmail = async (req, res) => {
     try {
-        const { token } = req.query;
+        let { token } = req.query;
 
         if (!token) {
             return sendError(res, 'Token de verificación requerido');
         }
 
+        // Decodificar token en caso de que esté codificado en la URL
+        try {
+            token = decodeURIComponent(token);
+        } catch (e) {
+            console.warn('Error al decodificar token, usando token original:', e.message);
+        }
+
+        console.log('🔍 Verificando token:', token.substring(0, 10) + '...');
+
+        // Verificar si el token existe (incluso si está expirado o usado)
         const tokenData = await Token.findValid(token, 'email_verification');
+        
         if (!tokenData) {
+            // Intentar encontrar el token sin validar para dar un mensaje más específico
+            const sql = `
+                SELECT t.id, t.user_id, t.token, t.type, t.expires_at, t.used, t.created_at,
+                       u.email, u.full_name, u.email_verified
+                FROM tokens_verificacion t
+                JOIN usuarios u ON t.user_id = u.id
+                WHERE t.token = ? AND t.type = ?
+            `;
+            const result = await query(sql, [token, 'email_verification']);
+            
+            if (result[0]) {
+                const tokenInfo = result[0];
+                if (tokenInfo.used) {
+                    console.log('❌ Token ya fue usado');
+                    if (tokenInfo.email_verified) {
+                        return sendError(res, 'Este token ya fue utilizado. Tu email ya está verificado.');
+                    }
+                    return sendError(res, 'Este token ya fue utilizado. Solicita un nuevo enlace de verificación.');
+                }
+                if (new Date(tokenInfo.expires_at) < new Date()) {
+                    console.log('❌ Token expirado');
+                    return sendError(res, 'El token ha expirado. Solicita un nuevo enlace de verificación.');
+                }
+            }
+            
+            console.log('❌ Token no encontrado');
             return sendError(res, 'Token inválido o expirado');
         }
 
+        // Verificar si el email ya está verificado
+        if (tokenData.email_verified) {
+            console.log('ℹ️ Email ya está verificado para usuario ID:', tokenData.user_id);
+            await Token.markAsUsed(token);
+            return sendSuccess(res, 'Email ya estaba verificado', { already_verified: true });
+        }
+
+        console.log('✅ Token válido para usuario ID:', tokenData.user_id);
         await Usuario.verifyEmail(tokenData.user_id);
         await Token.markAsUsed(token);
+        console.log('✅ Email verificado exitosamente para usuario ID:', tokenData.user_id);
 
         sendSuccess(res, 'Email verificado exitosamente');
     } catch (error) {
-        console.error('Error en verificación de email:', error);
+        console.error('❌ Error en verificación de email:', error);
         sendError(res, 'Error al verificar email', null, 500);
     }
 };

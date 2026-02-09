@@ -1,0 +1,58 @@
+📜 Manual de Estándares: Clean Code & Pragmatic Thinking
+Este documento rige el desarrollo del backend para garantizar un código mantenible, escalable y profesional.
+
+💎 I. Pilares de Clean Code (Calidad de Código)
+
+1. Nombres con Sentido (Meaningful Names)
+   - Variables y Funciones: Deben revelar su intención. Evita nombres genéricos como data, item o aux.
+   - ❌ const d = 10;
+   - ✅ const daysToPasswordExpiration = 10;
+   - Nombres Pronunciables: Si no puedes explicar el nombre en una conversación, cámbialo.
+   - Funciones: Deben ser verbos (ej. sendRecoveryEmail, validateToken).
+
+2. Funciones: Pequeñas y de Propósito Único (SRP)
+   - Regla de las 20 líneas: Si una función supera las 20-30 líneas, probablemente está haciendo demasiado.
+   - Un solo nivel de abstracción: No mezcles lógica de alto nivel (enviar correo) con detalles de bajo nivel (manipulación de strings de HTML).
+   - Argumentos: El número ideal es cero o uno. Evita funciones con más de tres argumentos; en su lugar, pasa un objeto.
+
+3. El Arte de Comentar (Tu Excepción Personalizada)
+   - Aunque el Clean Code original es reacio a los comentarios, aquí los usaremos para documentar decisiones y arquitectura:
+   - JSDoc obligatorio: Todas las funciones de los Services y Controllers deben llevar su bloque descriptivo.
+   - Comentarios de "Por qué": Úsalos para explicar por qué se tomó una decisión técnica compleja (ej. una consulta SQL muy específica).
+   - Marcadores TODO: Úsalos para deuda técnica inmediata, pero límpialos antes de hacer el merge a la rama principal.
+
+4. Formateo Uniforme
+   - Usa Prettier y ESLint para asegurar que el código se vea igual sin importar quién lo escriba.
+   - Las variables se declaran cerca de donde se usan.
+
+🛠️ II. The Pragmatic Programmer (Mentalidad)
+
+1. DRY: Don't Repeat Yourself
+   - No se trata solo de no copiar y pegar código. Se trata de que cada pieza de conocimiento debe tener una representación única en el sistema. Si cambias la lógica del 2FA, solo debería cambiarse en un lugar (2fa.service.js).
+
+2. Ortogonalidad (Desacoplamiento)
+   - Tus componentes deben ser independientes. Si cambias la base de datos de MariaDB a otra, el código de envío de correos (Nodemailer) no debería enterarse ni romperse.
+
+3. Rompe las Ventanas Rotas
+   - No ignores errores pequeños o advertencias en la consola. Un código "descuidado" invita a otros desarrolladores a seguir descuidándolo. Si ves algo mal, arréglalo en el momento.
+
+4. Programación por Contrato
+   - Define qué espera recibir cada función (validación con Express Validator) y qué garantiza devolver. No confíes ciegamente en los datos de entrada.
+
+🏗️ III. Implementación Técnica en el Backend
+
+- Manejo de Errores (Fail Fast)
+  - Pragmatic Tip: Deja que el programa falle rápido. Usa bloques try/catch en los controladores para capturar excepciones y pasarlas al middleware global de errores.
+
+- Seguridad y Secretos
+  - No seas una víctima: Nunca guardes contraseñas en texto plano (usa Bcryptjs).
+  - No "hardcodees" credenciales. Usa el principio de Configuración Externa.
+
+📋 Checklist de Revisión (Code Review)
+Antes de dar por terminada una tarea, verifica:
+
+[ ] ¿La función hace solo una cosa?
+[ ] ¿Las variables tienen nombres descriptivos en camelCase?
+[ ] ¿Hay lógica repetida que pueda extraerse a un Util o Service?
+[ ] ¿He incluido comentarios JSDoc en las funciones nuevas?
+[ ] ¿La respuesta de la API sigue el formato estándar del proyecto?

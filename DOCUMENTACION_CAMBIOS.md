@@ -645,7 +645,7 @@ Este documento detalla todos los cambios realizados en el sistema de autenticaci
 ```
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=tu_contraseña
+DB_PASSWORD=1234567
 DB_NAME=sistema_soporte
 JWT_SECRET=tu_secreto_jwt_min_32_caracteres
 EMAIL_HOST=smtp.gmail.com

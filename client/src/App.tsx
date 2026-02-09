@@ -12,6 +12,11 @@ import { ResetPassword } from './pages/ResetPassword';
 import { EmailAlreadyVerified } from './pages/EmailAlreadyVerified';
 import { RequestVerification } from './pages/RequestVerification';
 import { Dashboard } from './pages/Dashboard';
+import { TicketsList } from './pages/TicketsList';
+import { CreateTicket } from './pages/CreateTicket';
+import { TicketDetail } from './pages/TicketDetail';
+import { TicketsDashboard } from './pages/TicketsDashboard';
+import { AdminConfig } from './pages/AdminConfig';
 
 function App() {
   return (
@@ -30,6 +35,54 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <TicketsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/crear"
+            element={
+              <ProtectedRoute>
+                <CreateTicket />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/:id"
+            element={
+              <ProtectedRoute>
+                <TicketDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/:id/editar"
+            element={
+              <ProtectedRoute>
+                <TicketDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets/dashboard"
+            element={
+              <ProtectedRoute>
+                <TicketsDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/config"
+            element={
+              <ProtectedRoute>
+                <AdminConfig />
               </ProtectedRoute>
             }
           />
