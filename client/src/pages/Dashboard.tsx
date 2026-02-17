@@ -1,15 +1,33 @@
 // Página de Dashboard (protegida)
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { UserProfileIcon } from '../components/icons/UserProfileIcon';
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -21,19 +39,54 @@ export const Dashboard: React.FC = () => {
                 Sistema de Gestión de Soporte Técnico
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                {user?.full_name}
-              </span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
-                {user?.role}
-              </span>
+            <div className="flex items-center" ref={menuRef}>
               <button
-                onClick={handleLogout}
-                className="btn-secondary"
+                type="button"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="flex items-center space-x-2 focus:outline-none"
               >
-                Cerrar Sesión
+                <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center">
+                  <UserProfileIcon className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {user?.full_name}
+                </span>
               </button>
+
+              {menuOpen && (
+                <div className="absolute right-4 top-16 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-20">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user?.full_name}
+                    </p>
+                    {user?.role === 'administrator' && (
+                      <span className="mt-1 inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
+                        Administrador
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate('/perfil');
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Actualizar información
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

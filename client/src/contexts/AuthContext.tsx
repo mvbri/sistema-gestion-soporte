@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
-import type { LoginData, RegisterData } from '../services/authService';
+import type { LoginData, RegisterData, UpdateProfileData } from '../services/authService';
 import type { User } from '../types';
 import { AuthContext } from './authContext';
 
@@ -46,6 +46,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateProfile = async (data: UpdateProfileData): Promise<void> => {
+    const response = await authService.updateProfile(data);
+    if (response.success && response.data) {
+      setUser(response.data);
+    } else {
+      throw new Error(response.message || 'Error al actualizar perfil');
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -58,6 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loading,
         login,
         register,
+        updateProfile,
         logout,
         isAuthenticated: !!user,
       }}

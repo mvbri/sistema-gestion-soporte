@@ -33,9 +33,7 @@ export interface EstadoTicket {
   color: string;
   orden: number;
   activo: boolean;
-}
-
-export interface CategoriaTicket {
+}export interface CategoriaTicket {
   id: number;
   nombre: string;
   descripcion?: string;

@@ -103,9 +103,7 @@ INSERT INTO prioridades_ticket (nombre, nivel, color, descripcion) VALUES
 ('Baja', 1, 'bg-green-100', 'Prioridad baja, puede esperar'),
 ('Media', 2, 'bg-yellow-100', 'Prioridad media, atención normal'),
 ('Alta', 3, 'bg-orange-100', 'Prioridad alta, requiere atención pronta'),
-('Urgente', 4, 'bg-red-100', 'Prioridad urgente, requiere atención inmediata');
-
--- Tabla principal de tickets
+('Urgente', 4, 'bg-red-100', 'Prioridad urgente, requiere atención inmediata');-- Tabla principal de tickets
 CREATE TABLE IF NOT EXISTS tickets (
     id CHAR(36) PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,

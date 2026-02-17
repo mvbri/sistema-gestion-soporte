@@ -14,6 +14,12 @@ export interface LoginData {
   password: string;
 }
 
+export interface UpdateProfileData {
+  full_name: string;
+  phone?: string | null;
+  department: string;
+}
+
 export const authService = {
   async register(data: RegisterData): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>('/auth/register', data);
@@ -58,6 +64,18 @@ export const authService = {
   async getCurrentUser(): Promise<ApiResponse<User>> {
     const response = await api.get<ApiResponse<User>>('/auth/current-user');
     return response.data;
+  },
+
+  async updateProfile(data: UpdateProfileData): Promise<ApiResponse<User>> {
+    const response = await api.put<ApiResponse<User>>('/auth/profile', data);
+    const result = response.data;
+
+    if (result.success && result.data) {
+      const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+      storage.setItem('user', JSON.stringify(result.data));
+    }
+
+    return result;
   },
 
   logout(): void {

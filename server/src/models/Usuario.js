@@ -65,6 +65,18 @@ class Usuario {
         await query(sql, [passwordHash, id]);
     }
 
+    static async updateProfile(id, { full_name, phone, department }) {
+        const sql = `
+            UPDATE usuarios
+            SET full_name = ?, phone = ?, department = ?
+            WHERE id = ?
+        `;
+
+        await query(sql, [full_name, phone || null, department, id]);
+
+        return this.findById(id);
+    }
+
     static async emailExists(email) {
         const sql = 'SELECT id FROM usuarios WHERE email = ?';
         const result = await query(sql, [email]);

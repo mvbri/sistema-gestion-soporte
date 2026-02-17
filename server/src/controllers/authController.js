@@ -315,3 +315,31 @@ export const getCurrentUser = async (req, res) => {
     }
 };
 
+/**
+ * Actualizar perfil del usuario autenticado
+ */
+export const updateCurrentUser = async (req, res) => {
+    try {
+        const { full_name, phone, department } = req.body;
+
+        const updatedUser = await Usuario.updateProfile(req.user.id, {
+            full_name,
+            phone,
+            department
+        });
+
+        sendSuccess(res, 'Perfil actualizado exitosamente', {
+            id: updatedUser.id,
+            full_name: updatedUser.full_name,
+            email: updatedUser.email,
+            role: updatedUser.role_name,
+            phone: updatedUser.phone,
+            department: updatedUser.department,
+            email_verified: updatedUser.email_verified
+        });
+    } catch (error) {
+        console.error('Error al actualizar perfil de usuario:', error);
+        sendError(res, 'Error al actualizar perfil de usuario', null, 500);
+    }
+};
+

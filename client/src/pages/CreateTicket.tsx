@@ -1,26 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ticketService } from '../services/ticketService';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
-import type { CategoriaTicket, PrioridadTicket, Ticket } from '../types';
-import type { ApiResponse } from '../types';
+import type { CategoriaTicket, PrioridadTicket } from '../types';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categorias, setCategorias] = useState<CategoriaTicket[]>([]);
   const [prioridades, setPrioridades] = useState<PrioridadTicket[]>([]);
-  const [imagenFile, setImagenFile] = useState<File | null>(null);
-  const [imagenPreview, setImagenPreview] = useState<string | null>(null);
+  const [imagenFiles, setImagenFiles] = useState<File[]>([]);
+  const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<CreateTicketData>({
     resolver: zodResolver(createTicketSchema),
   });
@@ -38,25 +37,54 @@ export const CreateTicket: React.FC = () => {
 
       if (categoriasRes.success && categoriasRes.data) setCategorias(categoriasRes.data);
       if (prioridadesRes.success && prioridadesRes.data) setPrioridades(prioridadesRes.data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar opciones');
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    const existingCount = imagenFiles.length;
+    const availableSlots = 5 - existingCount;
+    if (availableSlots <= 0) {
+      toast.error('Solo puedes subir hasta 5 imágenes');
+      return;
+    }
+
+    const selectedFiles = files.slice(0, availableSlots);
+
+    const validFiles: File[] = [];
+
+    selectedFiles.forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('La imagen no puede ser mayor a 5MB');
+        toast.error(`La imagen "${file.name}" no puede ser mayor a 5MB`);
         return;
       }
-      setImagenFile(file);
+      validFiles.push(file);
+    });
+
+    if (!validFiles.length) return;
+
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagenPreview(reader.result as string);
+        setImagenPreviews((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
+    });
+
+    setImagenFiles((prev) => [...prev, ...validFiles]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagenFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagenPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: CreateTicketData) => {
@@ -68,10 +96,10 @@ export const CreateTicket: React.FC = () => {
       formData.append('area_incidente', data.area_incidente);
       formData.append('categoria_id', data.categoria_id.toString());
       formData.append('prioridad_id', data.prioridad_id.toString());
-      
-      if (imagenFile) {
-        formData.append('imagen', imagenFile);
-      }
+
+      imagenFiles.forEach((file) => {
+        formData.append('imagenes', file);
+      });
 
       const result = await ticketService.createWithFormData(formData);
       if (result.success) {
@@ -80,8 +108,11 @@ export const CreateTicket: React.FC = () => {
       } else {
         toast.error(result.message || 'Error al crear ticket');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al crear ticket');
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
+        'Error al crear ticket';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -181,25 +212,39 @@ export const CreateTicket: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Imagen del Incidente <span className="text-red-500">*</span>
+                Imágenes del Incidente <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                multiple
                 onChange={handleImageChange}
+                ref={fileInputRef}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                required={imagenFiles.length === 0}
               />
               <p className="mt-1 text-xs text-gray-500">
-                Formatos permitidos: JPEG, JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB
+                Puedes subir hasta 5 imágenes. Formatos permitidos: JPEG, JPG, PNG, GIF, WEBP. Tamaño máximo por imagen: 5MB
               </p>
-              {imagenPreview && (
-                <div className="mt-4">
-                  <img
-                    src={imagenPreview}
-                    alt="Vista previa"
-                    className="max-w-full h-auto max-h-64 rounded-md border border-gray-300"
-                  />
+              {imagenPreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {imagenPreviews.map((preview, index) => (
+                    <div key={preview + index} className="relative">
+                      <img
+                        src={preview}
+                        alt={`Vista previa ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-sm shadow-md hover:bg-red-700"
+                        aria-label={`Eliminar imagen ${index + 1}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -17,6 +17,7 @@ import { CreateTicket } from './pages/CreateTicket';
 import { TicketDetail } from './pages/TicketDetail';
 import { TicketsDashboard } from './pages/TicketsDashboard';
 import { AdminConfig } from './pages/AdminConfig';
+import { Profile } from './pages/Profile';
 
 function App() {
   return (
@@ -83,6 +84,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminConfig />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

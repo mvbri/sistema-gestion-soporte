@@ -6,13 +6,15 @@ import {
     resendVerification,
     requestRecovery,
     resetPassword,
-    getCurrentUser
+    getCurrentUser,
+    updateCurrentUser
 } from '../controllers/authController.js';
 import {
     validateRegistro,
     validateLogin,
     validateRecuperacionPassword,
-    validateRestablecerPassword
+    validateRestablecerPassword,
+    validateUpdateProfile
 } from '../utils/validators.js';
 import { authenticate } from '../utils/jwt.js';
 
@@ -26,6 +28,7 @@ router.post('/request-password-recovery', validateRecuperacionPassword, requestR
 router.post('/reset-password', validateRestablecerPassword, resetPassword);
 
 router.get('/current-user', authenticate, getCurrentUser);
+router.put('/profile', authenticate, validateUpdateProfile, updateCurrentUser);
 
 export default router;
 
