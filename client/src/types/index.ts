@@ -73,9 +73,7 @@ export interface Ticket {
   fecha_creacion: string;
   fecha_actualizacion: string;
   fecha_cierre?: string | null;
-}
-
-export interface TicketComentario {
+}export interface TicketComentario {
   id: number;
   ticket_id: string;
   usuario_id: number;

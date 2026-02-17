@@ -164,15 +164,22 @@ export const verifyEmail = async (req, res) => {
             
             if (result[0]) {
                 const tokenInfo = result[0];
+                
+                // Si el email ya está verificado, no importa el estado del token
+                if (tokenInfo.email_verified) {
+                    console.log('ℹ️ Email ya está verificado para usuario ID:', tokenInfo.user_id);
+                    return sendSuccess(res, 'Tu email ya está verificado', { already_verified: true });
+                }
+                
+                // Si el token ya fue usado pero el email NO está verificado
                 if (tokenInfo.used) {
-                    console.log('❌ Token ya fue usado');
-                    if (tokenInfo.email_verified) {
-                        return sendError(res, 'Este token ya fue utilizado. Tu email ya está verificado.');
-                    }
+                    console.log('❌ Token ya fue usado y email no verificado');
                     return sendError(res, 'Este token ya fue utilizado. Solicita un nuevo enlace de verificación.');
                 }
+                
+                // Si el token está expirado y el email NO está verificado
                 if (new Date(tokenInfo.expires_at) < new Date()) {
-                    console.log('❌ Token expirado');
+                    console.log('❌ Token expirado y email no verificado');
                     return sendError(res, 'El token ha expirado. Solicita un nuevo enlace de verificación.');
                 }
             }

@@ -47,9 +47,9 @@ export const validateRegistro = [
         }),
     
     body('department')
-        .optional({ checkFalsy: true })
         .trim()
-        .isLength({ max: 100 }).withMessage('El departamento no puede exceder 100 caracteres'),
+        .notEmpty().withMessage('El departamento es requerido')
+        .isIn(['IT', 'Direccion', 'Secretaria', 'otro']).withMessage('El departamento debe ser uno de los valores permitidos: IT, Direccion, Secretaria, otro'),
     
     handleValidationErrors
 ];

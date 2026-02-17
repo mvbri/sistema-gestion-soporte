@@ -22,7 +22,7 @@ const formatRegisterData = (data: RegisterData): RegisterData => {
     email: formatRequiredField(data.email),
     password: data.password,
     phone: formatOptionalField(data.phone),
-    department: formatOptionalField(data.department),
+    department: formatRequiredField(data.department),
   };
 };
 
@@ -160,13 +160,17 @@ export const Register: React.FC = () => {
             <label htmlFor="department" className="label-field">
               Departamento
             </label>
-            <input
+            <select
               id="department"
-              type="text"
               {...register('department')}
-              className={`input-field ${errors.department ? formStyles.inputError : ''}`}
-              placeholder="IT, Ventas, etc."
-            />
+              className={`input-field ${formStyles.selectField} ${errors.department ? formStyles.inputError : ''}`}
+            >
+              <option value="">Selecciona un departamento</option>
+              <option value="IT">IT</option>
+              <option value="Direccion">Direccion</option>
+              <option value="Secretaria">Secretaria</option>
+              <option value="otro">otro</option>
+            </select>
             {errors.department && (
               <p className="error-message">{errors.department.message}</p>
             )}

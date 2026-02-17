@@ -51,9 +51,7 @@ CREATE TABLE IF NOT EXISTS tokens_verificacion (
     INDEX idx_user (user_id)
 );
 
--- Fase 2: Gestión de Tickets
-
--- Tabla de estados de tickets (configurable por administrador)
+-- Fase 2: Gestión de Tickets-- Tabla de estados de tickets (configurable por administrador)
 CREATE TABLE IF NOT EXISTS estados_ticket (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(50) NOT NULL UNIQUE,

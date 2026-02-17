@@ -6,7 +6,7 @@ export interface RegisterData {
   email: string;
   password: string;
   phone?: string | null;
-  department?: string | null;
+  department: string;
 }
 
 export interface LoginData {

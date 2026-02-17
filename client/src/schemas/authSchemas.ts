@@ -30,9 +30,11 @@ export const registroSchema = z.object({
   
   department: z
     .string()
-    .max(100, 'El departamento no puede exceder 100 caracteres')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'El departamento es requerido')
+    .refine(
+      (val) => ['IT', 'Direccion', 'Secretaria', 'otro'].includes(val),
+      { message: 'Debes seleccionar un departamento válido' }
+    ),
 });
 
 export const loginSchema = z.object({
