@@ -191,3 +191,60 @@ export const validateComment = [
     
     handleValidationErrors
 ];
+
+// Validaciones para obtener preguntas de seguridad
+export const validateGetSecurityQuestions = [
+    body('email')
+        .trim()
+        .notEmpty().withMessage('El email es requerido')
+        .isEmail().withMessage('El email no es válido')
+        .normalizeEmail(),
+    
+    handleValidationErrors
+];
+
+// Validaciones para verificar respuestas de seguridad
+export const validateVerifySecurityAnswers = [
+    body('email')
+        .trim()
+        .notEmpty().withMessage('El email es requerido')
+        .isEmail().withMessage('El email no es válido')
+        .normalizeEmail(),
+    
+    body('answer1')
+        .trim()
+        .notEmpty().withMessage('La primera respuesta es requerida')
+        .isLength({ min: 3 }).withMessage('La respuesta debe tener al menos 3 caracteres'),
+    
+    body('answer2')
+        .trim()
+        .notEmpty().withMessage('La segunda respuesta es requerida')
+        .isLength({ min: 3 }).withMessage('La respuesta debe tener al menos 3 caracteres'),
+    
+    handleValidationErrors
+];
+
+// Validaciones para configurar preguntas de seguridad
+export const validateSetSecurityQuestions = [
+    body('question1')
+        .trim()
+        .notEmpty().withMessage('La primera pregunta es requerida')
+        .isLength({ min: 10 }).withMessage('La pregunta debe tener al menos 10 caracteres'),
+    
+    body('answer1')
+        .trim()
+        .notEmpty().withMessage('La primera respuesta es requerida')
+        .isLength({ min: 3 }).withMessage('La respuesta debe tener al menos 3 caracteres'),
+    
+    body('question2')
+        .trim()
+        .notEmpty().withMessage('La segunda pregunta es requerida')
+        .isLength({ min: 10 }).withMessage('La pregunta debe tener al menos 10 caracteres'),
+    
+    body('answer2')
+        .trim()
+        .notEmpty().withMessage('La segunda respuesta es requerida')
+        .isLength({ min: 3 }).withMessage('La respuesta debe tener al menos 3 caracteres'),
+    
+    handleValidationErrors
+];

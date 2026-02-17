@@ -33,13 +33,21 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
       const currentPath = window.location.pathname;
-      if (!currentPath.includes('/login') && !currentPath.includes('/registro')) {
-        window.location.href = '/login';
+      const isRecoveryRoute = 
+        currentPath.includes('/verificar-preguntas-seguridad') ||
+        currentPath.includes('/recuperar-password') ||
+        currentPath.includes('/restablecer-password') ||
+        currentPath.includes('/solicitar-verificacion');
+      
+      if (!isRecoveryRoute) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        if (!currentPath.includes('/login') && !currentPath.includes('/registro')) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

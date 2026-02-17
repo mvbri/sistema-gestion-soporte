@@ -43,6 +43,11 @@ export const adminService = {
     return response.data;
   },
 
+  async deleteCategoria(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/categorias/${id}`);
+    return response.data;
+  },
+
   async getPrioridades(): Promise<ApiResponse<PrioridadTicket[]>> {
     const response = await api.get<ApiResponse<PrioridadTicket[]>>('/admin/prioridades');
     return response.data;
@@ -55,6 +60,11 @@ export const adminService = {
 
   async updatePrioridad(id: number, data: UpdatePrioridadData): Promise<ApiResponse<PrioridadTicket>> {
     const response = await api.put<ApiResponse<PrioridadTicket>>(`/admin/prioridades/${id}`, data);
+    return response.data;
+  },
+
+  async deletePrioridad(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/prioridades/${id}`);
     return response.data;
   },
 };

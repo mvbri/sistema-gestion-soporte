@@ -1,6 +1,9 @@
 import { query } from '../config/database.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 
+/**
+ * Obtiene todas las categorías de ticket.
+ */
 export const getCategorias = async (req, res) => {
     try {
         const sql = 'SELECT * FROM categorias_ticket ORDER BY nombre';
@@ -12,6 +15,9 @@ export const getCategorias = async (req, res) => {
     }
 };
 
+/**
+ * Crea una nueva categoría de ticket.
+ */
 export const createCategoria = async (req, res) => {
     try {
         const { nombre, descripcion } = req.body;
@@ -30,6 +36,9 @@ export const createCategoria = async (req, res) => {
     }
 };
 
+/**
+ * Actualiza una categoría de ticket existente.
+ */
 export const updateCategoria = async (req, res) => {
     try {
         const { id } = req.params;
@@ -67,6 +76,40 @@ export const updateCategoria = async (req, res) => {
             return sendError(res, 'Ya existe una categoría con ese nombre', null, 400);
         }
         sendError(res, 'Error al actualizar categoría', null, 500);
+    }
+};
+
+/**
+ * Elimina una categoría de ticket por id.
+ */
+export const deleteCategoria = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const categoria = await query('SELECT * FROM categorias_ticket WHERE id = ?', [id]);
+        if (categoria.length === 0) {
+            return sendError(res, 'La categoría no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM categorias_ticket WHERE id = ?', [id]);
+        } catch (error) {
+            // Posible restricción por claves foráneas (tickets asociados)
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar la categoría porque tiene tickets asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Categoría eliminada exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar categoría:', error);
+        sendError(res, 'Error al eliminar categoría', null, 500);
     }
 };
 
@@ -144,5 +187,38 @@ export const updatePrioridad = async (req, res) => {
             return sendError(res, 'Ya existe una prioridad con ese nombre o nivel', null, 400);
         }
         sendError(res, 'Error al actualizar prioridad', null, 500);
+    }
+};
+
+/**
+ * Elimina una prioridad de ticket por id.
+ */
+export const deletePrioridad = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const prioridad = await query('SELECT * FROM prioridades_ticket WHERE id = ?', [id]);
+        if (prioridad.length === 0) {
+            return sendError(res, 'La prioridad no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM prioridades_ticket WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar la prioridad porque tiene tickets asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Prioridad eliminada exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar prioridad:', error);
+        sendError(res, 'Error al eliminar prioridad', null, 500);
     }
 };

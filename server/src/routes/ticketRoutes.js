@@ -30,7 +30,7 @@ router.get('/prioridades', getPrioridades);
 router.get('/tecnicos', getTecnicos);
 router.get('/stats', getStats);
 
-router.post('/', upload.single('imagen'), validateCreateTicket, createTicket);
+router.post('/', upload.array('imagenes', 5), validateCreateTicket, createTicket);
 router.get('/', getTickets);
 router.get('/:id', getTicketById);
 router.put('/:id', validateUpdateTicket, updateTicket);

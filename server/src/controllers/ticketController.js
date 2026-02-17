@@ -6,6 +6,48 @@ import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { enviarEmailAsignacion } from '../config/email.js';
 import { query } from '../config/database.js';
 
+const buildTicketImagesFromRequest = (req) => {
+    if (Array.isArray(req.files) && req.files.length > 0) {
+        return req.files.map((file) => `/uploads/tickets/${file.filename}`);
+    }
+
+    if (req.file) {
+        return [`/uploads/tickets/${req.file.filename}`];
+    }
+
+    if (req.body.imagen_url) {
+        try {
+            const parsed = JSON.parse(req.body.imagen_url);
+            if (Array.isArray(parsed)) {
+                return parsed;
+            }
+            return [req.body.imagen_url];
+        } catch {
+            return [req.body.imagen_url];
+        }
+    }
+
+    return [];
+};
+
+const parseTicketImages = (rawValue) => {
+    if (!rawValue) return [];
+
+    if (Array.isArray(rawValue)) return rawValue;
+
+    try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) return parsed;
+        if (typeof parsed === 'string' && parsed.trim() !== '') return [parsed];
+    } catch {
+        if (typeof rawValue === 'string' && rawValue.trim() !== '') {
+            return [rawValue];
+        }
+    }
+
+    return [];
+};
+
 export const createTicket = async (req, res) => {
     try {
         const {
@@ -16,12 +58,8 @@ export const createTicket = async (req, res) => {
             prioridad_id
         } = req.body;
 
-        let imagen_url = null;
-        if (req.file) {
-            imagen_url = `/uploads/tickets/${req.file.filename}`;
-        } else if (req.body.imagen_url) {
-            imagen_url = req.body.imagen_url;
-        }
+        const imagenes = buildTicketImagesFromRequest(req);
+        const imagen_url = imagenes.length > 0 ? JSON.stringify(imagenes) : null;
 
         const ticket = await Ticket.create({
             titulo,
@@ -66,8 +104,10 @@ export const getTickets = async (req, res) => {
 
         if (role === 'end_user') {
             filters.usuario_creador_id = id;
-        } else if (role === 'technician' && tecnico_asignado_id) {
-            filters.tecnico_asignado_id = tecnico_asignado_id;
+        }
+
+        if (tecnico_asignado_id && (role === 'administrator' || role === 'technician')) {
+            filters.tecnico_asignado_id = parseInt(tecnico_asignado_id);
         }
 
         if (estado_id) filters.estado_id = parseInt(estado_id);
@@ -117,8 +157,13 @@ export const getTicketById = async (req, res) => {
         const comentarios = await TicketComentario.findByTicketId(id);
         const historial = await TicketHistorial.findByTicketId(id);
 
+        const ticketConImagenes = {
+            ...ticket,
+            imagenes: parseTicketImages(ticket.imagen_url)
+        };
+
         sendSuccess(res, 'Ticket obtenido exitosamente', {
-            ticket,
+            ticket: ticketConImagenes,
             comentarios,
             historial
         });

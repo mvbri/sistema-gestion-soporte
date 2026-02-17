@@ -33,12 +33,16 @@ export interface EstadoTicket {
   color: string;
   orden: number;
   activo: boolean;
-}export interface CategoriaTicket {
+}
+
+export interface CategoriaTicket {
   id: number;
   nombre: string;
   descripcion?: string;
   activo: boolean;
-}export interface PrioridadTicket {
+}
+
+export interface PrioridadTicket {
   id: number;
   nombre: string;
   nivel: number;
@@ -68,10 +72,13 @@ export interface Ticket {
   tecnico_asignado_nombre?: string | null;
   tecnico_asignado_email?: string | null;
   imagen_url?: string | null;
+  imagenes?: string[];
   fecha_creacion: string;
   fecha_actualizacion: string;
   fecha_cierre?: string | null;
-}export interface TicketComentario {
+}
+
+export interface TicketComentario {
   id: number;
   ticket_id: string;
   usuario_id: number;
@@ -134,3 +141,4 @@ export interface TicketFilters {
   page?: number;
   limit?: number;
 }
+

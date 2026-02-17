@@ -3,9 +3,11 @@ import {
     getCategorias,
     createCategoria,
     updateCategoria,
+    deleteCategoria,
     getPrioridades,
     createPrioridad,
-    updatePrioridad
+    updatePrioridad,
+    deletePrioridad
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
@@ -38,6 +40,7 @@ router.put('/categorias/:id', [
     body('activo').optional().isBoolean(),
     handleValidationErrors
 ], updateCategoria);
+router.delete('/categorias/:id', deleteCategoria);
 
 router.get('/prioridades', getPrioridades);
 router.post('/prioridades', [
@@ -55,5 +58,6 @@ router.put('/prioridades/:id', [
     body('activo').optional().isBoolean(),
     handleValidationErrors
 ], updatePrioridad);
+router.delete('/prioridades/:id', deletePrioridad);
 
 export default router;

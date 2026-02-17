@@ -14,14 +14,15 @@ export const TicketsList: React.FC = () => {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialFilters: TicketFilters = {
+    page: 1,
+    limit: 10,
+  };
   const [estados, setEstados] = useState<EstadoTicket[]>([]);
   const [categorias, setCategorias] = useState<CategoriaTicket[]>([]);
   const [prioridades, setPrioridades] = useState<PrioridadTicket[]>([]);
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
-  const [filters, setFilters] = useState<TicketFilters>({
-    page: 1,
-    limit: 10,
-  });
+  const [filters, setFilters] = useState<TicketFilters>(initialFilters);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -76,6 +77,11 @@ export const TicketsList: React.FC = () => {
     setFilters((prev) => ({ ...prev, busqueda: searchTerm || undefined, page: 1 }));
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilters(initialFilters);
+  };
+
   const handleDelete = async () => {
     if (!deleteModal.ticket) return;
 
@@ -121,6 +127,28 @@ export const TicketsList: React.FC = () => {
           </div>
 
           <div className="bg-white shadow rounded-lg p-6 mb-6">
+            <div className="flex justify-end mb-4">
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+                aria-label="Limpiar todos los filtros"
+                title="Limpiar filtros"
+              >
+                <svg
+                  className="w-5 h-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path d="M4 4h16l-6 7v5.5a1 1 0 0 1-.4.8l-3 2.25V11L4 4z" />
+                  <path d="M15 15l4 4m0-4l-4 4" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
@@ -128,7 +156,14 @@ export const TicketsList: React.FC = () => {
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+
+                      if (value === '') {
+                        setFilters((prev) => ({ ...prev, busqueda: undefined, page: 1 }));
+                      }
+                    }}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Título o descripción..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -233,8 +268,14 @@ export const TicketsList: React.FC = () => {
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {ticket.titulo}
                             </p>
-                            <StatusBadge estado={ticket.estado_nombre || ''} />
-                            <PriorityBadge prioridad={ticket.prioridad_nombre || ''} />
+                            <StatusBadge
+                              estado={ticket.estado_nombre || ''}
+                              colorOverride={ticket.estado_color}
+                            />
+                            <PriorityBadge
+                              prioridad={ticket.prioridad_nombre || ''}
+                              colorOverride={ticket.prioridad_color}
+                            />
                             <CategoryBadge categoria={ticket.categoria_nombre || ''} />
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">

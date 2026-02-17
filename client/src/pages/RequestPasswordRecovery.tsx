@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { recuperacionSchema } from '../schemas/authSchemas';
@@ -11,8 +11,12 @@ interface RecoveryData {
   email: string;
 }
 
+type RecoveryMethod = 'email' | 'security-questions';
+
 export const RequestPasswordRecovery: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState<RecoveryMethod>('email');
+  const navigate = useNavigate();
 
   const {
     register,
@@ -22,14 +26,32 @@ export const RequestPasswordRecovery: React.FC = () => {
     resolver: zodResolver(recuperacionSchema),
   });
 
+  const handleMethodChange = (newMethod: RecoveryMethod) => {
+    setMethod(newMethod);
+  };
+
   const onSubmit = async (data: RecoveryData) => {
     setLoading(true);
     try {
-      const response = await authService.requestPasswordRecovery(data.email);
-      if (response.success) {
-        toast.success('Se ha enviado un email con las instrucciones para recuperar tu contraseña.');
+      if (method === 'email') {
+        const response = await authService.requestPasswordRecovery(data.email);
+        if (response.success) {
+          toast.success('Se ha enviado un email con las instrucciones para recuperar tu contraseña.');
+        } else {
+          toast.error(response.message || 'Error al solicitar recuperación');
+        }
       } else {
-        toast.error(response.message || 'Error al solicitar recuperación');
+        const response = await authService.getSecurityQuestions(data.email);
+        if (response.success && response.data) {
+          navigate('/verificar-preguntas-seguridad', {
+            state: {
+              email: data.email,
+              questions: response.data
+            }
+          });
+        } else {
+          toast.error(response.message || 'No se encontraron preguntas de seguridad para este usuario');
+        }
       }
     } catch (err: unknown) {
       let errorMessage = 'Error al solicitar recuperación';
@@ -51,8 +73,40 @@ export const RequestPasswordRecovery: React.FC = () => {
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">Recuperar Contraseña</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
+            Elige un método de recuperación
           </p>
+        </div>
+
+        <div className="mb-6 space-y-3">
+          <button
+            type="button"
+            onClick={() => handleMethodChange('email')}
+            className={`w-full p-3 rounded-lg border-2 transition-colors ${
+              method === 'email'
+                ? 'border-primary-600 bg-primary-50 text-primary-700'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="font-medium">📧 Recuperar por Email</div>
+            <div className="text-xs mt-1 text-gray-500">
+              Te enviaremos un enlace a tu correo electrónico
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleMethodChange('security-questions')}
+            className={`w-full p-3 rounded-lg border-2 transition-colors ${
+              method === 'security-questions'
+                ? 'border-primary-600 bg-primary-50 text-primary-700'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="font-medium">🔒 Recuperar con Preguntas de Seguridad</div>
+            <div className="text-xs mt-1 text-gray-500">
+              Responde tus preguntas de seguridad configuradas
+            </div>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -79,8 +133,10 @@ export const RequestPasswordRecovery: React.FC = () => {
           >
             {loading ? (
               <span className={formStyles.loadingSpinner}></span>
-            ) : (
+            ) : method === 'email' ? (
               'Enviar enlace de recuperación'
+            ) : (
+              'Continuar con preguntas de seguridad'
             )}
           </button>
         </form>

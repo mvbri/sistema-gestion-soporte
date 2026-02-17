@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-import { perfilSchema } from '../schemas/authSchemas';
+import { perfilSchema, securityQuestionsSchema } from '../schemas/authSchemas';
 import type { UpdateProfileData } from '../services/authService';
+import { authService } from '../services/authService';
 import formStyles from '../styles/modules/forms.module.css';
 
 const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
@@ -23,8 +24,16 @@ const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
   };
 };
 
+interface SecurityQuestionsData {
+  question1: string;
+  answer1: string;
+  question2: string;
+  answer2: string;
+}
+
 export const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const [showSecurityQuestions, setShowSecurityQuestions] = useState(false);
 
   const {
     register,
@@ -38,6 +47,15 @@ export const Profile: React.FC = () => {
       phone: user?.phone ?? '',
       department: user?.department ?? '',
     },
+  });
+
+  const {
+    register: registerSecurity,
+    handleSubmit: handleSubmitSecurity,
+    reset: resetSecurity,
+    formState: { errors: errorsSecurity, isSubmitting: isSubmittingSecurity },
+  } = useForm<SecurityQuestionsData>({
+    resolver: zodResolver(securityQuestionsSchema),
   });
 
   useEffect(() => {
@@ -62,6 +80,34 @@ export const Profile: React.FC = () => {
         errorMessage = err.message;
       }
 
+      toast.error(errorMessage);
+    }
+  };
+
+  const onSubmitSecurityQuestions = async (data: SecurityQuestionsData) => {
+    try {
+      const response = await authService.setSecurityQuestions(
+        data.question1.trim(),
+        data.answer1.trim(),
+        data.question2.trim(),
+        data.answer2.trim()
+      );
+      
+      if (response.success) {
+        toast.success('Preguntas de seguridad configuradas correctamente');
+        resetSecurity();
+        setShowSecurityQuestions(false);
+      } else {
+        toast.error(response.message || 'Error al configurar preguntas de seguridad');
+      }
+    } catch (err) {
+      let errorMessage = 'Error al configurar preguntas de seguridad';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       toast.error(errorMessage);
     }
   };
@@ -162,6 +208,116 @@ export const Profile: React.FC = () => {
             {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </form>
+
+        <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Preguntas de Seguridad
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Configura preguntas de seguridad para recuperar tu contraseña si tienes problemas con tu email.
+            </p>
+            {!showSecurityQuestions && (
+              <button
+                type="button"
+                onClick={() => setShowSecurityQuestions(true)}
+                className="btn-secondary w-full"
+              >
+                Configurar Preguntas de Seguridad
+              </button>
+            )}
+          </div>
+
+          {showSecurityQuestions && (
+            <form onSubmit={handleSubmitSecurity(onSubmitSecurityQuestions)} className="space-y-4">
+              <div className={formStyles.formGroup}>
+                <label htmlFor="question1" className="label-field">
+                  Pregunta 1
+                </label>
+                <input
+                  id="question1"
+                  type="text"
+                  {...registerSecurity('question1')}
+                  className={`input-field ${errorsSecurity.question1 ? formStyles.inputError : ''}`}
+                  placeholder="Ej: ¿Cuál es el nombre de tu mascota?"
+                />
+                {errorsSecurity.question1 && (
+                  <p className="error-message">{errorsSecurity.question1.message}</p>
+                )}
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label htmlFor="answer1" className="label-field">
+                  Respuesta 1
+                </label>
+                <input
+                  id="answer1"
+                  type="text"
+                  {...registerSecurity('answer1')}
+                  className={`input-field ${errorsSecurity.answer1 ? formStyles.inputError : ''}`}
+                  placeholder="Tu respuesta"
+                  autoComplete="off"
+                />
+                {errorsSecurity.answer1 && (
+                  <p className="error-message">{errorsSecurity.answer1.message}</p>
+                )}
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label htmlFor="question2" className="label-field">
+                  Pregunta 2
+                </label>
+                <input
+                  id="question2"
+                  type="text"
+                  {...registerSecurity('question2')}
+                  className={`input-field ${errorsSecurity.question2 ? formStyles.inputError : ''}`}
+                  placeholder="Ej: ¿En qué ciudad naciste?"
+                />
+                {errorsSecurity.question2 && (
+                  <p className="error-message">{errorsSecurity.question2.message}</p>
+                )}
+              </div>
+
+              <div className={formStyles.formGroup}>
+                <label htmlFor="answer2" className="label-field">
+                  Respuesta 2
+                </label>
+                <input
+                  id="answer2"
+                  type="text"
+                  {...registerSecurity('answer2')}
+                  className={`input-field ${errorsSecurity.answer2 ? formStyles.inputError : ''}`}
+                  placeholder="Tu respuesta"
+                  autoComplete="off"
+                />
+                {errorsSecurity.answer2 && (
+                  <p className="error-message">{errorsSecurity.answer2.message}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="btn-primary flex-1"
+                  disabled={isSubmittingSecurity}
+                >
+                  {isSubmittingSecurity ? 'Guardando...' : 'Guardar Preguntas'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSecurityQuestions(false);
+                    resetSecurity();
+                  }}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

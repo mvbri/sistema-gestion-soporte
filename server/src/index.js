@@ -26,7 +26,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Servimos tanto /uploads (acceso directo) como /api/uploads (cuando se usa baseURL /api en el frontend)
+const uploadsPath = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
+app.use('/api/uploads', express.static(uploadsPath));
 
 // Rutas
 app.use('/api/auth', authRoutes);

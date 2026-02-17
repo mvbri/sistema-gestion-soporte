@@ -153,7 +153,11 @@ export const TicketDetail: React.FC = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-ES', {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+
+    return date.toLocaleString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -161,6 +165,13 @@ export const TicketDetail: React.FC = () => {
       minute: '2-digit',
     });
   };
+
+  const apiBaseUrl = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+  const imagenes = ticket.imagenes && ticket.imagenes.length > 0
+    ? ticket.imagenes
+    : ticket.imagen_url
+      ? [ticket.imagen_url]
+      : [];
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -181,8 +192,14 @@ export const TicketDetail: React.FC = () => {
               <p className="text-sm text-gray-500 mt-1">ID: {ticket.id}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <StatusBadge estado={ticket.estado_nombre || ''} />
-              <PriorityBadge prioridad={ticket.prioridad_nombre || ''} />
+              <StatusBadge
+                estado={ticket.estado_nombre || ''}
+                colorOverride={ticket.estado_color}
+              />
+              <PriorityBadge
+                prioridad={ticket.prioridad_nombre || ''}
+                colorOverride={ticket.prioridad_color}
+              />
               <CategoryBadge categoria={ticket.categoria_nombre || ''} />
             </div>
           </div>
@@ -287,9 +304,16 @@ export const TicketDetail: React.FC = () => {
                 )}
               </div>
 
-              {ticket.imagen_url && (
-                <div className="mt-4">
-                  <img src={ticket.imagen_url} alt="Imagen del ticket" className="max-w-full h-auto rounded-md" />
+              {imagenes.length > 0 && (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {imagenes.map((relativeUrl, index) => (
+                    <img
+                      key={`${relativeUrl}-${index}`}
+                      src={`${apiBaseUrl}${relativeUrl}`}
+                      alt={`Imagen ${index + 1} del ticket`}
+                      className="w-full h-auto rounded-md object-contain bg-gray-100"
+                    />
+                  ))}
                 </div>
               )}
 
