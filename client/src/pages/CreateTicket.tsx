@@ -1,17 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { ticketService } from '../services/ticketService';
+import { useCategorias, usePrioridades, useCreateTicketWithFormData } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
-import type { CategoriaTicket, PrioridadTicket } from '../types';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [categorias, setCategorias] = useState<CategoriaTicket[]>([]);
-  const [prioridades, setPrioridades] = useState<PrioridadTicket[]>([]);
+  const { data: categorias = [] } = useCategorias();
+  const { data: prioridades = [] } = usePrioridades();
+  const createTicketMutation = useCreateTicketWithFormData();
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
   const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -23,24 +22,6 @@ export const CreateTicket: React.FC = () => {
   } = useForm<CreateTicketData>({
     resolver: zodResolver(createTicketSchema),
   });
-
-  useEffect(() => {
-    loadOptions();
-  }, []);
-
-  const loadOptions = async () => {
-    try {
-      const [categoriasRes, prioridadesRes] = await Promise.all([
-        ticketService.getCategorias(),
-        ticketService.getPrioridades(),
-      ]);
-
-      if (categoriasRes.success && categoriasRes.data) setCategorias(categoriasRes.data);
-      if (prioridadesRes.success && prioridadesRes.data) setPrioridades(prioridadesRes.data);
-    } catch {
-      toast.error('Error al cargar opciones');
-    }
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -87,35 +68,23 @@ export const CreateTicket: React.FC = () => {
     setImagenPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (data: CreateTicketData) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('titulo', data.titulo);
-      formData.append('descripcion', data.descripcion);
-      formData.append('area_incidente', data.area_incidente);
-      formData.append('categoria_id', data.categoria_id.toString());
-      formData.append('prioridad_id', data.prioridad_id.toString());
+  const onSubmit = (data: CreateTicketData) => {
+    const formData = new FormData();
+    formData.append('titulo', data.titulo);
+    formData.append('descripcion', data.descripcion);
+    formData.append('area_incidente', data.area_incidente);
+    formData.append('categoria_id', data.categoria_id.toString());
+    formData.append('prioridad_id', data.prioridad_id.toString());
 
-      imagenFiles.forEach((file) => {
-        formData.append('imagenes', file);
-      });
+    imagenFiles.forEach((file) => {
+      formData.append('imagenes', file);
+    });
 
-      const result = await ticketService.createWithFormData(formData);
-      if (result.success) {
-        toast.success('Ticket creado exitosamente');
+    createTicketMutation.mutate(formData, {
+      onSuccess: () => {
         navigate('/tickets');
-      } else {
-        toast.error(result.message || 'Error al crear ticket');
-      }
-    } catch (err) {
-      const message =
-        (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
-        'Error al crear ticket';
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
+      },
+    });
   };
 
   return (
@@ -259,10 +228,10 @@ export const CreateTicket: React.FC = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={createTicketMutation.isPending}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? 'Creando...' : 'Crear Ticket'}
+                {createTicketMutation.isPending ? 'Creando...' : 'Crear Ticket'}
               </button>
             </div>
           </form>

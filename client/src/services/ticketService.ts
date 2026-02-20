@@ -108,4 +108,14 @@ export const ticketService = {
     const response = await api.get<ApiResponse<TicketStats>>('/tickets/stats');
     return response.data;
   },
+
+  async startProgress(id: string): Promise<ApiResponse<Ticket>> {
+    const response = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/iniciar-progreso`);
+    return response.data;
+  },
+
+  async markAsResolved(id: string): Promise<ApiResponse<Ticket>> {
+    const response = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/marcar-resuelto`);
+    return response.data;
+  },
 };

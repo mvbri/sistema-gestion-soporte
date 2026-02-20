@@ -93,7 +93,6 @@ export const restablecerPasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
-
 export const securityQuestionsSchema = z.object({
   question1: z
     .string()

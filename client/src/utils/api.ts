@@ -1,5 +1,6 @@
 // Utilidades para llamadas API
 import axios from 'axios';
+import { queryClient } from '../config/queryClient';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -41,6 +42,7 @@ api.interceptors.response.use(
         currentPath.includes('/solicitar-verificacion');
       
       if (!isRecoveryRoute) {
+        queryClient.clear();
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         sessionStorage.removeItem('token');

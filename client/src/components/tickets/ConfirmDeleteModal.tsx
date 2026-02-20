@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,15 +15,14 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
-
-        <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+  return createPortal(
+    <>
+      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-[9999]" onClick={onClose}></div>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 pointer-events-none">
+        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full pointer-events-auto">
+          <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="flex items-start">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-red-100 rounded-full">
                 <svg
                   className="w-6 h-6 text-red-600"
                   fill="none"
@@ -36,7 +37,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                   />
                 </svg>
               </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <div className="ml-4">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">
                   Confirmar eliminación
                 </h3>
@@ -53,20 +54,35 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             <button
               type="button"
               onClick={onConfirm}
-              className="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+              className="group inline-flex justify-center items-center gap-2 w-full px-5 py-2.5 text-base font-medium text-white bg-gradient-to-r from-red-500 to-red-600 border border-transparent rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
               Eliminar
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              className="inline-flex justify-center w-full px-5 py-2.5 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 hover:border-gray-400 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
               Cancelar
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </>,
+    document.body
   );
 };

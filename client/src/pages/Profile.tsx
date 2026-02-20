@@ -3,10 +3,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
+import { MainNavbar } from '../components/MainNavbar';
+import { PageWrapper } from '../components/PageWrapper';
 import { perfilSchema, securityQuestionsSchema } from '../schemas/authSchemas';
 import type { UpdateProfileData } from '../services/authService';
 import { authService } from '../services/authService';
 import formStyles from '../styles/modules/forms.module.css';
+import { translateRole } from '../utils/roleTranslations';
 
 const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
   const formatRequiredField = (value: string): string => value.trim();
@@ -117,7 +120,10 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <>
+      <MainNavbar />
+      <PageWrapper>
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className={`${formStyles.formContainer} card max-w-lg w-full`}>
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">Mi Perfil</h2>
@@ -159,9 +165,9 @@ export const Profile: React.FC = () => {
             <label className="label-field">Rol</label>
             <input
               type="text"
-              value={user.role.replace('_', ' ')}
+              value={translateRole(user.role)}
               disabled
-              className="input-field bg-gray-100 cursor-not-allowed capitalize"
+              className="input-field bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -319,7 +325,9 @@ export const Profile: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+      </PageWrapper>
+    </>
   );
 };
 

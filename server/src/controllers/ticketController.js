@@ -85,6 +85,11 @@ export const createTicket = async (req, res) => {
     }
 };
 
+/**
+ * Obtiene la lista de tickets con filtros aplicados.
+ * Los usuarios con rol 'end_user' (Colaboradores) solo pueden ver sus propios tickets.
+ * Este filtro se aplica automáticamente y no puede ser anulado.
+ */
 export const getTickets = async (req, res) => {
     try {
         const { role, id } = req.user;
@@ -193,43 +198,101 @@ export const updateTicket = async (req, res) => {
             area_incidente,
             categoria_id,
             prioridad_id,
-            estado_id,
-            tecnico_asignado_id
+            estado_id: estadoIdRaw,
+            tecnico_asignado_id: tecnicoAsignadoIdRaw
         } = req.body;
+
+        const estado_id = estadoIdRaw !== undefined ? parseInt(estadoIdRaw, 10) : undefined;
+        const tecnico_asignado_id = tecnicoAsignadoIdRaw !== undefined && tecnicoAsignadoIdRaw !== null 
+            ? parseInt(tecnicoAsignadoIdRaw, 10) 
+            : tecnicoAsignadoIdRaw;
+
+        if (role === 'technician') {
+            if (ticket.tecnico_asignado_id !== userId) {
+                return sendError(res, 'Solo puedes actualizar tickets asignados a ti', null, 403);
+            }
+
+            if (titulo !== undefined || descripcion !== undefined || area_incidente !== undefined ||
+                categoria_id !== undefined || prioridad_id !== undefined || tecnico_asignado_id !== undefined) {
+                return sendError(res, 'Como técnico, solo puedes modificar el estado del ticket', null, 403);
+            }
+
+            if (estado_id === undefined) {
+                return sendError(res, 'Debes especificar un estado', null, 400);
+            }
+        }
 
         const cambios = [];
         const historialEntries = [];
+        let estadoAutoAsignado = false;
 
-        if (titulo !== undefined && titulo !== ticket.titulo) {
-            cambios.push({ campo: 'titulo', anterior: ticket.titulo, nuevo: titulo });
-        }
+        if (role === 'administrator') {
+            if (titulo !== undefined && titulo !== ticket.titulo) {
+                cambios.push({ campo: 'titulo', anterior: ticket.titulo, nuevo: titulo });
+            }
 
-        if (descripcion !== undefined && descripcion !== ticket.descripcion) {
-            cambios.push({ campo: 'descripcion', anterior: ticket.descripcion, nuevo: descripcion });
-        }
+            if (descripcion !== undefined && descripcion !== ticket.descripcion) {
+                cambios.push({ campo: 'descripcion', anterior: ticket.descripcion, nuevo: descripcion });
+            }
 
-        if (area_incidente !== undefined && area_incidente !== ticket.area_incidente) {
-            cambios.push({ campo: 'area_incidente', anterior: ticket.area_incidente, nuevo: area_incidente });
-        }
+            if (area_incidente !== undefined && area_incidente !== ticket.area_incidente) {
+                cambios.push({ campo: 'area_incidente', anterior: ticket.area_incidente, nuevo: area_incidente });
+            }
 
-        if (categoria_id !== undefined && categoria_id !== ticket.categoria_id) {
-            const categoriaAnterior = await query('SELECT nombre FROM categorias_ticket WHERE id = ?', [ticket.categoria_id]);
-            const categoriaNueva = await query('SELECT nombre FROM categorias_ticket WHERE id = ?', [categoria_id]);
-            cambios.push({
-                campo: 'categoria',
-                anterior: categoriaAnterior[0]?.nombre || '',
-                nuevo: categoriaNueva[0]?.nombre || ''
-            });
-        }
+            if (categoria_id !== undefined && categoria_id !== ticket.categoria_id) {
+                const categoriaAnterior = await query('SELECT nombre FROM categorias_ticket WHERE id = ?', [ticket.categoria_id]);
+                const categoriaNueva = await query('SELECT nombre FROM categorias_ticket WHERE id = ?', [categoria_id]);
+                cambios.push({
+                    campo: 'categoria',
+                    anterior: categoriaAnterior[0]?.nombre || '',
+                    nuevo: categoriaNueva[0]?.nombre || ''
+                });
+            }
 
-        if (prioridad_id !== undefined && prioridad_id !== ticket.prioridad_id) {
-            const prioridadAnterior = await query('SELECT nombre FROM prioridades_ticket WHERE id = ?', [ticket.prioridad_id]);
-            const prioridadNueva = await query('SELECT nombre FROM prioridades_ticket WHERE id = ?', [prioridad_id]);
-            cambios.push({
-                campo: 'prioridad',
-                anterior: prioridadAnterior[0]?.nombre || '',
-                nuevo: prioridadNueva[0]?.nombre || ''
-            });
+            if (prioridad_id !== undefined && prioridad_id !== ticket.prioridad_id) {
+                const prioridadAnterior = await query('SELECT nombre FROM prioridades_ticket WHERE id = ?', [ticket.prioridad_id]);
+                const prioridadNueva = await query('SELECT nombre FROM prioridades_ticket WHERE id = ?', [prioridad_id]);
+                cambios.push({
+                    campo: 'prioridad',
+                    anterior: prioridadAnterior[0]?.nombre || '',
+                    nuevo: prioridadNueva[0]?.nombre || ''
+                });
+            }
+
+            if (tecnico_asignado_id !== undefined && tecnico_asignado_id !== ticket.tecnico_asignado_id) {
+                const tecnicoAnterior = ticket.tecnico_asignado_nombre || 'Sin asignar';
+                let tecnicoNuevo = 'Sin asignar';
+                
+                if (tecnico_asignado_id) {
+                    const tecnico = await Usuario.findById(tecnico_asignado_id);
+                    tecnicoNuevo = tecnico?.full_name || 'Desconocido';
+                    
+                    if (tecnico && tecnico.email) {
+                        try {
+                            await enviarEmailAsignacion(
+                                tecnico.email,
+                                tecnico.full_name,
+                                ticket.titulo,
+                                ticket.id
+                            );
+                        } catch (emailError) {
+                            console.error('Error al enviar email de asignación:', emailError);
+                        }
+                    }
+
+                    if (ticket.estado_id === 1 && (estado_id === undefined || estado_id === 1)) {
+                        estado_id = 2;
+                        estadoAutoAsignado = true;
+                        console.log(`Estado automáticamente cambiado a "Asignado" (2) para ticket ${id} al asignar técnico ${tecnico_asignado_id}`);
+                    }
+                }
+
+                cambios.push({
+                    campo: 'tecnico_asignado',
+                    anterior: tecnicoAnterior,
+                    nuevo: tecnicoNuevo
+                });
+            }
         }
 
         if (estado_id !== undefined && estado_id !== ticket.estado_id) {
@@ -242,36 +305,7 @@ export const updateTicket = async (req, res) => {
             });
         }
 
-        if (tecnico_asignado_id !== undefined && tecnico_asignado_id !== ticket.tecnico_asignado_id) {
-            const tecnicoAnterior = ticket.tecnico_asignado_nombre || 'Sin asignar';
-            let tecnicoNuevo = 'Sin asignar';
-            
-            if (tecnico_asignado_id) {
-                const tecnico = await Usuario.findById(tecnico_asignado_id);
-                tecnicoNuevo = tecnico?.full_name || 'Desconocido';
-                
-                if (tecnico && tecnico.email) {
-                    try {
-                        await enviarEmailAsignacion(
-                            tecnico.email,
-                            tecnico.full_name,
-                            ticket.titulo,
-                            ticket.id
-                        );
-                    } catch (emailError) {
-                        console.error('Error al enviar email de asignación:', emailError);
-                    }
-                }
-            }
-
-            cambios.push({
-                campo: 'tecnico_asignado',
-                anterior: tecnicoAnterior,
-                nuevo: tecnicoNuevo
-            });
-        }
-
-        const updatedTicket = await Ticket.update(id, {
+        const updateData = role === 'administrator' ? {
             titulo,
             descripcion,
             area_incidente,
@@ -279,7 +313,11 @@ export const updateTicket = async (req, res) => {
             prioridad_id,
             estado_id,
             tecnico_asignado_id
-        });
+        } : {
+            estado_id
+        };
+
+        const updatedTicket = await Ticket.update(id, updateData);
 
         for (const cambio of cambios) {
             await TicketHistorial.create({
@@ -338,17 +376,13 @@ export const addComment = async (req, res) => {
             return sendError(res, 'No tienes permiso para comentar en este ticket', null, 403);
         }
 
+        const fechaActual = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
         const comentario = await TicketComentario.create({
             ticket_id: id,
             usuario_id: userId,
-            contenido
-        });
-
-        await TicketHistorial.create({
-            ticket_id: id,
-            usuario_id: userId,
-            tipo_cambio: 'COMENTARIO',
-            descripcion: 'Comentario agregado'
+            contenido,
+            fecha_creacion: fechaActual
         });
 
         sendSuccess(res, 'Comentario agregado exitosamente', comentario, 201);
@@ -430,5 +464,131 @@ export const getStats = async (req, res) => {
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);
         sendError(res, 'Error al obtener estadísticas', null, 500);
+    }
+};
+
+export const startProgress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, id: userId } = req.user;
+
+        if (role !== 'technician' && role !== 'administrator') {
+            return sendError(res, 'Solo los técnicos pueden iniciar el progreso de un ticket', null, 403);
+        }
+
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return sendError(res, 'Ticket no encontrado', null, 404);
+        }
+
+        if (role === 'technician' && ticket.tecnico_asignado_id !== userId) {
+            return sendError(res, 'Solo puedes iniciar el progreso de tickets asignados a ti', null, 403);
+        }
+
+        if (!ticket.tecnico_asignado_id) {
+            return sendError(res, 'El ticket debe estar asignado a un técnico antes de iniciar el progreso', null, 400);
+        }
+
+        if (ticket.estado_id === 1) {
+            return sendError(res, 'No se puede iniciar progreso en un ticket "Abierto". El ticket debe estar "Asignado" primero', null, 400);
+        }
+
+        if (ticket.estado_id === 3) {
+            return sendError(res, 'El ticket ya está "En Proceso"', null, 400);
+        }
+
+        if (ticket.estado_id === 4) {
+            return sendError(res, 'No se puede iniciar progreso en un ticket "Resuelto"', null, 400);
+        }
+
+        if (ticket.estado_id === 5) {
+            return sendError(res, 'No se puede iniciar progreso en un ticket "Cerrado"', null, 400);
+        }
+
+        if (ticket.estado_id !== 2) {
+            return sendError(res, 'Solo se puede iniciar progreso desde el estado "Asignado"', null, 400);
+        }
+
+        const estadoAnterior = await query('SELECT nombre FROM estados_ticket WHERE id = ?', [ticket.estado_id]);
+        const estadoNuevo = await query('SELECT nombre FROM estados_ticket WHERE id = ?', [3]);
+
+        const updatedTicket = await Ticket.update(id, { estado_id: 3 });
+
+        await TicketHistorial.create({
+            ticket_id: id,
+            usuario_id: userId,
+            tipo_cambio: 'ACTUALIZACION',
+            campo_anterior: estadoAnterior[0]?.nombre || '',
+            campo_nuevo: estadoNuevo[0]?.nombre || '',
+            descripcion: `Estado cambiado de "${estadoAnterior[0]?.nombre || ''}" a "${estadoNuevo[0]?.nombre || ''}"`
+        });
+
+        sendSuccess(res, 'Ticket marcado como "En Proceso"', updatedTicket);
+    } catch (error) {
+        console.error('Error al iniciar progreso:', error);
+        sendError(res, 'Error al iniciar progreso del ticket', null, 500);
+    }
+};
+
+export const markAsResolved = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, id: userId } = req.user;
+
+        if (role !== 'technician' && role !== 'administrator') {
+            return sendError(res, 'Solo los técnicos pueden marcar tickets como resueltos', null, 403);
+        }
+
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return sendError(res, 'Ticket no encontrado', null, 404);
+        }
+
+        if (role === 'technician' && ticket.tecnico_asignado_id !== userId) {
+            return sendError(res, 'Solo puedes marcar como resueltos los tickets asignados a ti', null, 403);
+        }
+
+        if (!ticket.tecnico_asignado_id) {
+            return sendError(res, 'El ticket debe estar asignado a un técnico', null, 400);
+        }
+
+        if (ticket.estado_id === 1) {
+            return sendError(res, 'No se puede marcar como resuelto un ticket "Abierto". Debe estar "Asignado" y "En Proceso" primero', null, 400);
+        }
+
+        if (ticket.estado_id === 2) {
+            return sendError(res, 'No se puede marcar como resuelto un ticket "Asignado". Debe estar "En Proceso" primero', null, 400);
+        }
+
+        if (ticket.estado_id === 4) {
+            return sendError(res, 'El ticket ya está marcado como "Resuelto"', null, 400);
+        }
+
+        if (ticket.estado_id === 5) {
+            return sendError(res, 'No se puede marcar como resuelto un ticket "Cerrado"', null, 400);
+        }
+
+        if (ticket.estado_id !== 3) {
+            return sendError(res, 'Solo se puede marcar como resuelto un ticket que está "En Proceso"', null, 400);
+        }
+
+        const estadoAnterior = await query('SELECT nombre FROM estados_ticket WHERE id = ?', [ticket.estado_id]);
+        const estadoNuevo = await query('SELECT nombre FROM estados_ticket WHERE id = ?', [4]);
+
+        const updatedTicket = await Ticket.update(id, { estado_id: 4 });
+
+        await TicketHistorial.create({
+            ticket_id: id,
+            usuario_id: userId,
+            tipo_cambio: 'ACTUALIZACION',
+            campo_anterior: estadoAnterior[0]?.nombre || '',
+            campo_nuevo: estadoNuevo[0]?.nombre || '',
+            descripcion: `Estado cambiado de "${estadoAnterior[0]?.nombre || ''}" a "${estadoNuevo[0]?.nombre || ''}"`
+        });
+
+        sendSuccess(res, 'Ticket marcado como "Resuelto"', updatedTicket);
+    } catch (error) {
+        console.error('Error al marcar como resuelto:', error);
+        sendError(res, 'Error al marcar ticket como resuelto', null, 500);
     }
 };

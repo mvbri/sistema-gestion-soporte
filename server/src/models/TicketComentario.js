@@ -2,14 +2,23 @@ import { query } from '../config/database.js';
 
 class TicketComentario {
     static async create(data) {
-        const { ticket_id, usuario_id, contenido } = data;
+        const { ticket_id, usuario_id, contenido, fecha_creacion } = data;
 
-        const sql = `
-            INSERT INTO ticket_comentarios (ticket_id, usuario_id, contenido)
-            VALUES (?, ?, ?)
-        `;
+        const sql = fecha_creacion
+            ? `
+                INSERT INTO ticket_comentarios (ticket_id, usuario_id, contenido, fecha_creacion)
+                VALUES (?, ?, ?, ?)
+            `
+            : `
+                INSERT INTO ticket_comentarios (ticket_id, usuario_id, contenido)
+                VALUES (?, ?, ?)
+            `;
 
-        const result = await query(sql, [ticket_id, usuario_id, contenido]);
+        const params = fecha_creacion
+            ? [ticket_id, usuario_id, contenido, fecha_creacion]
+            : [ticket_id, usuario_id, contenido];
+
+        const result = await query(sql, params);
 
         return await this.findById(result.insertId);
     }

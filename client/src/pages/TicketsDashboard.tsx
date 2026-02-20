@@ -1,38 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { ticketService } from '../services/ticketService';
-import type { TicketStats } from '../types';
+import { useTicketStats } from '../hooks/useTickets';
+import { MainNavbar } from '../components/MainNavbar';
+import { PageWrapper } from '../components/PageWrapper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { toast } from 'react-toastify';
 
 export const TicketsDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<TicketStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading: loading } = useTicketStats();
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
       navigate('/tickets');
-      return;
     }
-    loadStats();
-  }, [user]);
-
-  const loadStats = async () => {
-    try {
-      setLoading(true);
-      const response = await ticketService.getStats();
-      if (response.success && response.data) {
-        setStats(response.data);
-      }
-    } catch (error) {
-      toast.error('Error al cargar estadísticas');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, navigate]);
 
   if (user?.role !== 'administrator') {
     return null;
@@ -40,28 +23,41 @@ export const TicketsDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Cargando estadísticas...</p>
+      <>
+        <MainNavbar />
+        <PageWrapper>
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Cargando estadísticas...</p>
+          </div>
         </div>
-      </div>
+        </PageWrapper>
+      </>
     );
   }
 
   if (!stats) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">No hay estadísticas disponibles</p>
-      </div>
+      <>
+        <MainNavbar />
+        <PageWrapper>
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <p className="text-gray-500">No hay estadísticas disponibles</p>
+        </div>
+        </PageWrapper>
+      </>
     );
   }
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      <MainNavbar />
+      <PageWrapper>
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard de Tickets</h1>
           <p className="text-gray-600 mt-2">Resumen estadístico del sistema de tickets</p>
@@ -106,12 +102,15 @@ export const TicketsDashboard: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ nombre, cantidad }) => `${nombre}: ${cantidad}`}
+                  label={(entry) => {
+                    const data = entry as unknown as { nombre: string; cantidad: number };
+                    return `${data.nombre}: ${data.cantidad}`;
+                  }}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="cantidad"
                 >
-                  {stats.porPrioridad.map((entry, index) => (
+                  {stats.porPrioridad.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -134,7 +133,9 @@ export const TicketsDashboard: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+        </div>
       </div>
-    </div>
+      </PageWrapper>
+    </>
   );
 };
