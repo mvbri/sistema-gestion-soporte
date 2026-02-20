@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { adminService } from '../services/adminService';
+import { MainNavbar } from '../components/MainNavbar';
+import { PageWrapper } from '../components/PageWrapper';
+import {
+  useAdminCategorias,
+  useAdminPrioridades,
+  useCreateCategoria,
+  useUpdateCategoria,
+  useDeleteCategoria,
+  useCreatePrioridad,
+  useUpdatePrioridad,
+  useDeletePrioridad,
+} from '../hooks/useAdmin';
 import type { CategoriaTicket, PrioridadTicket } from '../types';
-import { toast } from 'react-toastify';
 
 export const AdminConfig: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [categorias, setCategorias] = useState<CategoriaTicket[]>([]);
-  const [prioridades, setPrioridades] = useState<PrioridadTicket[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades'>('categorias');
   const [editingCategoria, setEditingCategoria] = useState<CategoriaTicket | null>(null);
   const [editingPrioridad, setEditingPrioridad] = useState<PrioridadTicket | null>(null);
@@ -18,51 +25,43 @@ export const AdminConfig: React.FC = () => {
   const [showPrioridadForm, setShowPrioridadForm] = useState(false);
   const [prioridadNivel, setPrioridadNivel] = useState<string>('');
   const [prioridadColor, setPrioridadColor] = useState<string>('');
+  const [categoriaToDelete, setCategoriaToDelete] = useState<CategoriaTicket | null>(null);
+  const [prioridadToDelete, setPrioridadToDelete] = useState<PrioridadTicket | null>(null);
+
+  const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
+  const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
+  const createCategoriaMutation = useCreateCategoria();
+  const updateCategoriaMutation = useUpdateCategoria();
+  const deleteCategoriaMutation = useDeleteCategoria();
+  const createPrioridadMutation = useCreatePrioridad();
+  const updatePrioridadMutation = useUpdatePrioridad();
+  const deletePrioridadMutation = useDeletePrioridad();
+
+  const loading = loadingCategorias || loadingPrioridades;
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
       navigate('/dashboard');
-      return;
     }
-    loadData();
-  }, [user]);
+  }, [user, navigate]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [categoriasRes, prioridadesRes] = await Promise.all([
-        adminService.getCategorias(),
-        adminService.getPrioridades(),
-      ]);
-
-      if (categoriasRes.success && categoriasRes.data) setCategorias(categoriasRes.data);
-      if (prioridadesRes.success && prioridadesRes.data) setPrioridades(prioridadesRes.data);
-    } catch (error) {
-      toast.error('Error al cargar datos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateCategoria = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateCategoria = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const nombre = formData.get('nombre') as string;
     const descripcion = formData.get('descripcion') as string;
 
-    try {
-      const response = await adminService.createCategoria({ nombre, descripcion });
-      if (response.success) {
-        toast.success('Categoría creada exitosamente');
-        setShowCategoriaForm(false);
-        loadData();
+    createCategoriaMutation.mutate(
+      { nombre, descripcion },
+      {
+        onSuccess: () => {
+          setShowCategoriaForm(false);
+        },
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al crear categoría');
-    }
+    );
   };
 
-  const handleUpdateCategoria = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateCategoria = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingCategoria) return;
 
@@ -71,20 +70,26 @@ export const AdminConfig: React.FC = () => {
     const descripcion = formData.get('descripcion') as string;
     const activo = formData.get('activo') === 'on';
 
-    try {
-      const response = await adminService.updateCategoria(editingCategoria.id, {
-        nombre,
-        descripcion,
-        activo,
-      });
-      if (response.success) {
-        toast.success('Categoría actualizada exitosamente');
-        setEditingCategoria(null);
-        loadData();
+    updateCategoriaMutation.mutate(
+      {
+        id: editingCategoria.id,
+        data: { nombre, descripcion, activo },
+      },
+      {
+        onSuccess: () => {
+          setEditingCategoria(null);
+        },
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al actualizar categoría');
-    }
+    );
+  };
+
+  const handleDeleteCategoria = () => {
+    if (!categoriaToDelete) return;
+    deleteCategoriaMutation.mutate(categoriaToDelete.id, {
+      onSuccess: () => {
+        setCategoriaToDelete(null);
+      },
+    });
   };
 
   const getColorByNivel = (nivel: string): string => {
@@ -105,7 +110,7 @@ export const AdminConfig: React.FC = () => {
     setPrioridadColor(getColorByNivel(nivel));
   };
 
-  const handleCreatePrioridad = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreatePrioridad = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const nombre = formData.get('nombre') as string;
@@ -113,21 +118,19 @@ export const AdminConfig: React.FC = () => {
     const color = prioridadColor || getColorByNivel(nivel.toString());
     const descripcion = formData.get('descripcion') as string;
 
-    try {
-      const response = await adminService.createPrioridad({ nombre, nivel, color, descripcion });
-      if (response.success) {
-        toast.success('Prioridad creada exitosamente');
-        setShowPrioridadForm(false);
-        setPrioridadNivel('');
-        setPrioridadColor('');
-        loadData();
+    createPrioridadMutation.mutate(
+      { nombre, nivel, color, descripcion },
+      {
+        onSuccess: () => {
+          setShowPrioridadForm(false);
+          setPrioridadNivel('');
+          setPrioridadColor('');
+        },
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al crear prioridad');
-    }
+    );
   };
 
-  const handleUpdatePrioridad = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdatePrioridad = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingPrioridad) return;
 
@@ -138,24 +141,28 @@ export const AdminConfig: React.FC = () => {
     const descripcion = formData.get('descripcion') as string;
     const activo = formData.get('activo') === 'on';
 
-    try {
-      const response = await adminService.updatePrioridad(editingPrioridad.id, {
-        nombre,
-        nivel,
-        color,
-        descripcion,
-        activo,
-      });
-      if (response.success) {
-        toast.success('Prioridad actualizada exitosamente');
-        setEditingPrioridad(null);
-        setPrioridadNivel('');
-        setPrioridadColor('');
-        loadData();
+    updatePrioridadMutation.mutate(
+      {
+        id: editingPrioridad.id,
+        data: { nombre, nivel, color, descripcion, activo },
+      },
+      {
+        onSuccess: () => {
+          setEditingPrioridad(null);
+          setPrioridadNivel('');
+          setPrioridadColor('');
+        },
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al actualizar prioridad');
-    }
+    );
+  };
+
+  const handleDeletePrioridad = () => {
+    if (!prioridadToDelete) return;
+    deletePrioridadMutation.mutate(prioridadToDelete.id, {
+      onSuccess: () => {
+        setPrioridadToDelete(null);
+      },
+    });
   };
 
   if (user?.role !== 'administrator') {
@@ -164,18 +171,26 @@ export const AdminConfig: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Cargando...</p>
+      <>
+        <MainNavbar />
+        <PageWrapper>
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Cargando...</p>
+          </div>
         </div>
-      </div>
+        </PageWrapper>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      <MainNavbar />
+      <PageWrapper>
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Configuración de Administración</h1>
           <p className="text-gray-600 mt-2">Gestiona categorías y prioridades del sistema</p>
@@ -186,20 +201,20 @@ export const AdminConfig: React.FC = () => {
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('categorias')}
-                className={`py-4 px-6 text-sm font-medium ${
+                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'categorias'
                     ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
                 }`}
               >
                 Categorías
               </button>
               <button
                 onClick={() => setActiveTab('prioridades')}
-                className={`py-4 px-6 text-sm font-medium ${
+                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'prioridades'
                     ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
                 }`}
               >
                 Prioridades
@@ -217,8 +232,22 @@ export const AdminConfig: React.FC = () => {
                       setShowCategoriaForm(true);
                       setEditingCategoria(null);
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out flex items-center gap-2"
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
                     Nueva Categoría
                   </button>
                 </div>
@@ -251,14 +280,14 @@ export const AdminConfig: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Crear
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowCategoriaForm(false)}
-                          className="px-4 py-2 border border-gray-300 rounded-md"
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Cancelar
                         </button>
@@ -308,14 +337,14 @@ export const AdminConfig: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingCategoria(null)}
-                          className="px-4 py-2 border border-gray-300 rounded-md"
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Cancelar
                         </button>
@@ -337,21 +366,61 @@ export const AdminConfig: React.FC = () => {
                         {categoria.descripcion && (
                           <p className="text-sm text-gray-500">{categoria.descripcion}</p>
                         )}
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          categoria.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            categoria.activo
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {categoria.activo ? 'Activa' : 'Inactiva'}
                         </span>
                       </div>
-                      <button
-                        onClick={() => {
-                          setEditingCategoria(categoria);
-                          setShowCategoriaForm(false);
-                        }}
-                        className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                      >
-                        Editar
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingCategoria(categoria);
+                            setShowCategoriaForm(false);
+                          }}
+                          className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                          title="Editar"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setCategoriaToDelete(categoria)}
+                          className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                          title="Eliminar"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -369,8 +438,22 @@ export const AdminConfig: React.FC = () => {
                         setPrioridadNivel('');
                         setPrioridadColor('');
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out flex items-center gap-2"
                     >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
                       Nueva Prioridad
                     </button>
                 </div>
@@ -392,7 +475,7 @@ export const AdminConfig: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nivel <span className="text-red-500">*</span>
+                          Nivel (orden numérico) <span className="text-red-500">*</span>
                         </label>
                         <select
                           name="nivel"
@@ -402,11 +485,13 @@ export const AdminConfig: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">Seleccione un nivel</option>
-                          <option value="1">Baja</option>
-                          <option value="2">Media</option>
-                          <option value="3">Alta</option>
+                          <option value="1">1 - Baja</option>
+                          <option value="2">2 - Media</option>
+                          <option value="3">3 - Alta</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Seleccione el nivel de prioridad</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          El nombre es la etiqueta visible (ej. Altísima). El nivel es el valor numérico interno para ordenar y reglas de negocio.
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -443,14 +528,14 @@ export const AdminConfig: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Crear
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowPrioridadForm(false)}
-                          className="px-4 py-2 border border-gray-300 rounded-md"
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Cancelar
                         </button>
@@ -477,7 +562,7 @@ export const AdminConfig: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nivel <span className="text-red-500">*</span>
+                          Nivel (orden numérico) <span className="text-red-500">*</span>
                         </label>
                         <select
                           name="nivel"
@@ -485,11 +570,13 @@ export const AdminConfig: React.FC = () => {
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="1">Baja</option>
-                          <option value="2">Media</option>
-                          <option value="3">Alta</option>
+                          <option value="1">1 - Baja</option>
+                          <option value="2">2 - Media</option>
+                          <option value="3">3 - Alta</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Seleccione el nivel de prioridad</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          El nombre es la etiqueta visible (ej. Altísima). El nivel es el valor numérico interno para ordenar y reglas de negocio.
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -528,14 +615,14 @@ export const AdminConfig: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingPrioridad(null)}
-                          className="px-4 py-2 border border-gray-300 rounded-md"
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
                         >
                           Cancelar
                         </button>
@@ -563,25 +650,63 @@ export const AdminConfig: React.FC = () => {
                               {prioridad.nombre}
                             </span>
                             <span className="text-xs text-gray-500">Nivel: {prioridad.nivel}</span>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              prioridad.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                prioridad.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {prioridad.activo ? 'Activa' : 'Inactiva'}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => {
-                          setEditingPrioridad(prioridad);
-                          setShowPrioridadForm(false);
-                          setPrioridadNivel(prioridad.nivel.toString());
-                          setPrioridadColor(prioridad.color);
-                        }}
-                        className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                      >
-                        Editar
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingPrioridad(prioridad);
+                            setShowPrioridadForm(false);
+                            setPrioridadNivel(prioridad.nivel.toString());
+                            setPrioridadColor(prioridad.color);
+                          }}
+                          className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                          title="Editar"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setPrioridadToDelete(prioridad)}
+                          className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                          title="Eliminar"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -589,7 +714,63 @@ export const AdminConfig: React.FC = () => {
             )}
           </div>
         </div>
+
+        {categoriaToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+              <p className="text-gray-700 mb-6">
+                ¿Estás seguro de que deseas eliminar {categoriaToDelete.nombre}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setCategoriaToDelete(null)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteCategoria}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {prioridadToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+              <p className="text-gray-700 mb-6">
+                ¿Estás seguro de que deseas eliminar la prioridad {prioridadToDelete.nombre}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setPrioridadToDelete(null)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeletePrioridad}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
       </div>
-    </div>
+      </PageWrapper>
+    </>
   );
 };

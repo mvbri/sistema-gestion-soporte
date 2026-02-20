@@ -89,6 +89,10 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return sendError(res, 'Email y contraseña son requeridos', null, 400);
+        }
+
         const user = await Usuario.findByEmail(email);
         if (!user) {
             return sendError(res, 'Credenciales inválidas', null, 401);
@@ -105,6 +109,11 @@ export const login = async (req, res) => {
 
         if (!user.email_verified) {
             return sendError(res, 'Por favor verifica tu email antes de iniciar sesión', { requires_verification: true }, 403);
+        }
+
+        if (!user.role_name) {
+            console.error('Usuario sin role_name:', user);
+            return sendError(res, 'Error en la configuración del usuario. Contacta al administrador.', null, 500);
         }
 
         const token = generarToken({
@@ -126,6 +135,7 @@ export const login = async (req, res) => {
         });
     } catch (error) {
         console.error('Error en login:', error);
+        console.error('Stack trace:', error.stack);
         sendError(res, 'Error al iniciar sesión', null, 500);
     }
 };
@@ -291,6 +301,104 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+/**
+ * Obtener preguntas de seguridad de un usuario por email
+ */
+export const getSecurityQuestions = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return sendError(res, 'Email requerido');
+        }
+
+        const questions = await Usuario.getSecurityQuestions(email);
+        
+        if (!questions) {
+            return sendError(res, 'El usuario no tiene preguntas de seguridad configuradas');
+        }
+
+        sendSuccess(res, 'Preguntas de seguridad obtenidas', questions);
+    } catch (error) {
+        console.error('Error al obtener preguntas de seguridad:', error);
+        sendError(res, 'Error al obtener preguntas de seguridad', null, 500);
+    }
+};
+
+/**
+ * Verificar respuestas de seguridad y generar token de recuperación
+ */
+export const verifySecurityAnswers = async (req, res) => {
+    try {
+        const { email, answer1, answer2 } = req.body;
+
+        if (!email || !answer1 || !answer2) {
+            return sendError(res, 'Email y ambas respuestas son requeridas');
+        }
+
+        const user = await Usuario.findByEmail(email);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado', null, 404);
+        }
+
+        const isValid = await Usuario.verifySecurityAnswers(user.id, { answer1, answer2 });
+        
+        if (!isValid) {
+            return sendError(res, 'Las respuestas de seguridad son incorrectas', null, 401);
+        }
+
+        await Token.deleteByUser(user.id, 'password_recovery');
+        const recoveryToken = generarTokenVerificacion();
+        await Token.create(user.id, recoveryToken, 'password_recovery', 1);
+
+        sendSuccess(res, 'Respuestas verificadas correctamente', { token: recoveryToken });
+    } catch (error) {
+        console.error('Error al verificar respuestas de seguridad:', error);
+        sendError(res, 'Error al verificar respuestas de seguridad', null, 500);
+    }
+};
+
+/**
+ * Configurar preguntas de seguridad (requiere autenticación)
+ */
+export const setSecurityQuestions = async (req, res) => {
+    try {
+        const { question1, answer1, question2, answer2 } = req.body;
+
+        if (!question1 || !answer1 || !question2 || !answer2) {
+            return sendError(res, 'Todas las preguntas y respuestas son requeridas');
+        }
+
+        if (question1.trim().length < 10 || question2.trim().length < 10) {
+            return sendError(res, 'Las preguntas deben tener al menos 10 caracteres');
+        }
+
+        if (answer1.trim().length < 3 || answer2.trim().length < 3) {
+            return sendError(res, 'Las respuestas deben tener al menos 3 caracteres');
+        }
+
+        await Usuario.updateSecurityQuestions(req.user.id, {
+            question1: question1.trim(),
+            answer1: answer1.trim(),
+            question2: question2.trim(),
+            answer2: answer2.trim()
+        });
+
+        sendSuccess(res, 'Preguntas de seguridad configuradas exitosamente');
+    } catch (error) {
+        console.error('Error al configurar preguntas de seguridad:', error);
+        console.error('Detalles del error:', error.message);
+        console.error('Código del error:', error.code);
+        
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            return sendError(res, 'Las columnas de preguntas de seguridad no existen en la base de datos. Por favor ejecuta la migración migration_security_questions.sql', null, 500);
+        }
+        
+        const errorMessage = error.message || 'Error al configurar preguntas de seguridad';
+        sendError(res, errorMessage, null, 500);
+    }
+};
+
 // Obtener usuario actual
 export const getCurrentUser = async (req, res) => {
     try {
@@ -312,6 +420,34 @@ export const getCurrentUser = async (req, res) => {
     } catch (error) {
         console.error('Error al obtener usuario:', error);
         sendError(res, 'Error al obtener información del usuario', null, 500);
+    }
+};
+
+/**
+ * Actualizar perfil del usuario autenticado
+ */
+export const updateCurrentUser = async (req, res) => {
+    try {
+        const { full_name, phone, department } = req.body;
+
+        const updatedUser = await Usuario.updateProfile(req.user.id, {
+            full_name,
+            phone,
+            department
+        });
+
+        sendSuccess(res, 'Perfil actualizado exitosamente', {
+            id: updatedUser.id,
+            full_name: updatedUser.full_name,
+            email: updatedUser.email,
+            role: updatedUser.role_name,
+            phone: updatedUser.phone,
+            department: updatedUser.department,
+            email_verified: updatedUser.email_verified
+        });
+    } catch (error) {
+        console.error('Error al actualizar perfil de usuario:', error);
+        sendError(res, 'Error al actualizar perfil de usuario', null, 500);
     }
 };
 

@@ -2,12 +2,27 @@ import type { PrioridadTicket } from '../../types';
 
 interface PriorityBadgeProps {
   prioridad: PrioridadTicket | string;
+  /**
+   * Permite forzar el color del badge cuando solo se tiene el nombre de la prioridad
+   * (por ejemplo, al listar tickets con `prioridad_nombre` y `prioridad_color`).
+   */
+  colorOverride?: string;
   className?: string;
 }
 
-export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ prioridad, className = '' }) => {
+export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
+  prioridad,
+  colorOverride,
+  className = '',
+}) => {
   const prioridadNombre = typeof prioridad === 'string' ? prioridad : prioridad.nombre;
-  const prioridadColor = typeof prioridad === 'string' ? 'bg-gray-100' : prioridad.color;
+
+  const baseColor =
+    typeof prioridad === 'string'
+      ? 'bg-gray-100'
+      : prioridad.color || 'bg-gray-100';
+
+  const prioridadColor = colorOverride || baseColor;
 
   return (
     <span

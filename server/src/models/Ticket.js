@@ -234,7 +234,9 @@ class Ticket {
         }
 
         const result = await query(sql, params);
-        return result[0].total;
+        const rawTotal = result[0]?.total ?? 0;
+        // El driver puede devolver COUNT(*) como BigInt, lo convertimos explícitamente a Number
+        return typeof rawTotal === 'bigint' ? Number(rawTotal) : rawTotal;
     }
 
     static async getStats() {

@@ -4,6 +4,15 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    // Colores usados dinámicamente desde la base de datos para estados y prioridades
+    'bg-green-400',
+    'bg-yellow-200',
+    'bg-orange-300',
+    'bg-red-400',
+    'bg-blue-100',
+    'bg-gray-100',
+  ],
   theme: {
     extend: {
       colors: {
