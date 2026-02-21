@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCategorias, usePrioridades, useCreateTicketWithFormData } from '../hooks/useTickets';
+import { useCategorias, usePrioridades, useDirecciones, useCreateTicketWithFormData } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
+  const { data: direcciones = [] } = useDirecciones();
   const createTicketMutation = useCreateTicketWithFormData();
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
   const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
@@ -70,11 +71,11 @@ export const CreateTicket: React.FC = () => {
 
   const onSubmit = (data: CreateTicketData) => {
     const formData = new FormData();
-    formData.append('titulo', data.titulo);
-    formData.append('descripcion', data.descripcion);
-    formData.append('area_incidente', data.area_incidente);
-    formData.append('categoria_id', data.categoria_id.toString());
-    formData.append('prioridad_id', data.prioridad_id.toString());
+    formData.append('title', data.titulo);
+    formData.append('description', data.descripcion);
+    formData.append('incident_area_id', data.area_incidente_id.toString());
+    formData.append('category_id', data.categoria_id.toString());
+    formData.append('priority_id', data.prioridad_id.toString());
 
     imagenFiles.forEach((file) => {
       formData.append('imagenes', file);
@@ -126,14 +127,19 @@ export const CreateTicket: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Área del Incidente <span className="text-red-500">*</span>
               </label>
-              <input
-                {...register('area_incidente')}
-                type="text"
-                placeholder="Ej: Sala de reuniones, Oficina 201, etc."
+              <select
+                {...register('area_incidente_id', { valueAsNumber: true })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {errors.area_incidente && (
-                <p className="mt-1 text-sm text-red-600">{errors.area_incidente.message}</p>
+              >
+                <option value="">Seleccione un área</option>
+                {direcciones.map((direccion) => (
+                  <option key={direccion.id} value={direccion.id}>
+                    {direccion.name}
+                  </option>
+                ))}
+              </select>
+              {errors.area_incidente_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.area_incidente_id.message}</p>
               )}
             </div>
 
@@ -149,7 +155,7 @@ export const CreateTicket: React.FC = () => {
                   <option value="">Seleccione una categoría</option>
                   {categorias.map((categoria) => (
                     <option key={categoria.id} value={categoria.id}>
-                      {categoria.nombre}
+                      {categoria.name}
                     </option>
                   ))}
                 </select>
@@ -169,7 +175,7 @@ export const CreateTicket: React.FC = () => {
                   <option value="">Seleccione una prioridad</option>
                   {prioridades.map((prioridad) => (
                     <option key={prioridad.id} value={prioridad.id}>
-                      {prioridad.nombre}
+                      {prioridad.name}
                     </option>
                   ))}
                 </select>

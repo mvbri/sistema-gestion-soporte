@@ -10,10 +10,10 @@ export const createTicketSchema = z.object({
     .string()
     .min(20, 'La descripción debe tener al menos 20 caracteres'),
   
-  area_incidente: z
-    .string()
-    .min(1, 'El área del incidente es requerida')
-    .max(255, 'El área del incidente no puede exceder 255 caracteres'),
+  area_incidente_id: z
+    .number()
+    .int()
+    .min(1, 'El área del incidente es requerida'),
   
   categoria_id: z
     .number()
@@ -42,10 +42,10 @@ export const updateTicketSchema = z.object({
     .min(20, 'La descripción debe tener al menos 20 caracteres')
     .optional(),
   
-  area_incidente: z
-    .string()
-    .min(1, 'El área del incidente es requerida')
-    .max(255, 'El área del incidente no puede exceder 255 caracteres')
+  area_incidente_id: z
+    .number()
+    .int()
+    .min(1, 'El área del incidente debe ser válida')
     .optional(),
   
   categoria_id: z
@@ -67,10 +67,10 @@ export const updateTicketSchema = z.object({
     .optional(),
   
   tecnico_asignado_id: z
-    .number()
-    .int()
-    .min(1, 'El técnico asignado debe ser válido')
-    .nullable()
+    .union([
+      z.number().int().min(1, 'El técnico asignado debe ser válido'),
+      z.null(),
+    ])
     .optional(),
 });
 

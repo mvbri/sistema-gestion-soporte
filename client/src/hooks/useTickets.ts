@@ -47,6 +47,15 @@ export const usePrioridades = () => {
   });
 };
 
+export const useDirecciones = () => {
+  return useQuery({
+    queryKey: ['direcciones'],
+    queryFn: () => ticketService.getDirecciones(),
+    select: (response) => response.data,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
 export const useTecnicos = () => {
   return useQuery({
     queryKey: ['tecnicos'],
@@ -61,6 +70,10 @@ export const useTicketStats = () => {
     queryKey: ['ticketStats'],
     queryFn: () => ticketService.getStats(),
     select: (response) => response.data,
+    onError: (error: any) => {
+      console.error('Error al cargar estadísticas:', error);
+      toast.error(error.response?.data?.message || 'Error al cargar estadísticas');
+    },
   });
 };
 
@@ -93,7 +106,14 @@ export const useCreateTicketWithFormData = () => {
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Error al crear ticket');
+      const errorData = error.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+        errorData.errors.forEach((err: any) => {
+          toast.error(err.message || 'Error de validación');
+        });
+      } else {
+        toast.error(errorData?.message || 'Error al crear ticket');
+      }
     },
   });
 };
@@ -147,7 +167,14 @@ export const useAddComment = () => {
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Error al agregar comentario');
+      const errorData = error.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+        errorData.errors.forEach((err: any) => {
+          toast.error(err.message || 'Error de validación');
+        });
+      } else {
+        toast.error(errorData?.message || 'Error al agregar comentario');
+      }
     },
   });
 };

@@ -25,7 +25,7 @@ export const AdministratorDashboard: React.FC = () => {
         className="p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
         <h3 className="font-bold text-lg mb-2">Configuración</h3>
-        <p className="text-sm">Gestionar categorías y prioridades</p>
+        <p className="text-sm">Gestionar categorías, prioridades y direcciones</p>
       </button>
     </div>
   );

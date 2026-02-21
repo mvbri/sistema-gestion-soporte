@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -125,7 +125,71 @@ export const useDeletePrioridad = () => {
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar prioridad');
+        toast.error(error.response?.data?.message || 'Error al eliminar prioridad');
+    },
+  });
+};
+
+export const useAdminDirecciones = () => {
+  return useQuery({
+    queryKey: ['adminDirecciones'],
+    queryFn: () => adminService.getDirecciones(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateDireccion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateDireccionData) => adminService.createDireccion(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminDirecciones'] });
+        queryClient.invalidateQueries({ queryKey: ['direcciones'] });
+        toast.success('Dirección creada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear dirección');
+    },
+  });
+};
+
+export const useUpdateDireccion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateDireccionData }) =>
+      adminService.updateDireccion(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminDirecciones'] });
+        queryClient.invalidateQueries({ queryKey: ['direcciones'] });
+        toast.success('Dirección actualizada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar dirección');
+    },
+  });
+};
+
+export const useDeleteDireccion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteDireccion(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminDirecciones'] });
+        queryClient.invalidateQueries({ queryKey: ['direcciones'] });
+        toast.success('Dirección eliminada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar dirección');
     },
   });
 };

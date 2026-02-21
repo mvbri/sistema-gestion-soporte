@@ -9,7 +9,7 @@ class Usuario {
         const passwordHash = await bcrypt.hash(password, 10);
         
         const sql = `
-            INSERT INTO usuarios (full_name, email, password, phone, department, role_id)
+            INSERT INTO users (full_name, email, password, phone, department, role_id)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
@@ -28,15 +28,29 @@ class Usuario {
 
     static async findByEmail(email) {
         try {
-            const sql = `
+            let sql = `
                 SELECT u.*, r.name as role_name
-                FROM usuarios u
+                FROM users u
                 JOIN roles r ON u.role_id = r.id
                 WHERE u.email = ?
             `;
             
-            const result = await query(sql, [email]);
-            return result[0] || null;
+            try {
+                const result = await query(sql, [email]);
+                return result[0] || null;
+            } catch (error) {
+                if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
+                    sql = `
+                        SELECT u.*, r.nombre as role_name
+                        FROM users u
+                        JOIN roles r ON u.role_id = r.id
+                        WHERE u.email = ?
+                    `;
+                    const result = await query(sql, [email]);
+                    return result[0] || null;
+                }
+                throw error;
+            }
         } catch (error) {
             console.error('Error en findByEmail:', error);
             console.error('Email buscado:', email);
@@ -45,15 +59,29 @@ class Usuario {
     }
 
     static async findById(id) {
-        const sql = `
+        let sql = `
             SELECT u.*, r.name as role_name
-            FROM usuarios u
+            FROM users u
             JOIN roles r ON u.role_id = r.id
             WHERE u.id = ?
         `;
         
-        const result = await query(sql, [id]);
-        return result[0] || null;
+        try {
+            const result = await query(sql, [id]);
+            return result[0] || null;
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
+                sql = `
+                    SELECT u.*, r.nombre as role_name
+                    FROM users u
+                    JOIN roles r ON u.role_id = r.id
+                    WHERE u.id = ?
+                `;
+                const result = await query(sql, [id]);
+                return result[0] || null;
+            }
+            throw error;
+        }
     }
 
     static async verifyPassword(password, passwordHash) {
@@ -61,19 +89,19 @@ class Usuario {
     }
 
     static async verifyEmail(id) {
-        const sql = 'UPDATE usuarios SET email_verified = TRUE WHERE id = ?';
+        const sql = 'UPDATE users SET email_verified = TRUE WHERE id = ?';
         await query(sql, [id]);
     }
 
     static async updatePassword(id, newPassword) {
         const passwordHash = await bcrypt.hash(newPassword, 10);
-        const sql = 'UPDATE usuarios SET password = ? WHERE id = ?';
+        const sql = 'UPDATE users SET password = ? WHERE id = ?';
         await query(sql, [passwordHash, id]);
     }
 
     static async updateProfile(id, { full_name, phone, department }) {
         const sql = `
-            UPDATE usuarios
+            UPDATE users
             SET full_name = ?, phone = ?, department = ?
             WHERE id = ?
         `;
@@ -89,7 +117,7 @@ class Usuario {
             const answer2Hash = answer2 ? await bcrypt.hash(answer2.toLowerCase().trim(), 10) : null;
 
             const sql = `
-                UPDATE usuarios
+                UPDATE users
                 SET security_question_1 = ?, security_answer_1 = ?,
                     security_question_2 = ?, security_answer_2 = ?
                 WHERE id = ?
@@ -142,13 +170,13 @@ class Usuario {
     }
 
     static async emailExists(email) {
-        const sql = 'SELECT id FROM usuarios WHERE email = ?';
+        const sql = 'SELECT id FROM users WHERE email = ?';
         const result = await query(sql, [email]);
         return result.length > 0;
     }
 
     static async delete(id) {
-        const sql = 'DELETE FROM usuarios WHERE id = ?';
+        const sql = 'DELETE FROM users WHERE id = ?';
         await query(sql, [id]);
     }
 }

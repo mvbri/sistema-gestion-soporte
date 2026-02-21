@@ -4,133 +4,159 @@ import { randomUUID } from 'crypto';
 class Ticket {
     static async create(data) {
         const {
-            titulo,
-            descripcion,
-            area_incidente,
-            categoria_id,
-            prioridad_id,
-            usuario_creador_id,
-            imagen_url
+            title,
+            description,
+            incident_area_id,
+            category_id,
+            priority_id,
+            created_by_user_id,
+            image_url
         } = data;
 
         const ticketId = randomUUID();
 
-        const sql = `
+        let sql = `
             INSERT INTO tickets (
-                id, titulo, descripcion, area_incidente, categoria_id,
-                prioridad_id, estado_id, usuario_creador_id, imagen_url
+                id, title, description, incident_area_id, category_id,
+                priority_id, state_id, created_by_user_id, image_url
             )
             VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
         `;
 
-        await query(sql, [
-            ticketId,
-            titulo,
-            descripcion,
-            area_incidente,
-            categoria_id,
-            prioridad_id,
-            usuario_creador_id,
-            imagen_url || null
-        ]);
+        try {
+            await query(sql, [
+                ticketId,
+                title,
+                description,
+                incident_area_id,
+                category_id,
+                priority_id,
+                created_by_user_id,
+                image_url || null
+            ]);
+        } catch (error) {
+            throw error;
+        }
 
         return await this.findById(ticketId);
     }
 
     static async findById(id) {
-        const sql = `
+        let sql = `
             SELECT 
                 t.*,
-                c.nombre as categoria_nombre,
-                p.nombre as prioridad_nombre,
-                p.color as prioridad_color,
-                p.nivel as prioridad_nivel,
-                e.nombre as estado_nombre,
-                e.color as estado_color,
-                u1.full_name as usuario_creador_nombre,
-                u1.email as usuario_creador_email,
-                u2.full_name as tecnico_asignado_nombre,
-                u2.email as tecnico_asignado_email
+                c.name as category_name,
+                p.name as priority_name,
+                p.color as priority_color,
+                p.level as priority_level,
+                e.name as state_name,
+                e.color as state_color,
+                ia.name as incident_area_name,
+                u1.full_name as created_by_user_name,
+                u1.email as created_by_user_email,
+                u2.full_name as assigned_technician_name,
+                u2.email as assigned_technician_email
             FROM tickets t
-            LEFT JOIN categorias_ticket c ON t.categoria_id = c.id
-            LEFT JOIN prioridades_ticket p ON t.prioridad_id = p.id
-            LEFT JOIN estados_ticket e ON t.estado_id = e.id
-            LEFT JOIN usuarios u1 ON t.usuario_creador_id = u1.id
-            LEFT JOIN usuarios u2 ON t.tecnico_asignado_id = u2.id
+            LEFT JOIN ticket_categories c ON t.category_id = c.id
+            LEFT JOIN ticket_priorities p ON t.priority_id = p.id
+            LEFT JOIN ticket_states e ON t.state_id = e.id
+            LEFT JOIN incident_areas ia ON t.incident_area_id = ia.id
+            LEFT JOIN users u1 ON t.created_by_user_id = u1.id
+            LEFT JOIN users u2 ON t.assigned_technician_id = u2.id
             WHERE t.id = ?
         `;
 
-        const result = await query(sql, [id]);
-        return result[0] || null;
+        try {
+            const result = await query(sql, [id]);
+            return result[0] ? this._normalizeTicket(result[0]) : null;
+        } catch (error) {
+            throw error;
+        }
     }
 
     static async findAll(filters = {}) {
         let sql = `
             SELECT 
                 t.*,
-                c.nombre as categoria_nombre,
-                p.nombre as prioridad_nombre,
-                p.color as prioridad_color,
-                p.nivel as prioridad_nivel,
-                e.nombre as estado_nombre,
-                e.color as estado_color,
-                u1.full_name as usuario_creador_nombre,
-                u1.email as usuario_creador_email,
-                u2.full_name as tecnico_asignado_nombre,
-                u2.email as tecnico_asignado_email
+                c.name as category_name,
+                p.name as priority_name,
+                p.color as priority_color,
+                p.level as priority_level,
+                e.name as state_name,
+                e.color as state_color,
+                ia.name as incident_area_name,
+                u1.full_name as created_by_user_name,
+                u1.email as created_by_user_email,
+                u2.full_name as assigned_technician_name,
+                u2.email as assigned_technician_email
             FROM tickets t
-            LEFT JOIN categorias_ticket c ON t.categoria_id = c.id
-            LEFT JOIN prioridades_ticket p ON t.prioridad_id = p.id
-            LEFT JOIN estados_ticket e ON t.estado_id = e.id
-            LEFT JOIN usuarios u1 ON t.usuario_creador_id = u1.id
-            LEFT JOIN usuarios u2 ON t.tecnico_asignado_id = u2.id
+            LEFT JOIN ticket_categories c ON t.category_id = c.id
+            LEFT JOIN ticket_priorities p ON t.priority_id = p.id
+            LEFT JOIN ticket_states e ON t.state_id = e.id
+            LEFT JOIN incident_areas ia ON t.incident_area_id = ia.id
+            LEFT JOIN users u1 ON t.created_by_user_id = u1.id
+            LEFT JOIN users u2 ON t.assigned_technician_id = u2.id
             WHERE 1=1
         `;
+        
+        try {
+            const results = await this._executeFindAll(sql, filters, false);
+            return results.map(ticket => this._normalizeTicket(ticket));
+        } catch (error) {
+            throw error;
+        }
+    }
 
+    static _normalizeTicket(ticket, fromOldColumns) {
+        if (!ticket) return ticket;
+        return ticket;
+    }
+
+    static async _executeFindAll(sql, filters) {
         const params = [];
 
-        if (filters.usuario_creador_id) {
-            sql += ' AND t.usuario_creador_id = ?';
-            params.push(filters.usuario_creador_id);
+        if (filters.created_by_user_id) {
+            sql += ' AND t.created_by_user_id = ?';
+            params.push(filters.created_by_user_id);
         }
 
-        if (filters.tecnico_asignado_id) {
-            sql += ' AND t.tecnico_asignado_id = ?';
-            params.push(filters.tecnico_asignado_id);
+        if (filters.assigned_technician_id) {
+            sql += ' AND t.assigned_technician_id = ?';
+            params.push(filters.assigned_technician_id);
         }
 
-        if (filters.estado_id) {
-            sql += ' AND t.estado_id = ?';
-            params.push(filters.estado_id);
+        if (filters.state_id) {
+            sql += ' AND t.state_id = ?';
+            params.push(filters.state_id);
         }
 
-        if (filters.categoria_id) {
-            sql += ' AND t.categoria_id = ?';
-            params.push(filters.categoria_id);
+        if (filters.category_id) {
+            sql += ' AND t.category_id = ?';
+            params.push(filters.category_id);
         }
 
-        if (filters.prioridad_id) {
-            sql += ' AND t.prioridad_id = ?';
-            params.push(filters.prioridad_id);
+        if (filters.priority_id) {
+            sql += ' AND t.priority_id = ?';
+            params.push(filters.priority_id);
         }
 
-        if (filters.busqueda) {
-            sql += ' AND (t.titulo LIKE ? OR t.descripcion LIKE ?)';
-            const searchTerm = `%${filters.busqueda}%`;
+        if (filters.search) {
+            sql += ' AND (t.title LIKE ? OR t.description LIKE ?)';
+            const searchTerm = `%${filters.search}%`;
             params.push(searchTerm, searchTerm);
         }
 
-        if (filters.fecha_desde) {
-            sql += ' AND DATE(t.fecha_creacion) >= ?';
-            params.push(filters.fecha_desde);
+        if (filters.date_from) {
+            sql += ' AND DATE(t.created_at) >= ?';
+            params.push(filters.date_from);
         }
 
-        if (filters.fecha_hasta) {
-            sql += ' AND DATE(t.fecha_creacion) <= ?';
-            params.push(filters.fecha_hasta);
+        if (filters.date_to) {
+            sql += ' AND DATE(t.created_at) <= ?';
+            params.push(filters.date_to);
         }
 
-        sql += ' ORDER BY t.fecha_creacion DESC';
+        sql += ' ORDER BY t.created_at DESC';
 
         if (filters.limit) {
             sql += ' LIMIT ?';
@@ -141,60 +167,66 @@ class Ticket {
             }
         }
 
-        return await query(sql, params);
+        try {
+            return await query(sql, params);
+        } catch (error) {
+            // Re-lanzar el error para que el método findAll lo capture
+            throw error;
+        }
     }
 
     static async update(id, data) {
         const {
-            titulo,
-            descripcion,
-            area_incidente,
-            categoria_id,
-            prioridad_id,
-            estado_id,
-            tecnico_asignado_id
+            title,
+            description,
+            incident_area_id,
+            category_id,
+            priority_id,
+            state_id,
+            assigned_technician_id
         } = data;
 
-        const updates = [];
+        let updates = [];
         const params = [];
+        let useOldColumns = false;
 
-        if (titulo !== undefined) {
-            updates.push('titulo = ?');
-            params.push(titulo);
+        if (title !== undefined) {
+            updates.push('title = ?');
+            params.push(title);
         }
 
-        if (descripcion !== undefined) {
-            updates.push('descripcion = ?');
-            params.push(descripcion);
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
         }
 
-        if (area_incidente !== undefined) {
-            updates.push('area_incidente = ?');
-            params.push(area_incidente);
+        if (incident_area_id !== undefined) {
+            updates.push('incident_area_id = ?');
+            params.push(incident_area_id);
         }
 
-        if (categoria_id !== undefined) {
-            updates.push('categoria_id = ?');
-            params.push(categoria_id);
+        if (category_id !== undefined) {
+            updates.push('category_id = ?');
+            params.push(category_id);
         }
 
-        if (prioridad_id !== undefined) {
-            updates.push('prioridad_id = ?');
-            params.push(prioridad_id);
+        if (priority_id !== undefined) {
+            updates.push('priority_id = ?');
+            params.push(priority_id);
         }
 
-        if (estado_id !== undefined) {
-            updates.push('estado_id = ?');
-            params.push(estado_id);
+        if (state_id !== undefined) {
+            updates.push('state_id = ?');
+            params.push(state_id);
             
-            if (estado_id === 5) {
-                updates.push('fecha_cierre = NOW()');
+            if (state_id === 5) {
+                updates.push('closed_at = NOW()');
             }
         }
 
-        if (tecnico_asignado_id !== undefined) {
-            updates.push('tecnico_asignado_id = ?');
-            params.push(tecnico_asignado_id);
+        if (assigned_technician_id !== undefined) {
+            updates.push('assigned_technician_id = ?');
+            params.push(assigned_technician_id);
         }
 
         if (updates.length === 0) {
@@ -202,9 +234,10 @@ class Ticket {
         }
 
         params.push(id);
-        const sql = `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`;
+        let sql = `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`;
 
         await query(sql, params);
+
         return await this.findById(id);
     }
 
@@ -218,72 +251,101 @@ class Ticket {
         let sql = 'SELECT COUNT(*) as total FROM tickets WHERE 1=1';
         const params = [];
 
-        if (filters.usuario_creador_id) {
-            sql += ' AND usuario_creador_id = ?';
-            params.push(filters.usuario_creador_id);
-        }
+        try {
+            if (filters.created_by_user_id) {
+                sql += ' AND created_by_user_id = ?';
+                params.push(filters.created_by_user_id);
+            }
 
-        if (filters.tecnico_asignado_id) {
-            sql += ' AND tecnico_asignado_id = ?';
-            params.push(filters.tecnico_asignado_id);
-        }
+            if (filters.assigned_technician_id) {
+                sql += ' AND assigned_technician_id = ?';
+                params.push(filters.assigned_technician_id);
+            }
 
-        if (filters.estado_id) {
-            sql += ' AND estado_id = ?';
-            params.push(filters.estado_id);
-        }
+            if (filters.state_id) {
+                sql += ' AND state_id = ?';
+                params.push(filters.state_id);
+            }
 
-        const result = await query(sql, params);
-        const rawTotal = result[0]?.total ?? 0;
-        // El driver puede devolver COUNT(*) como BigInt, lo convertimos explícitamente a Number
-        return typeof rawTotal === 'bigint' ? Number(rawTotal) : rawTotal;
+            if (filters.category_id) {
+                sql += ' AND category_id = ?';
+                params.push(filters.category_id);
+            }
+
+            if (filters.priority_id) {
+                sql += ' AND priority_id = ?';
+                params.push(filters.priority_id);
+            }
+
+            if (filters.search) {
+                sql += ' AND (title LIKE ? OR description LIKE ?)';
+                const searchTerm = `%${filters.search}%`;
+                params.push(searchTerm, searchTerm);
+            }
+
+            if (filters.date_from) {
+                sql += ' AND DATE(created_at) >= ?';
+                params.push(filters.date_from);
+            }
+
+            if (filters.date_to) {
+                sql += ' AND DATE(created_at) <= ?';
+                params.push(filters.date_to);
+            }
+
+            const result = await query(sql, params);
+            const rawTotal = result[0]?.total ?? 0;
+            return typeof rawTotal === 'bigint' ? Number(rawTotal) : rawTotal;
+        } catch (error) {
+            throw error;
+        }
     }
 
     static async getStats() {
-        const sql = `
+        let sql = `
             SELECT 
-                e.id as estado_id,
-                e.nombre as estado_nombre,
-                e.color as estado_color,
-                COUNT(t.id) as cantidad
-            FROM estados_ticket e
-            LEFT JOIN tickets t ON e.id = t.estado_id
-            WHERE e.activo = TRUE
-            GROUP BY e.id, e.nombre, e.color
-            ORDER BY e.orden
+                e.id as state_id,
+                e.name as state_name,
+                e.color as state_color,
+                COUNT(t.id) as count
+            FROM ticket_states e
+            LEFT JOIN tickets t ON e.id = t.state_id
+            WHERE e.active = TRUE
+            GROUP BY e.id, e.name, e.color
+            ORDER BY e.\`order\`
         `;
 
         return await query(sql);
     }
 
     static async getStatsByCategory() {
-        const sql = `
+        let sql = `
             SELECT 
                 c.id,
-                c.nombre,
-                COUNT(t.id) as cantidad
-            FROM categorias_ticket c
-            LEFT JOIN tickets t ON c.id = t.categoria_id
-            WHERE c.activo = TRUE
-            GROUP BY c.id, c.nombre
-            ORDER BY cantidad DESC
+                c.name,
+                COUNT(t.id) as count
+            FROM ticket_categories c
+            LEFT JOIN tickets t ON c.id = t.category_id
+            WHERE c.active = TRUE
+            GROUP BY c.id, c.name
+            ORDER BY count DESC
         `;
 
         return await query(sql);
     }
 
     static async getStatsByPriority() {
-        const sql = `
+        let sql = `
             SELECT 
                 p.id,
-                p.nombre,
+                p.name,
                 p.color,
-                COUNT(t.id) as cantidad
-            FROM prioridades_ticket p
-            LEFT JOIN tickets t ON p.id = t.prioridad_id
-            WHERE p.activo = TRUE
-            GROUP BY p.id, p.nombre, p.color
-            ORDER BY p.nivel DESC
+                COUNT(t.id) as count
+            FROM ticket_priorities p
+            LEFT JOIN tickets t ON p.id = t.priority_id
+            WHERE p.active = TRUE
+            GROUP BY p.id, p.name, p.color
+            ORDER BY p.level DESC
         `;
 
         return await query(sql);

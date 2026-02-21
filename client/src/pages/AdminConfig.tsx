@@ -6,38 +6,49 @@ import { PageWrapper } from '../components/PageWrapper';
 import {
   useAdminCategorias,
   useAdminPrioridades,
+  useAdminDirecciones,
   useCreateCategoria,
   useUpdateCategoria,
   useDeleteCategoria,
   useCreatePrioridad,
   useUpdatePrioridad,
   useDeletePrioridad,
+  useCreateDireccion,
+  useUpdateDireccion,
+  useDeleteDireccion,
 } from '../hooks/useAdmin';
-import type { CategoriaTicket, PrioridadTicket } from '../types';
+import type { CategoriaTicket, PrioridadTicket, DireccionTicket } from '../types';
 
 export const AdminConfig: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades'>('categorias');
+  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'direcciones'>('categorias');
   const [editingCategoria, setEditingCategoria] = useState<CategoriaTicket | null>(null);
   const [editingPrioridad, setEditingPrioridad] = useState<PrioridadTicket | null>(null);
+  const [editingDireccion, setEditingDireccion] = useState<DireccionTicket | null>(null);
   const [showCategoriaForm, setShowCategoriaForm] = useState(false);
   const [showPrioridadForm, setShowPrioridadForm] = useState(false);
+  const [showDireccionForm, setShowDireccionForm] = useState(false);
   const [prioridadNivel, setPrioridadNivel] = useState<string>('');
   const [prioridadColor, setPrioridadColor] = useState<string>('');
   const [categoriaToDelete, setCategoriaToDelete] = useState<CategoriaTicket | null>(null);
   const [prioridadToDelete, setPrioridadToDelete] = useState<PrioridadTicket | null>(null);
+  const [direccionToDelete, setDireccionToDelete] = useState<DireccionTicket | null>(null);
 
   const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
   const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
+  const { data: direcciones = [], isLoading: loadingDirecciones } = useAdminDirecciones();
   const createCategoriaMutation = useCreateCategoria();
   const updateCategoriaMutation = useUpdateCategoria();
   const deleteCategoriaMutation = useDeleteCategoria();
   const createPrioridadMutation = useCreatePrioridad();
   const updatePrioridadMutation = useUpdatePrioridad();
   const deletePrioridadMutation = useDeletePrioridad();
+  const createDireccionMutation = useCreateDireccion();
+  const updateDireccionMutation = useUpdateDireccion();
+  const deleteDireccionMutation = useDeleteDireccion();
 
-  const loading = loadingCategorias || loadingPrioridades;
+  const loading = loadingCategorias || loadingPrioridades || loadingDirecciones;
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -48,11 +59,11 @@ export const AdminConfig: React.FC = () => {
   const handleCreateCategoria = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const nombre = formData.get('nombre') as string;
-    const descripcion = formData.get('descripcion') as string;
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
 
     createCategoriaMutation.mutate(
-      { nombre, descripcion },
+      { name, description },
       {
         onSuccess: () => {
           setShowCategoriaForm(false);
@@ -66,14 +77,14 @@ export const AdminConfig: React.FC = () => {
     if (!editingCategoria) return;
 
     const formData = new FormData(e.currentTarget);
-    const nombre = formData.get('nombre') as string;
-    const descripcion = formData.get('descripcion') as string;
-    const activo = formData.get('activo') === 'on';
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const active = formData.get('active') === 'on';
 
     updateCategoriaMutation.mutate(
       {
         id: editingCategoria.id,
-        data: { nombre, descripcion, activo },
+        data: { name, description, active },
       },
       {
         onSuccess: () => {
@@ -113,13 +124,13 @@ export const AdminConfig: React.FC = () => {
   const handleCreatePrioridad = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const nombre = formData.get('nombre') as string;
-    const nivel = parseInt(formData.get('nivel') as string);
-    const color = prioridadColor || getColorByNivel(nivel.toString());
-    const descripcion = formData.get('descripcion') as string;
+    const name = formData.get('name') as string;
+    const level = parseInt(formData.get('level') as string);
+    const color = prioridadColor || getColorByNivel(level.toString());
+    const description = formData.get('description') as string;
 
     createPrioridadMutation.mutate(
-      { nombre, nivel, color, descripcion },
+      { name, level, color, description },
       {
         onSuccess: () => {
           setShowPrioridadForm(false);
@@ -135,16 +146,16 @@ export const AdminConfig: React.FC = () => {
     if (!editingPrioridad) return;
 
     const formData = new FormData(e.currentTarget);
-    const nombre = formData.get('nombre') as string;
-    const nivel = parseInt(formData.get('nivel') as string);
-    const color = prioridadColor || getColorByNivel(nivel.toString());
-    const descripcion = formData.get('descripcion') as string;
-    const activo = formData.get('activo') === 'on';
+    const name = formData.get('name') as string;
+    const level = parseInt(formData.get('level') as string);
+    const color = prioridadColor || getColorByNivel(level.toString());
+    const description = formData.get('description') as string;
+    const active = formData.get('active') === 'on';
 
     updatePrioridadMutation.mutate(
       {
         id: editingPrioridad.id,
-        data: { nombre, nivel, color, descripcion, activo },
+        data: { name, level, color, description, active },
       },
       {
         onSuccess: () => {
@@ -161,6 +172,53 @@ export const AdminConfig: React.FC = () => {
     deletePrioridadMutation.mutate(prioridadToDelete.id, {
       onSuccess: () => {
         setPrioridadToDelete(null);
+      },
+    });
+  };
+
+  const handleCreateDireccion = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+
+    createDireccionMutation.mutate(
+      { name, description },
+      {
+        onSuccess: () => {
+          setShowDireccionForm(false);
+        },
+      }
+    );
+  };
+
+  const handleUpdateDireccion = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingDireccion) return;
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const active = formData.get('active') === 'on';
+
+    updateDireccionMutation.mutate(
+      {
+        id: editingDireccion.id,
+        data: { name, description, active },
+      },
+      {
+        onSuccess: () => {
+          setEditingDireccion(null);
+        },
+      }
+    );
+  };
+
+  const handleDeleteDireccion = () => {
+    if (!direccionToDelete) return;
+    deleteDireccionMutation.mutate(direccionToDelete.id, {
+      onSuccess: () => {
+        setDireccionToDelete(null);
       },
     });
   };
@@ -193,7 +251,7 @@ export const AdminConfig: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Configuración de Administración</h1>
-          <p className="text-gray-600 mt-2">Gestiona categorías y prioridades del sistema</p>
+          <p className="text-gray-600 mt-2">Gestiona categorías, prioridades y direcciones del sistema</p>
         </div>
 
         <div className="bg-white shadow rounded-lg">
@@ -218,6 +276,16 @@ export const AdminConfig: React.FC = () => {
                 }`}
               >
                 Prioridades
+              </button>
+              <button
+                onClick={() => setActiveTab('direcciones')}
+                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'direcciones'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                }`}
+              >
+                Direcciones
               </button>
             </nav>
           </div>
@@ -262,7 +330,7 @@ export const AdminConfig: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          name="nombre"
+                          name="name"
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -272,7 +340,7 @@ export const AdminConfig: React.FC = () => {
                           Descripción
                         </label>
                         <textarea
-                          name="descripcion"
+                          name="description"
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -306,8 +374,8 @@ export const AdminConfig: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          name="nombre"
-                          defaultValue={editingCategoria.nombre}
+                          name="name"
+                          defaultValue={editingCategoria.name}
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -317,8 +385,8 @@ export const AdminConfig: React.FC = () => {
                           Descripción
                         </label>
                         <textarea
-                          name="descripcion"
-                          defaultValue={editingCategoria.descripcion || ''}
+                          name="description"
+                          defaultValue={editingCategoria.description || ''}
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -327,8 +395,8 @@ export const AdminConfig: React.FC = () => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            name="activo"
-                            defaultChecked={editingCategoria.activo}
+                            name="active"
+                            defaultChecked={editingCategoria.active}
                             className="mr-2"
                           />
                           <span className="text-sm text-gray-700">Activa</span>
@@ -358,22 +426,22 @@ export const AdminConfig: React.FC = () => {
                     <div
                       key={categoria.id}
                       className={`p-4 border rounded-lg flex justify-between items-center ${
-                        !categoria.activo ? 'bg-gray-100 opacity-60' : 'bg-white'
+                        !categoria.active ? 'bg-gray-100 opacity-60' : 'bg-white'
                       }`}
                     >
                       <div>
-                        <h3 className="font-medium">{categoria.nombre}</h3>
-                        {categoria.descripcion && (
-                          <p className="text-sm text-gray-500">{categoria.descripcion}</p>
+                        <h3 className="font-medium">{categoria.name}</h3>
+                        {categoria.description && (
+                          <p className="text-sm text-gray-500">{categoria.description}</p>
                         )}
                         <span
                           className={`text-xs px-2 py-1 rounded ${
-                            categoria.activo
+                            categoria.active
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {categoria.activo ? 'Activa' : 'Inactiva'}
+                          {categoria.active ? 'Activa' : 'Inactiva'}
                         </span>
                       </div>
                       <div className="flex space-x-2">
@@ -468,7 +536,7 @@ export const AdminConfig: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          name="nombre"
+                          name="name"
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -478,7 +546,7 @@ export const AdminConfig: React.FC = () => {
                           Nivel (orden numérico) <span className="text-red-500">*</span>
                         </label>
                         <select
-                          name="nivel"
+                          name="level"
                           required
                           value={prioridadNivel}
                           onChange={(e) => handleNivelChange(e.target.value)}
@@ -520,7 +588,7 @@ export const AdminConfig: React.FC = () => {
                           Descripción
                         </label>
                         <textarea
-                          name="descripcion"
+                          name="description"
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -554,8 +622,8 @@ export const AdminConfig: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          name="nombre"
-                          defaultValue={editingPrioridad.nombre}
+                          name="name"
+                          defaultValue={editingPrioridad.name}
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -565,8 +633,8 @@ export const AdminConfig: React.FC = () => {
                           Nivel (orden numérico) <span className="text-red-500">*</span>
                         </label>
                         <select
-                          name="nivel"
-                          defaultValue={editingPrioridad.nivel.toString()}
+                          name="level"
+                          defaultValue={editingPrioridad.level.toString()}
                           required
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
@@ -595,8 +663,8 @@ export const AdminConfig: React.FC = () => {
                           Descripción
                         </label>
                         <textarea
-                          name="descripcion"
-                          defaultValue={editingPrioridad.descripcion || ''}
+                          name="description"
+                          defaultValue={editingPrioridad.description || ''}
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
@@ -605,8 +673,8 @@ export const AdminConfig: React.FC = () => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            name="activo"
-                            defaultChecked={editingPrioridad.activo}
+                            name="active"
+                            defaultChecked={editingPrioridad.active}
                             className="mr-2"
                           />
                           <span className="text-sm text-gray-700">Activa</span>
@@ -636,26 +704,26 @@ export const AdminConfig: React.FC = () => {
                     <div
                       key={prioridad.id}
                       className={`p-4 border rounded-lg flex justify-between items-center ${
-                        !prioridad.activo ? 'bg-gray-100 opacity-60' : 'bg-white'
+                        !prioridad.active ? 'bg-gray-100 opacity-60' : 'bg-white'
                       }`}
                     >
                       <div className="flex items-center space-x-4">
                         <div>
-                          <h3 className="font-medium">{prioridad.nombre}</h3>
-                          {prioridad.descripcion && (
-                            <p className="text-sm text-gray-500">{prioridad.descripcion}</p>
+                          <h3 className="font-medium">{prioridad.name}</h3>
+                          {prioridad.description && (
+                            <p className="text-sm text-gray-500">{prioridad.description}</p>
                           )}
                           <div className="flex items-center space-x-2 mt-2">
                             <span className={`text-xs px-2 py-1 rounded ${prioridad.color} text-gray-800`}>
-                              {prioridad.nombre}
+                              {prioridad.name}
                             </span>
-                            <span className="text-xs text-gray-500">Nivel: {prioridad.nivel}</span>
+                            <span className="text-xs text-gray-500">Nivel: {prioridad.level}</span>
                             <span
                               className={`text-xs px-2 py-1 rounded ${
-                                prioridad.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                prioridad.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}
                             >
-                              {prioridad.activo ? 'Activa' : 'Inactiva'}
+                              {prioridad.active ? 'Activa' : 'Inactiva'}
                             </span>
                           </div>
                         </div>
@@ -665,7 +733,7 @@ export const AdminConfig: React.FC = () => {
                           onClick={() => {
                             setEditingPrioridad(prioridad);
                             setShowPrioridadForm(false);
-                            setPrioridadNivel(prioridad.nivel.toString());
+                            setPrioridadNivel(prioridad.level.toString());
                             setPrioridadColor(prioridad.color);
                           }}
                           className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
@@ -706,6 +774,210 @@ export const AdminConfig: React.FC = () => {
                             />
                           </svg>
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'direcciones' && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Direcciones</h2>
+                  <button
+                    onClick={() => {
+                      setShowDireccionForm(true);
+                      setEditingDireccion(null);
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    Nueva Dirección
+                  </button>
+                </div>
+
+                {showDireccionForm && !editingDireccion && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Crear Dirección</h3>
+                    <form onSubmit={handleCreateDireccion} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Descripción
+                        </label>
+                        <textarea
+                          name="description"
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Crear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowDireccionForm(false)}
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {editingDireccion && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Editar Dirección</h3>
+                    <form onSubmit={handleUpdateDireccion} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          defaultValue={editingDireccion.name}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Descripción
+                        </label>
+                        <textarea
+                          name="description"
+                          rows={3}
+                          defaultValue={editingDireccion.description || ''}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="active"
+                          defaultChecked={editingDireccion.active}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 block text-sm text-gray-700">Activo</label>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Actualizar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingDireccion(null)}
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {direcciones.map((direccion) => (
+                    <div
+                      key={direccion.id}
+                      className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">{direccion.name}</h3>
+                          {direccion.description && (
+                            <p className="text-sm text-gray-600 mt-1">{direccion.description}</p>
+                          )}
+                          <div className="mt-2 flex items-center gap-2">
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded ${
+                                direccion.active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {direccion.active ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingDireccion(direccion);
+                              setShowDireccionForm(false);
+                            }}
+                            className="group p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                            title="Editar"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => setDireccionToDelete(direccion)}
+                            className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                            title="Eliminar"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -760,6 +1032,33 @@ export const AdminConfig: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDeletePrioridad}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {direccionToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+              <p className="text-gray-700 mb-6">
+                ¿Estás seguro de que deseas eliminar la dirección {direccionToDelete.nombre}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setDireccionToDelete(null)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteDireccion}
                   className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                 >
                   Eliminar

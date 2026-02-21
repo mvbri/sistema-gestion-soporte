@@ -65,8 +65,8 @@ export const verifyEmail = async (req, res) => {
             const sql = `
                 SELECT t.id, t.user_id, t.token, t.type, t.expires_at, t.used, t.created_at,
                        u.email, u.full_name, u.email_verified
-                FROM tokens_verificacion t
-                JOIN usuarios u ON t.user_id = u.id
+                FROM verification_tokens t
+                JOIN users u ON t.user_id = u.id
                 WHERE t.token = ? AND t.type = ?
             `;
             const result = await query(sql, [token, 'email_verification']);
@@ -149,7 +149,7 @@ export const verifyEmail = async (req, res) => {
         // Procedemos a verificar el email del usuario
         console.log('✅ Token válido para usuario ID:', tokenData.user_id);
         
-        // Actualizar el campo email_verified a TRUE en la tabla usuarios
+        // Actualizar el campo email_verified a TRUE en la tabla users
         // Esto permite que el usuario pueda hacer login
         await Usuario.verifyEmail(tokenData.user_id);
         

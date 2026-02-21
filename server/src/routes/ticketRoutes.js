@@ -9,6 +9,7 @@ import {
     getEstados,
     getCategorias,
     getPrioridades,
+    getDirecciones,
     getTecnicos,
     getStats,
     startProgress,
@@ -29,6 +30,7 @@ router.use(authenticate);
 router.get('/estados', getEstados);
 router.get('/categorias', getCategorias);
 router.get('/prioridades', getPrioridades);
+router.get('/direcciones', getDirecciones);
 router.get('/tecnicos', getTecnicos);
 router.get('/stats', getStats);
 

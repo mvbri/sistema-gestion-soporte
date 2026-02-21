@@ -5,10 +5,22 @@ import { body, validationResult } from 'express-validator';
 export const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        const formattedErrors = errors.array().map(error => ({
+            type: 'field',
+            field: error.path,
+            value: error.value || '',
+            message: error.msg
+        }));
+
+        const errorMessages = formattedErrors.map(err => err.message);
+        const mainMessage = formattedErrors.length === 1 
+            ? formattedErrors[0].message 
+            : `Se encontraron ${formattedErrors.length} errores de validación`;
+
         return res.status(400).json({
             success: false,
-            message: 'Errores de validación',
-            errors: errors.array()
+            message: mainMessage,
+            errors: formattedErrors
         });
     }
     next();
@@ -120,62 +132,60 @@ export const validateUpdateProfile = [
 
 // Validaciones para crear ticket (sin validar imagen_url si hay archivo)
 export const validateCreateTicket = [
-    body('titulo')
+    body('title')
         .trim()
-        .notEmpty().withMessage('El título es requerido')
-        .isLength({ min: 5, max: 255 }).withMessage('El título debe tener entre 5 y 255 caracteres'),
+        .notEmpty().withMessage('Por favor, ingresa un título para el ticket')
+        .isLength({ min: 5, max: 255 }).withMessage('El título debe tener entre 5 y 255 caracteres. Actualmente tiene menos de 5 caracteres'),
     
-    body('descripcion')
+    body('description')
         .trim()
-        .notEmpty().withMessage('La descripción es requerida')
-        .isLength({ min: 20 }).withMessage('La descripción debe tener al menos 20 caracteres'),
+        .notEmpty().withMessage('Por favor, proporciona una descripción detallada del problema')
+        .isLength({ min: 20 }).withMessage('La descripción debe tener al menos 20 caracteres para poder entender mejor el problema'),
     
-    body('area_incidente')
-        .trim()
-        .notEmpty().withMessage('El área del incidente es requerida')
-        .isLength({ max: 255 }).withMessage('El área del incidente no puede exceder 255 caracteres'),
+    body('incident_area_id')
+        .notEmpty().withMessage('Debes seleccionar el área del incidente')
+        .isInt({ min: 1 }).withMessage('El área del incidente seleccionada no es válida'),
     
-    body('categoria_id')
-        .notEmpty().withMessage('La categoría es requerida')
-        .isInt({ min: 1 }).withMessage('La categoría debe ser un número válido'),
+    body('category_id')
+        .notEmpty().withMessage('Debes seleccionar una categoría para el ticket')
+        .isInt({ min: 1 }).withMessage('La categoría seleccionada no es válida'),
     
-    body('prioridad_id')
-        .notEmpty().withMessage('La prioridad es requerida')
-        .isInt({ min: 1 }).withMessage('La prioridad debe ser un número válido'),
+    body('priority_id')
+        .notEmpty().withMessage('Debes seleccionar la prioridad del ticket')
+        .isInt({ min: 1 }).withMessage('La prioridad seleccionada no es válida'),
     
     handleValidationErrors
 ];
 
 // Validaciones para actualizar ticket
 export const validateUpdateTicket = [
-    body('titulo')
+    body('title')
         .optional()
         .trim()
         .isLength({ min: 5, max: 255 }).withMessage('El título debe tener entre 5 y 255 caracteres'),
     
-    body('descripcion')
+    body('description')
         .optional()
         .trim()
         .isLength({ min: 20 }).withMessage('La descripción debe tener al menos 20 caracteres'),
     
-    body('area_incidente')
+    body('incident_area_id')
         .optional()
-        .trim()
-        .isLength({ max: 255 }).withMessage('El área del incidente no puede exceder 255 caracteres'),
+        .isInt({ min: 1 }).withMessage('El área del incidente debe ser un número válido'),
     
-    body('categoria_id')
+    body('category_id')
         .optional()
         .isInt({ min: 1 }).withMessage('La categoría debe ser un número válido'),
     
-    body('prioridad_id')
+    body('priority_id')
         .optional()
         .isInt({ min: 1 }).withMessage('La prioridad debe ser un número válido'),
     
-    body('estado_id')
+    body('state_id')
         .optional()
         .isInt({ min: 1 }).withMessage('El estado debe ser un número válido'),
     
-    body('tecnico_asignado_id')
+    body('assigned_technician_id')
         .optional()
         .isInt({ min: 1 }).withMessage('El técnico asignado debe ser un número válido'),
     
@@ -184,10 +194,10 @@ export const validateUpdateTicket = [
 
 // Validaciones para comentarios
 export const validateComment = [
-    body('contenido')
+    body('content')
         .trim()
-        .notEmpty().withMessage('El contenido del comentario es requerido')
-        .isLength({ min: 5 }).withMessage('El comentario debe tener al menos 5 caracteres'),
+        .notEmpty().withMessage('Por favor, escribe un comentario antes de enviarlo')
+        .isLength({ min: 5 }).withMessage('El comentario debe tener al menos 5 caracteres para ser válido'),
     
     handleValidationErrors
 ];

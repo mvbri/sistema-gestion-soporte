@@ -108,9 +108,7 @@ export const securityQuestionsSchema = z.object({
   answer2: z
     .string()
     .min(3, 'La respuesta debe tener al menos 3 caracteres'),
-});
-
-export const verifySecurityAnswersSchema = z.object({
+});export const verifySecurityAnswersSchema = z.object({
   email: z
     .string()
     .min(1, 'El email es requerido')

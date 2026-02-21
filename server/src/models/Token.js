@@ -7,7 +7,7 @@ class Token {
         expiresAt.setHours(expiresAt.getHours() + expirationHours);
         
         const sql = `
-            INSERT INTO tokens_verificacion (user_id, token, type, expires_at)
+            INSERT INTO verification_tokens (user_id, token, type, expires_at)
             VALUES (?, ?, ?, ?)
         `;
         
@@ -19,8 +19,8 @@ class Token {
         const sql = `
             SELECT t.id, t.user_id, t.token, t.type, t.expires_at, t.used, t.created_at,
                    u.email, u.full_name, u.email_verified
-            FROM tokens_verificacion t
-            JOIN usuarios u ON t.user_id = u.id
+            FROM verification_tokens t
+            JOIN users u ON t.user_id = u.id
             WHERE t.token = ? 
             AND t.type = ?
             AND t.used = FALSE
@@ -38,17 +38,17 @@ class Token {
     }
 
     static async markAsUsed(token) {
-        const sql = 'UPDATE tokens_verificacion SET used = TRUE WHERE token = ?';
+        const sql = 'UPDATE verification_tokens SET used = TRUE WHERE token = ?';
         await query(sql, [token]);
     }
 
     static async deleteExpired() {
-        const sql = 'DELETE FROM tokens_verificacion WHERE expires_at < NOW()';
+        const sql = 'DELETE FROM verification_tokens WHERE expires_at < NOW()';
         await query(sql);
     }
 
     static async deleteByUser(userId, type) {
-        const sql = 'DELETE FROM tokens_verificacion WHERE user_id = ? AND type = ?';
+        const sql = 'DELETE FROM verification_tokens WHERE user_id = ? AND type = ?';
         await query(sql, [userId, type]);
     }
 }

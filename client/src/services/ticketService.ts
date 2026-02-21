@@ -1,10 +1,10 @@
 import api from '../utils/api';
-import type { ApiResponse, Ticket, TicketComentario, TicketHistorial, EstadoTicket, CategoriaTicket, PrioridadTicket, Tecnico, TicketStats, TicketFilters } from '../types';
+import type { ApiResponse, Ticket, TicketComentario, TicketHistorial, EstadoTicket, CategoriaTicket, PrioridadTicket, DireccionTicket, Tecnico, TicketStats, TicketFilters } from '../types';
 
 export interface CreateTicketData {
   titulo: string;
   descripcion: string;
-  area_incidente: string;
+  area_incidente_id: number;
   categoria_id: number;
   prioridad_id: number;
   imagen_url?: string;
@@ -13,7 +13,7 @@ export interface CreateTicketData {
 export interface UpdateTicketData {
   titulo?: string;
   descripcion?: string;
-  area_incidente?: string;
+  area_incidente_id?: number;
   categoria_id?: number;
   prioridad_id?: number;
   estado_id?: number;
@@ -54,9 +54,20 @@ export const ticketService = {
   async getAll(filters?: TicketFilters): Promise<ApiResponse<TicketsResponse>> {
     const params = new URLSearchParams();
     if (filters) {
+      const paramMapping: Record<string, string> = {
+        estado_id: 'state_id',
+        categoria_id: 'category_id',
+        prioridad_id: 'priority_id',
+        assigned_technician_id: 'assigned_technician_id',
+        busqueda: 'search',
+        fecha_desde: 'date_from',
+        fecha_hasta: 'date_to',
+      };
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
+          const backendKey = paramMapping[key] || key;
+          params.append(backendKey, String(value));
         }
       });
     }
@@ -70,7 +81,19 @@ export const ticketService = {
   },
 
   async update(id: string, data: UpdateTicketData): Promise<ApiResponse<Ticket>> {
-    const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}`, data);
+    const mappedData: Record<string, unknown> = {};
+    
+    if (data.titulo !== undefined) mappedData.title = data.titulo;
+    if (data.descripcion !== undefined) mappedData.description = data.descripcion;
+    if (data.area_incidente_id !== undefined) mappedData.incident_area_id = data.area_incidente_id;
+    if (data.categoria_id !== undefined) mappedData.category_id = data.categoria_id;
+    if (data.prioridad_id !== undefined) mappedData.priority_id = data.prioridad_id;
+    if (data.estado_id !== undefined) mappedData.state_id = data.estado_id;
+    if (data.tecnico_asignado_id !== undefined) {
+      mappedData.assigned_technician_id = data.tecnico_asignado_id;
+    }
+    
+    const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}`, mappedData);
     return response.data;
   },
 
@@ -80,7 +103,9 @@ export const ticketService = {
   },
 
   async addComment(id: string, data: CommentData): Promise<ApiResponse<TicketComentario>> {
-    const response = await api.post<ApiResponse<TicketComentario>>(`/tickets/${id}/comentarios`, data);
+    const response = await api.post<ApiResponse<TicketComentario>>(`/tickets/${id}/comentarios`, {
+      content: data.contenido
+    });
     return response.data;
   },
 
@@ -96,6 +121,11 @@ export const ticketService = {
 
   async getPrioridades(): Promise<ApiResponse<PrioridadTicket[]>> {
     const response = await api.get<ApiResponse<PrioridadTicket[]>>('/tickets/prioridades');
+    return response.data;
+  },
+
+  async getDirecciones(): Promise<ApiResponse<DireccionTicket[]>> {
+    const response = await api.get<ApiResponse<DireccionTicket[]>>('/tickets/direcciones');
     return response.data;
   },
 

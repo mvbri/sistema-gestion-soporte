@@ -16,7 +16,7 @@ export const TechnicianDashboard: React.FC = () => {
     page: 1,
     limit: 10,
     estado_id: undefined,
-    tecnico_asignado_id: user?.id,
+    assigned_technician_id: user?.id,
   });
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export const TechnicianDashboard: React.FC = () => {
     if (user?.id) {
       setFilters((prev) => ({
         ...prev,
-        tecnico_asignado_id: user.id,
+        assigned_technician_id: user.id,
       }));
     }
   }, [user, navigate]);
@@ -53,8 +53,8 @@ export const TechnicianDashboard: React.FC = () => {
     markAsResolvedMutation.mutate(ticketId);
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Fecha no disponible';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
 
@@ -188,7 +188,7 @@ export const TechnicianDashboard: React.FC = () => {
                     ...prev,
                     estado_id: undefined,
                     page: 1,
-                    tecnico_asignado_id: user?.id,
+                    assigned_technician_id: user?.id,
                   }))
                 }
                 className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
@@ -220,7 +220,7 @@ export const TechnicianDashboard: React.FC = () => {
                     ...prev,
                     estado_id: e.target.value ? parseInt(e.target.value) : undefined,
                     page: 1,
-                    tecnico_asignado_id: user?.id,
+                    assigned_technician_id: user?.id,
                   }))
                 }
                 className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer text-gray-700 font-medium"
@@ -228,7 +228,7 @@ export const TechnicianDashboard: React.FC = () => {
                 <option value="">Todos los estados</option>
                 {estados.map((estado) => (
                   <option key={estado.id} value={estado.id}>
-                    {estado.nombre}
+                    {estado.name}
                   </option>
                 ))}
               </select>
@@ -292,28 +292,28 @@ export const TechnicianDashboard: React.FC = () => {
                             onClick={() => navigate(`/tickets/${ticket.id}`)}
                             className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150 hover:underline"
                           >
-                            {ticket.titulo}
+                            {ticket.title}
                           </button>
                           <p className="text-sm text-gray-500">ID: {ticket.id.substring(0, 8)}...</p>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge
-                          estado={ticket.estado_nombre || ''}
-                          colorOverride={ticket.estado_color}
+                          estado={ticket.state_name || ''}
+                          colorOverride={ticket.state_color}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <PriorityBadge
-                          prioridad={ticket.prioridad_nombre || ''}
-                          colorOverride={ticket.prioridad_color}
+                          prioridad={ticket.priority_name || ''}
+                          colorOverride={ticket.priority_color}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <CategoryBadge categoria={ticket.categoria_nombre || ''} />
+                        <CategoryBadge categoria={ticket.category_name || ''} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(ticket.fecha_creacion)}
+                        {formatDate(ticket.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
@@ -374,14 +374,14 @@ export const TechnicianDashboard: React.FC = () => {
             <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
-                  onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1, tecnico_asignado_id: user?.id }))}
+                  onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1, assigned_technician_id: user?.id }))}
                   disabled={pagination.page === 1}
                   className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:shadow-none transition-all duration-200 ease-in-out"
                 >
                   Anterior
                 </button>
                 <button
-                  onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1, tecnico_asignado_id: user?.id }))}
+                  onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1, assigned_technician_id: user?.id }))}
                   disabled={pagination.page === pagination.totalPages}
                   className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:shadow-none transition-all duration-200 ease-in-out"
                 >
@@ -401,7 +401,7 @@ export const TechnicianDashboard: React.FC = () => {
                 <div>
                   <nav className="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
                     <button
-                      onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1, tecnico_asignado_id: user?.id }))}
+                      onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1, assigned_technician_id: user?.id }))}
                       disabled={pagination.page === 1}
                       className="relative inline-flex items-center px-4 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:shadow-none transition-all duration-200 ease-in-out"
                     >
@@ -411,7 +411,7 @@ export const TechnicianDashboard: React.FC = () => {
                       Página {pagination.page} de {pagination.totalPages}
                     </span>
                     <button
-                      onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1, tecnico_asignado_id: user?.id }))}
+                      onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1, assigned_technician_id: user?.id }))}
                       disabled={pagination.page === pagination.totalPages}
                       className="relative inline-flex items-center px-4 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:shadow-none transition-all duration-200 ease-in-out"
                     >

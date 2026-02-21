@@ -61,8 +61,12 @@ export const TicketsList: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Fecha no disponible';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+
+    return date.toLocaleString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -223,7 +227,7 @@ export const TicketsList: React.FC = () => {
                     <option value="">Todos</option>
                     {estados.map((estado) => (
                       <option key={estado.id} value={estado.id}>
-                        {estado.nombre}
+                        {estado.name}
                       </option>
                     ))}
                   </select>
@@ -271,7 +275,7 @@ export const TicketsList: React.FC = () => {
                     <option value="">Todas</option>
                     {categorias.map((categoria) => (
                       <option key={categoria.id} value={categoria.id}>
-                        {categoria.nombre}
+                        {categoria.name}
                       </option>
                     ))}
                   </select>
@@ -319,7 +323,7 @@ export const TicketsList: React.FC = () => {
                     <option value="">Todas</option>
                     {prioridades.map((prioridad) => (
                       <option key={prioridad.id} value={prioridad.id}>
-                        {prioridad.nombre}
+                        {prioridad.name}
                       </option>
                     ))}
                   </select>
@@ -363,8 +367,8 @@ export const TicketsList: React.FC = () => {
                   </label>
                   <div className="relative">
                     <select
-                      value={filters.tecnico_asignado_id || ''}
-                      onChange={(e) => handleFilterChange('tecnico_asignado_id', e.target.value ? parseInt(e.target.value) : undefined)}
+                      value={filters.assigned_technician_id || ''}
+                      onChange={(e) => handleFilterChange('assigned_technician_id', e.target.value ? parseInt(e.target.value) : undefined)}
                       className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
                     >
                       <option value="">Todos</option>
@@ -414,27 +418,27 @@ export const TicketsList: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-3 mb-2">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              {ticket.titulo}
+                              {ticket.title}
                             </p>
                             <StatusBadge
-                              estado={ticket.estado_nombre || ''}
-                              colorOverride={ticket.estado_color}
+                              estado={ticket.state_name || ''}
+                              colorOverride={ticket.state_color}
                             />
                             <PriorityBadge
-                              prioridad={ticket.prioridad_nombre || ''}
-                              colorOverride={ticket.prioridad_color}
+                              prioridad={ticket.priority_name || ''}
+                              colorOverride={ticket.priority_color}
                             />
-                            <CategoryBadge categoria={ticket.categoria_nombre || ''} />
+                            <CategoryBadge categoria={ticket.category_name || ''} />
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <span>ID: {ticket.id.substring(0, 8)}...</span>
-                            <span>Creado: {formatDate(ticket.fecha_creacion)}</span>
-                            {ticket.fecha_cierre && (
-                              <span>Cerrado: {formatDate(ticket.fecha_cierre)}</span>
+                            <span>Creado: {formatDate(ticket.created_at)}</span>
+                            {ticket.closed_at && (
+                              <span>Cerrado: {formatDate(ticket.closed_at)}</span>
                             )}
-                            <span>Por: {ticket.usuario_creador_nombre}</span>
-                            {ticket.tecnico_asignado_nombre && (
-                              <span>Asignado a: {ticket.tecnico_asignado_nombre}</span>
+                            <span>Por: {ticket.created_by_user_name || 'N/A'}</span>
+                            {ticket.assigned_technician_name && (
+                              <span>Asignado a: {ticket.assigned_technician_name}</span>
                             )}
                           </div>
                         </div>
@@ -527,7 +531,7 @@ export const TicketsList: React.FC = () => {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, ticket: null })}
         onConfirm={handleDelete}
-        ticketTitulo={deleteModal.ticket?.titulo || ''}
+        ticketTitulo={deleteModal.ticket?.title || ''}
       />
       </PageWrapper>
     </>

@@ -4,47 +4,47 @@ class TicketHistorial {
     static async create(data) {
         const {
             ticket_id,
-            usuario_id,
-            tipo_cambio,
-            campo_anterior,
-            campo_nuevo,
-            descripcion,
-            fecha_cambio
+            user_id,
+            change_type,
+            previous_field,
+            new_field,
+            description,
+            changed_at
         } = data;
 
-        const sql = fecha_cambio
+        const sql = changed_at
             ? `
-                INSERT INTO ticket_historial (
-                    ticket_id, usuario_id, tipo_cambio,
-                    campo_anterior, campo_nuevo, descripcion, fecha_cambio
+                INSERT INTO ticket_history (
+                    ticket_id, user_id, change_type,
+                    previous_field, new_field, description, changed_at
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             `
             : `
-                INSERT INTO ticket_historial (
-                    ticket_id, usuario_id, tipo_cambio,
-                    campo_anterior, campo_nuevo, descripcion
+                INSERT INTO ticket_history (
+                    ticket_id, user_id, change_type,
+                    previous_field, new_field, description
                 )
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
 
-        const params = fecha_cambio
+        const params = changed_at
             ? [
                 ticket_id,
-                usuario_id,
-                tipo_cambio,
-                campo_anterior || null,
-                campo_nuevo || null,
-                descripcion || null,
-                fecha_cambio
+                user_id,
+                change_type,
+                previous_field || null,
+                new_field || null,
+                description || null,
+                changed_at
             ]
             : [
                 ticket_id,
-                usuario_id,
-                tipo_cambio,
-                campo_anterior || null,
-                campo_nuevo || null,
-                descripcion || null
+                user_id,
+                change_type,
+                previous_field || null,
+                new_field || null,
+                description || null
             ];
 
         const result = await query(sql, params);
@@ -56,10 +56,10 @@ class TicketHistorial {
         const sql = `
             SELECT 
                 th.*,
-                u.full_name as usuario_nombre,
-                u.email as usuario_email
-            FROM ticket_historial th
-            LEFT JOIN usuarios u ON th.usuario_id = u.id
+                u.full_name as user_name,
+                u.email as user_email
+            FROM ticket_history th
+            LEFT JOIN users u ON th.user_id = u.id
             WHERE th.id = ?
         `;
 
@@ -71,12 +71,12 @@ class TicketHistorial {
         const sql = `
             SELECT 
                 th.*,
-                u.full_name as usuario_nombre,
-                u.email as usuario_email
-            FROM ticket_historial th
-            LEFT JOIN usuarios u ON th.usuario_id = u.id
+                u.full_name as user_name,
+                u.email as user_email
+            FROM ticket_history th
+            LEFT JOIN users u ON th.user_id = u.id
             WHERE th.ticket_id = ?
-            ORDER BY th.fecha_cambio DESC
+            ORDER BY th.changed_at DESC
         `;
 
         return await query(sql, [ticketId]);

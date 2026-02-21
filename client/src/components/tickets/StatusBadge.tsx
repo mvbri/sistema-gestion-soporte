@@ -15,7 +15,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   colorOverride,
   className = '',
 }) => {
-  const estadoNombre = typeof estado === 'string' ? estado : estado.nombre;
+  const estadoNombre = typeof estado === 'string' ? estado : estado.name;
 
   const baseColor =
     typeof estado === 'string'

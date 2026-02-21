@@ -1,4 +1,4 @@
-// Función helper para convertir BigInt a Number recursivamente
+// Función helper para convertir BigInt a Number y Date a string ISO recursivamente
 const convertBigIntToNumber = (obj) => {
     if (obj === null || obj === undefined) {
         return obj;
@@ -6,6 +6,10 @@ const convertBigIntToNumber = (obj) => {
     
     if (typeof obj === 'bigint') {
         return Number(obj);
+    }
+    
+    if (obj instanceof Date) {
+        return obj.toISOString();
     }
     
     if (Array.isArray(obj)) {

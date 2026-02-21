@@ -6,9 +6,19 @@ import { sendSuccess, sendError } from '../utils/responseHandler.js';
  */
 export const getCategorias = async (req, res) => {
     try {
-        const sql = 'SELECT * FROM categorias_ticket ORDER BY nombre';
-        const categorias = await query(sql);
-        sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
+        let sql = 'SELECT * FROM ticket_categories ORDER BY name';
+        try {
+            const categorias = await query(sql);
+            sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM ticket_categories ORDER BY nombre';
+                const categorias = await query(sql);
+                sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
+            } else {
+                throw error;
+            }
+        }
     } catch (error) {
         console.error('Error al obtener categorías:', error);
         sendError(res, 'Error al obtener categorías', null, 500);
@@ -20,12 +30,12 @@ export const getCategorias = async (req, res) => {
  */
 export const createCategoria = async (req, res) => {
     try {
-        const { nombre, descripcion } = req.body;
+        const { name, description } = req.body;
 
-        const sql = 'INSERT INTO categorias_ticket (nombre, descripcion) VALUES (?, ?)';
-        const result = await query(sql, [nombre, descripcion || null]);
+        const sql = 'INSERT INTO ticket_categories (name, description) VALUES (?, ?)';
+        const result = await query(sql, [name, description || null]);
 
-        const nuevaCategoria = await query('SELECT * FROM categorias_ticket WHERE id = ?', [result.insertId]);
+        const nuevaCategoria = await query('SELECT * FROM ticket_categories WHERE id = ?', [result.insertId]);
         sendSuccess(res, 'Categoría creada exitosamente', nuevaCategoria[0], 201);
     } catch (error) {
         console.error('Error al crear categoría:', error);
@@ -42,22 +52,22 @@ export const createCategoria = async (req, res) => {
 export const updateCategoria = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, activo } = req.body;
+        const { name, description, active } = req.body;
 
         const updates = [];
         const params = [];
 
-        if (nombre !== undefined) {
-            updates.push('nombre = ?');
-            params.push(nombre);
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
         }
-        if (descripcion !== undefined) {
-            updates.push('descripcion = ?');
-            params.push(descripcion);
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
         }
-        if (activo !== undefined) {
-            updates.push('activo = ?');
-            params.push(activo);
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
         }
 
         if (updates.length === 0) {
@@ -65,10 +75,10 @@ export const updateCategoria = async (req, res) => {
         }
 
         params.push(id);
-        const sql = `UPDATE categorias_ticket SET ${updates.join(', ')} WHERE id = ?`;
+        const sql = `UPDATE ticket_categories SET ${updates.join(', ')} WHERE id = ?`;
         await query(sql, params);
 
-        const categoria = await query('SELECT * FROM categorias_ticket WHERE id = ?', [id]);
+        const categoria = await query('SELECT * FROM ticket_categories WHERE id = ?', [id]);
         sendSuccess(res, 'Categoría actualizada exitosamente', categoria[0]);
     } catch (error) {
         console.error('Error al actualizar categoría:', error);
@@ -86,13 +96,13 @@ export const deleteCategoria = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const categoria = await query('SELECT * FROM categorias_ticket WHERE id = ?', [id]);
+        const categoria = await query('SELECT * FROM ticket_categories WHERE id = ?', [id]);
         if (categoria.length === 0) {
             return sendError(res, 'La categoría no existe', null, 404);
         }
 
         try {
-            await query('DELETE FROM categorias_ticket WHERE id = ?', [id]);
+            await query('DELETE FROM ticket_categories WHERE id = ?', [id]);
         } catch (error) {
             // Posible restricción por claves foráneas (tickets asociados)
             if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
@@ -115,9 +125,19 @@ export const deleteCategoria = async (req, res) => {
 
 export const getPrioridades = async (req, res) => {
     try {
-        const sql = 'SELECT * FROM prioridades_ticket ORDER BY nivel';
-        const prioridades = await query(sql);
-        sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
+        let sql = 'SELECT * FROM ticket_priorities ORDER BY level';
+        try {
+            const prioridades = await query(sql);
+            sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM ticket_priorities ORDER BY nivel';
+                const prioridades = await query(sql);
+                sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
+            } else {
+                throw error;
+            }
+        }
     } catch (error) {
         console.error('Error al obtener prioridades:', error);
         sendError(res, 'Error al obtener prioridades', null, 500);
@@ -126,12 +146,12 @@ export const getPrioridades = async (req, res) => {
 
 export const createPrioridad = async (req, res) => {
     try {
-        const { nombre, nivel, color, descripcion } = req.body;
+        const { name, level, color, description } = req.body;
 
-        const sql = 'INSERT INTO prioridades_ticket (nombre, nivel, color, descripcion) VALUES (?, ?, ?, ?)';
-        const result = await query(sql, [nombre, nivel, color, descripcion || null]);
+        const sql = 'INSERT INTO ticket_priorities (name, level, color, description) VALUES (?, ?, ?, ?)';
+        const result = await query(sql, [name, level, color, description || null]);
 
-        const nuevaPrioridad = await query('SELECT * FROM prioridades_ticket WHERE id = ?', [result.insertId]);
+        const nuevaPrioridad = await query('SELECT * FROM ticket_priorities WHERE id = ?', [result.insertId]);
         sendSuccess(res, 'Prioridad creada exitosamente', nuevaPrioridad[0], 201);
     } catch (error) {
         console.error('Error al crear prioridad:', error);
@@ -145,30 +165,30 @@ export const createPrioridad = async (req, res) => {
 export const updatePrioridad = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, nivel, color, descripcion, activo } = req.body;
+        const { name, level, color, description, active } = req.body;
 
         const updates = [];
         const params = [];
 
-        if (nombre !== undefined) {
-            updates.push('nombre = ?');
-            params.push(nombre);
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
         }
-        if (nivel !== undefined) {
-            updates.push('nivel = ?');
-            params.push(nivel);
+        if (level !== undefined) {
+            updates.push('level = ?');
+            params.push(level);
         }
         if (color !== undefined) {
             updates.push('color = ?');
             params.push(color);
         }
-        if (descripcion !== undefined) {
-            updates.push('descripcion = ?');
-            params.push(descripcion);
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
         }
-        if (activo !== undefined) {
-            updates.push('activo = ?');
-            params.push(activo);
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
         }
 
         if (updates.length === 0) {
@@ -176,10 +196,10 @@ export const updatePrioridad = async (req, res) => {
         }
 
         params.push(id);
-        const sql = `UPDATE prioridades_ticket SET ${updates.join(', ')} WHERE id = ?`;
+        const sql = `UPDATE ticket_priorities SET ${updates.join(', ')} WHERE id = ?`;
         await query(sql, params);
 
-        const prioridad = await query('SELECT * FROM prioridades_ticket WHERE id = ?', [id]);
+        const prioridad = await query('SELECT * FROM ticket_priorities WHERE id = ?', [id]);
         sendSuccess(res, 'Prioridad actualizada exitosamente', prioridad[0]);
     } catch (error) {
         console.error('Error al actualizar prioridad:', error);
@@ -197,13 +217,13 @@ export const deletePrioridad = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const prioridad = await query('SELECT * FROM prioridades_ticket WHERE id = ?', [id]);
+        const prioridad = await query('SELECT * FROM ticket_priorities WHERE id = ?', [id]);
         if (prioridad.length === 0) {
             return sendError(res, 'La prioridad no existe', null, 404);
         }
 
         try {
-            await query('DELETE FROM prioridades_ticket WHERE id = ?', [id]);
+            await query('DELETE FROM ticket_priorities WHERE id = ?', [id]);
         } catch (error) {
             if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
                 return sendError(
@@ -220,5 +240,126 @@ export const deletePrioridad = async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar prioridad:', error);
         sendError(res, 'Error al eliminar prioridad', null, 500);
+    }
+};
+
+/**
+ * Obtiene todas las direcciones/áreas de incidentes.
+ */
+export const getDirecciones = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM incident_areas ORDER BY name';
+        try {
+            const direcciones = await query(sql);
+            sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM incident_areas ORDER BY nombre';
+                const direcciones = await query(sql);
+                sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener direcciones:', error);
+        sendError(res, 'Error al obtener direcciones', null, 500);
+    }
+};
+
+/**
+ * Crea una nueva dirección/área de incidente.
+ */
+export const createDireccion = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const sql = 'INSERT INTO incident_areas (name, description) VALUES (?, ?)';
+        const result = await query(sql, [name, description || null]);
+
+        const nuevaDireccion = await query('SELECT * FROM incident_areas WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Dirección creada exitosamente', nuevaDireccion[0], 201);
+    } catch (error) {
+        console.error('Error al crear dirección:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe una dirección con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al crear dirección', null, 500);
+    }
+};
+
+/**
+ * Actualiza una dirección/área de incidente existente.
+ */
+export const updateDireccion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, active } = req.body;
+
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        params.push(id);
+        const sql = `UPDATE incident_areas SET ${updates.join(', ')} WHERE id = ?`;
+        await query(sql, params);
+
+        const direccion = await query('SELECT * FROM incident_areas WHERE id = ?', [id]);
+        sendSuccess(res, 'Dirección actualizada exitosamente', direccion[0]);
+    } catch (error) {
+        console.error('Error al actualizar dirección:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe una dirección con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar dirección', null, 500);
+    }
+};
+
+/**
+ * Elimina una dirección/área de incidente por id.
+ */
+export const deleteDireccion = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const direccion = await query('SELECT * FROM incident_areas WHERE id = ?', [id]);
+        if (direccion.length === 0) {
+            return sendError(res, 'La dirección no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM incident_areas WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar la dirección porque tiene tickets asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Dirección eliminada exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar dirección:', error);
+        sendError(res, 'Error al eliminar dirección', null, 500);
     }
 };

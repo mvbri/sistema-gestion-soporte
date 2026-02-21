@@ -1,30 +1,41 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket } from '../types';
 
 export interface CreateCategoriaData {
-  nombre: string;
-  descripcion?: string;
+  name: string;
+  description?: string;
 }
 
 export interface UpdateCategoriaData {
-  nombre?: string;
-  descripcion?: string;
-  activo?: boolean;
+  name?: string;
+  description?: string;
+  active?: boolean;
 }
 
 export interface CreatePrioridadData {
-  nombre: string;
-  nivel: number;
+  name: string;
+  level: number;
   color: string;
-  descripcion?: string;
+  description?: string;
 }
 
 export interface UpdatePrioridadData {
-  nombre?: string;
-  nivel?: number;
+  name?: string;
+  level?: number;
   color?: string;
-  descripcion?: string;
-  activo?: boolean;
+  description?: string;
+  active?: boolean;
+}
+
+export interface CreateDireccionData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateDireccionData {
+  name?: string;
+  description?: string;
+  active?: boolean;
 }
 
 export const adminService = {
@@ -65,6 +76,26 @@ export const adminService = {
 
   async deletePrioridad(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/prioridades/${id}`);
+    return response.data;
+  },
+
+  async getDirecciones(): Promise<ApiResponse<DireccionTicket[]>> {
+    const response = await api.get<ApiResponse<DireccionTicket[]>>('/admin/direcciones');
+    return response.data;
+  },
+
+  async createDireccion(data: CreateDireccionData): Promise<ApiResponse<DireccionTicket>> {
+    const response = await api.post<ApiResponse<DireccionTicket>>('/admin/direcciones', data);
+    return response.data;
+  },
+
+  async updateDireccion(id: number, data: UpdateDireccionData): Promise<ApiResponse<DireccionTicket>> {
+    const response = await api.put<ApiResponse<DireccionTicket>>(`/admin/direcciones/${id}`, data);
+    return response.data;
+  },
+
+  async deleteDireccion(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/direcciones/${id}`);
     return response.data;
   },
 };

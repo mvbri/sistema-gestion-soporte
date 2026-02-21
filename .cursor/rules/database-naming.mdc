@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+---
+# Database Naming Conventions
+
+All database tables and columns must use English names following these conventions:
+
+## Tables
+- Use plural nouns in snake_case
+- Examples: `users`, `tickets`, `ticket_states`, `ticket_categories`, `ticket_priorities`, `ticket_comments`, `ticket_history`, `verification_tokens`, `incident_areas`, `roles`
+
+## Columns
+- Use snake_case for column names
+- Use descriptive English names
+- Common patterns:
+  - `id` - primary key
+  - `created_at`, `updated_at`, `closed_at`, `changed_at` - timestamps
+  - `user_id`, `ticket_id`, `category_id`, `priority_id`, `state_id` - foreign keys
+  - `name`, `description`, `title`, `content` - text fields
+  - `active`, `used`, `email_verified` - boolean fields
+  - `level`, `order` - numeric ordering fields
+
+## Column Naming Examples
+- `nombre` → `name`
+- `descripcion` → `description`
+- `titulo` → `title`
+- `contenido` → `content`
+- `activo` → `active`
+- `orden` → `order`
+- `nivel` → `level`
+- `usuario_id` → `user_id`
+- `usuario_creador_id` → `created_by_user_id`
+- `tecnico_asignado_id` → `assigned_technician_id`
+- `categoria_id` → `category_id`
+- `prioridad_id` → `priority_id`
+- `estado_id` → `state_id`
+- `fecha_creacion` → `created_at`
+- `fecha_actualizacion` → `updated_at`
+- `fecha_cierre` → `closed_at`
+- `fecha_cambio` → `changed_at`
+- `tipo_cambio` → `change_type`
+- `campo_anterior` → `previous_field`
+- `campo_nuevo` → `new_field`
+
+## Foreign Key Naming
+- Use descriptive names that indicate the relationship
+- Pattern: `{referenced_table}_id` or `{relationship_description}_id`
+- Examples: `created_by_user_id`, `assigned_technician_id`, `category_id`
+
+## Index Naming
+- Use `idx_` prefix followed by column name(s)
+- Examples: `idx_user`, `idx_ticket`, `idx_created_at`, `idx_state`
+
+## Important Notes
+- **ALL table names must be in English**
+- **ALL column names must be in English**
+- **ALL foreign key names must be in English**
+- **ALL index names must be in English**
+- When creating new tables or columns, always use English names
+- When writing SQL queries, always use English column names
+- When writing model code, always use English property names that match the database columns

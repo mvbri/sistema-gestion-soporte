@@ -7,7 +7,11 @@ import {
     getPrioridades,
     createPrioridad,
     updatePrioridad,
-    deletePrioridad
+    deletePrioridad,
+    getDirecciones,
+    createDireccion,
+    updateDireccion,
+    deleteDireccion
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
@@ -30,34 +34,48 @@ router.use(isAdmin);
 
 router.get('/categorias', getCategorias);
 router.post('/categorias', [
-    body('nombre').trim().notEmpty().withMessage('El nombre es requerido'),
-    body('descripcion').optional().trim(),
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
     handleValidationErrors
 ], createCategoria);
 router.put('/categorias/:id', [
-    body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
-    body('descripcion').optional().trim(),
-    body('activo').optional().isBoolean(),
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
     handleValidationErrors
 ], updateCategoria);
 router.delete('/categorias/:id', deleteCategoria);
 
 router.get('/prioridades', getPrioridades);
 router.post('/prioridades', [
-    body('nombre').trim().notEmpty().withMessage('El nombre es requerido'),
-    body('nivel').isInt({ min: 1 }).withMessage('El nivel debe ser un número entero mayor a 0'),
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('level').isInt({ min: 1 }).withMessage('El nivel debe ser un número entero mayor a 0'),
     body('color').trim().notEmpty().withMessage('El color es requerido'),
-    body('descripcion').optional().trim(),
+    body('description').optional().trim(),
     handleValidationErrors
 ], createPrioridad);
 router.put('/prioridades/:id', [
-    body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
-    body('nivel').optional().isInt({ min: 1 }).withMessage('El nivel debe ser un número entero mayor a 0'),
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('level').optional().isInt({ min: 1 }).withMessage('El nivel debe ser un número entero mayor a 0'),
     body('color').optional().trim().notEmpty().withMessage('El color no puede estar vacío'),
-    body('descripcion').optional().trim(),
-    body('activo').optional().isBoolean(),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
     handleValidationErrors
 ], updatePrioridad);
 router.delete('/prioridades/:id', deletePrioridad);
+
+router.get('/direcciones', getDirecciones);
+router.post('/direcciones', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
+    handleValidationErrors
+], createDireccion);
+router.put('/direcciones/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateDireccion);
+router.delete('/direcciones/:id', deleteDireccion);
 
 export default router;

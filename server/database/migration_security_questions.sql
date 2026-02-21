@@ -4,7 +4,7 @@
 USE sistema_soporte;
 
 -- Agregar columnas para preguntas de seguridad
-ALTER TABLE usuarios 
+ALTER TABLE users 
 ADD COLUMN IF NOT EXISTS security_question_1 VARCHAR(255) NULL,
 ADD COLUMN IF NOT EXISTS security_answer_1 VARCHAR(255) NULL,
 ADD COLUMN IF NOT EXISTS security_question_2 VARCHAR(255) NULL,

@@ -63,17 +63,23 @@ export const TicketDetail: React.FC = () => {
 
   useEffect(() => {
     if (ticket) {
-      const isAssignedTechnician = user?.role === 'technician' && ticket.tecnico_asignado_id === user?.id;
-      const defaultEstadoId = isAssignedTechnician && ticket.estado_id === 1 ? 2 : ticket.estado_id;
+      const isAssignedTechnician = user?.role === 'technician' && ticket.assigned_technician_id === user?.id;
+      let defaultEstadoId = ticket.state_id;
+      
+      if (ticket.assigned_technician_id && ticket.state_id === 1) {
+        defaultEstadoId = 2;
+      } else if (isAssignedTechnician && ticket.state_id === 1) {
+        defaultEstadoId = 2;
+      }
       
       resetUpdate({
-        titulo: ticket.titulo,
-        descripcion: ticket.descripcion,
-        area_incidente: ticket.area_incidente,
-        categoria_id: ticket.categoria_id,
-        prioridad_id: ticket.prioridad_id,
+        titulo: ticket.title,
+        descripcion: ticket.description,
+        area_incidente_id: ticket.incident_area_id,
+        categoria_id: ticket.category_id,
+        prioridad_id: ticket.priority_id,
         estado_id: defaultEstadoId,
-        tecnico_asignado_id: ticket.tecnico_asignado_id || null,
+        tecnico_asignado_id: ticket.assigned_technician_id || null,
       });
 
       if (location.pathname.includes('/editar')) {
@@ -88,11 +94,13 @@ export const TicketDetail: React.FC = () => {
   const estadoIdActual = watchUpdate('estado_id');
 
   useEffect(() => {
-    if (user?.role === 'administrator' && isEditing && ticket && tecnicoAsignadoId) {
-      const estadoAsignado = estados.find(e => e.id === 2);
-      const estadoIdForm = estadoIdActual || ticket.estado_id;
+    if (user?.role === 'administrator' && isEditing && ticket) {
+      const estadoIdForm = estadoIdActual || ticket.state_id;
+      const tecnicoAnterior = ticket.assigned_technician_id;
       
-      if (estadoAsignado && estadoIdForm === 1) {
+      if (tecnicoAsignadoId && !tecnicoAnterior && estadoIdForm === 1) {
+        setValueUpdate('estado_id', 2, { shouldValidate: true });
+      } else if (tecnicoAsignadoId && tecnicoAsignadoId !== tecnicoAnterior && estadoIdForm === 1) {
         setValueUpdate('estado_id', 2, { shouldValidate: true });
       }
     }
@@ -101,22 +109,61 @@ export const TicketDetail: React.FC = () => {
   const onUpdate = (data: UpdateTicketData) => {
     if (!id) return;
     
-    const isAssignedTechnician = user?.role === 'technician' && ticket?.tecnico_asignado_id === user?.id;
-    const dataToSend = isAssignedTechnician 
-      ? { estado_id: data.estado_id }
-      : data;
+    const isAssignedTechnician = user?.role === 'technician' && ticket?.assigned_technician_id === user?.id;
     
-    updateTicketMutation.mutate(
-      { id, data: dataToSend },
-      {
-        onSuccess: () => {
-          setIsEditing(false);
-          if (location.pathname.includes('/editar')) {
-            navigate(`/tickets/${id}`);
-          }
-        },
+    if (isAssignedTechnician) {
+      const estadoId = data.estado_id !== undefined && data.estado_id !== null 
+        ? Number(data.estado_id)
+        : ticket?.state_id 
+          ? Number(ticket.state_id)
+          : undefined;
+      
+      if (!estadoId || isNaN(estadoId)) {
+        return;
       }
-    );
+      
+      const dataToSend = { estado_id: estadoId };
+      updateTicketMutation.mutate(
+        { id, data: dataToSend as UpdateTicketData },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            if (location.pathname.includes('/editar')) {
+              navigate(`/tickets/${id}`);
+            }
+          },
+        }
+      );
+    } else {
+      const dataToSend: Record<string, unknown> = {};
+      
+      if (data.titulo !== undefined) dataToSend.title = data.titulo;
+      if (data.descripcion !== undefined) dataToSend.description = data.descripcion;
+      if (data.area_incidente_id !== undefined) dataToSend.incident_area_id = data.area_incidente_id;
+      if (data.categoria_id !== undefined) dataToSend.category_id = data.categoria_id;
+      if (data.prioridad_id !== undefined) dataToSend.priority_id = data.prioridad_id;
+      if (data.estado_id !== undefined) dataToSend.state_id = data.estado_id;
+      
+      if (data.tecnico_asignado_id !== undefined) {
+        dataToSend.assigned_technician_id = 
+          data.tecnico_asignado_id === null || 
+          (typeof data.tecnico_asignado_id === 'number' && isNaN(data.tecnico_asignado_id))
+            ? null 
+            : data.tecnico_asignado_id;
+      }
+      
+      updateTicketMutation.mutate(
+        { id, data: dataToSend },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            if (location.pathname.includes('/editar')) {
+              navigate(`/tickets/${id}`);
+            }
+          },
+        }
+      );
+    }
   };
 
   const onComment = (data: CommentData) => {
@@ -141,7 +188,7 @@ export const TicketDetail: React.FC = () => {
     markAsResolvedMutation.mutate(id);
   };
 
-  const isAssignedTechnician = user?.role === 'technician' && ticket?.tecnico_asignado_id === user?.id;
+  const isAssignedTechnician = user?.role === 'technician' && ticket?.assigned_technician_id === user?.id;
   const canEdit = user?.role === 'administrator' || isAssignedTechnician;
   const canComment = user?.role !== undefined;
 
@@ -182,8 +229,8 @@ export const TicketDetail: React.FC = () => {
     );
   }
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Fecha no disponible';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
 
@@ -194,6 +241,21 @@ export const TicketDetail: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const translateChangeType = (changeType: string | null | undefined) => {
+    if (!changeType) return 'Cambio';
+    const type = changeType.toUpperCase();
+    switch (type) {
+      case 'UPDATE':
+        return 'ACTUALIZACIÓN';
+      case 'CREATION':
+        return 'CREACIÓN';
+      case 'DELETE':
+        return 'ELIMINACIÓN';
+      default:
+        return changeType;
+    }
   };
 
   const apiBaseUrl = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
@@ -221,27 +283,27 @@ export const TicketDetail: React.FC = () => {
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{ticket.titulo}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{ticket.title}</h1>
               <p className="text-sm text-gray-500 mt-1">ID: {ticket.id}</p>
             </div>
             <div className="flex items-center space-x-2">
               <StatusBadge
                 estado={
-                  isAssignedTechnician && ticket.estado_id === 1
-                    ? estados.find(e => e.id === 2)?.nombre || 'Asignado'
-                    : ticket.estado_nombre || ''
+                  isAssignedTechnician && ticket.state_id === 1
+                    ? estados.find(e => e.id === 2)?.name || 'Asignado'
+                    : ticket.state_name || ''
                 }
                 colorOverride={
-                  isAssignedTechnician && ticket.estado_id === 1
+                  isAssignedTechnician && ticket.state_id === 1
                     ? estados.find(e => e.id === 2)?.color || 'bg-yellow-100'
-                    : ticket.estado_color
+                    : ticket.state_color
                 }
               />
               <PriorityBadge
-                prioridad={ticket.prioridad_nombre || ''}
-                colorOverride={ticket.prioridad_color}
+                prioridad={ticket.priority_name || ''}
+                colorOverride={ticket.priority_color}
               />
-              <CategoryBadge categoria={ticket.categoria_nombre || ''} />
+              <CategoryBadge categoria={ticket.category_name || ''} />
             </div>
           </div>
 
@@ -281,7 +343,7 @@ export const TicketDetail: React.FC = () => {
                       >
                         {estados.map((estado) => (
                           <option key={estado.id} value={estado.id}>
-                            {estado.nombre}
+                            {estado.name}
                           </option>
                         ))}
                       </select>
@@ -290,7 +352,15 @@ export const TicketDetail: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Técnico Asignado</label>
                       <select
-                        {...registerUpdate('tecnico_asignado_id', { valueAsNumber: true })}
+                        {...registerUpdate('tecnico_asignado_id', { 
+                          setValueAs: (value: string) => {
+                            if (value === '' || value === null || value === undefined) {
+                              return null;
+                            }
+                            const numValue = parseInt(value, 10);
+                            return isNaN(numValue) ? null : numValue;
+                          }
+                        })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md"
                       >
                         <option value="">Sin asignar</option>
@@ -314,41 +384,44 @@ export const TicketDetail: React.FC = () => {
                         e.id === 2 || e.id === 3 || e.id === 4 || e.id === 5
                       );
                       const estadoAsignado = estados.find(e => e.id === 2);
-                      const currentValue = field.value || ticket?.estado_id || '';
+                      const currentValue = field.value ?? ticket?.state_id ?? 2;
+                      const numericValue = typeof currentValue === 'number' ? currentValue : parseInt(String(currentValue), 10);
+                      const finalValue = isNaN(numericValue) ? 2 : numericValue;
                       
                       return (
                         <select
-                          {...field}
-                          value={currentValue}
+                          value={finalValue}
                           onChange={(e) => {
-                            const newValue = parseInt(e.target.value);
-                            if (newValue !== 2) {
+                            const newValue = parseInt(e.target.value, 10);
+                            if (!isNaN(newValue)) {
                               field.onChange(newValue);
                             }
                           }}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                           className={`w-full px-3 py-2 border border-gray-300 rounded-md ${
-                            currentValue === 2 ? 'bg-gray-100 text-gray-600' : ''
+                            finalValue === 2 ? 'bg-gray-100 text-gray-600' : ''
                           }`}
                         >
                           {estadoAsignado && (
                             <option 
                               key={estadoAsignado.id} 
                               value={estadoAsignado.id}
-                              disabled
                               style={{ 
                                 backgroundColor: '#f3f4f6', 
                                 color: '#6b7280',
                                 fontStyle: 'italic'
                               }}
                             >
-                              {estadoAsignado.nombre}
+                              {estadoAsignado.name}
                             </option>
                           )}
                           {estadosPermitidos
                             .filter(e => e.id !== 2)
                             .map((estado) => (
                               <option key={estado.id} value={estado.id}>
-                                {estado.nombre}
+                                {estado.name}
                               </option>
                             ))}
                         </select>
@@ -385,27 +458,27 @@ export const TicketDetail: React.FC = () => {
           ) : (
             <>
               <div className="prose max-w-none mb-6">
-                <p className="text-gray-700 whitespace-pre-wrap">{ticket.descripcion}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{ticket.description}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">Área del Incidente:</span> {ticket.area_incidente}
+                  <span className="font-medium">Área del Incidente:</span> {ticket.incident_area_name || 'N/A'}
                 </div>
                 <div>
-                  <span className="font-medium">Creado por:</span> {ticket.usuario_creador_nombre}
+                  <span className="font-medium">Creado por:</span> {ticket.created_by_user_name || 'N/A'}
                 </div>
                 <div>
-                  <span className="font-medium">Fecha de Creación:</span> {formatDate(ticket.fecha_creacion)}
+                  <span className="font-medium">Fecha de Creación:</span> {formatDate(ticket.created_at)}
                 </div>
-                {ticket.tecnico_asignado_nombre && (
+                {ticket.assigned_technician_name && (
                   <div>
-                    <span className="font-medium">Técnico Asignado:</span> {ticket.tecnico_asignado_nombre}
+                    <span className="font-medium">Técnico Asignado:</span> {ticket.assigned_technician_name}
                   </div>
                 )}
-                {ticket.fecha_cierre && (
+                {ticket.closed_at && (
                   <div>
-                    <span className="font-medium">Fecha de Cierre:</span> {formatDate(ticket.fecha_cierre)}
+                    <span className="font-medium">Fecha de Cierre:</span> {formatDate(ticket.closed_at)}
                   </div>
                 )}
               </div>
@@ -423,7 +496,7 @@ export const TicketDetail: React.FC = () => {
                 </div>
               )}
 
-              {isAssignedTechnician && ticket.estado_id === 2 && (
+              {isAssignedTechnician && ticket.state_id === 2 && (
                 <div className="mt-4 flex space-x-2">
                   <button
                     onClick={handleStartProgress}
@@ -434,7 +507,7 @@ export const TicketDetail: React.FC = () => {
                 </div>
               )}
 
-              {isAssignedTechnician && ticket.estado_id === 3 && (
+              {isAssignedTechnician && ticket.state_id === 3 && (
                 <div className="mt-4 flex space-x-2">
                   <button
                     onClick={handleMarkAsResolved}
@@ -450,17 +523,17 @@ export const TicketDetail: React.FC = () => {
                   <button
                     onClick={() => {
                       if (ticket) {
-                        const isAssignedTechnician = user?.role === 'technician' && ticket.tecnico_asignado_id === user?.id;
-                        const defaultEstadoId = isAssignedTechnician && ticket.estado_id === 1 ? 2 : ticket.estado_id;
+                        const isAssignedTechnician = user?.role === 'technician' && ticket.assigned_technician_id === user?.id;
+                        const defaultEstadoId = isAssignedTechnician && ticket.state_id === 1 ? 2 : ticket.state_id;
                         
                         resetUpdate({
-                          titulo: ticket.titulo,
-                          descripcion: ticket.descripcion,
-                          area_incidente: ticket.area_incidente,
-                          categoria_id: ticket.categoria_id,
-                          prioridad_id: ticket.prioridad_id,
+                          titulo: ticket.title,
+                          descripcion: ticket.description,
+                          area_incidente_id: ticket.incident_area_id,
+                          categoria_id: ticket.category_id,
+                          prioridad_id: ticket.priority_id,
                           estado_id: defaultEstadoId,
-                          tecnico_asignado_id: ticket.tecnico_asignado_id || null,
+                          tecnico_asignado_id: ticket.assigned_technician_id || null,
                         });
                       }
                       setIsEditing(true);
@@ -522,12 +595,12 @@ export const TicketDetail: React.FC = () => {
                 <div key={comentario.id} className="border-l-4 border-blue-500 pl-4 py-2">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="font-medium">{comentario.usuario_nombre}</p>
-                      <p className="text-sm text-gray-500">{formatDate(comentario.fecha_creacion)}</p>
+                      <p className="font-medium">{comentario.user_name || 'Usuario desconocido'}</p>
+                      <p className="text-sm text-gray-500">{formatDate(comentario.created_at)}</p>
                     </div>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">{translateRole(comentario.usuario_rol)}</span>
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">{translateRole(comentario.user_role || '')}</span>
                   </div>
-                  <p className="text-gray-700">{comentario.contenido}</p>
+                  <p className="text-gray-700">{comentario.content || 'Sin contenido'}</p>
                 </div>
               ))
             )}
@@ -543,11 +616,11 @@ export const TicketDetail: React.FC = () => {
               historial.map((item) => (
                 <div key={item.id} className="border-l-4 border-gray-300 pl-4 py-2">
                   <div className="flex justify-between items-start mb-1">
-                    <p className="font-medium">{item.tipo_cambio}</p>
-                    <p className="text-sm text-gray-500">{formatDate(item.fecha_cambio)}</p>
+                    <p className="font-medium">{translateChangeType(item.change_type)}</p>
+                    <p className="text-sm text-gray-500">{formatDate(item.changed_at)}</p>
                   </div>
-                  {item.descripcion && <p className="text-sm text-gray-600">{item.descripcion}</p>}
-                  <p className="text-xs text-gray-500">Por: {item.usuario_nombre}</p>
+                  {item.description && <p className="text-sm text-gray-600">{item.description}</p>}
+                  <p className="text-xs text-gray-500">Por: {item.user_name || 'Usuario desconocido'}</p>
                 </div>
               ))
             )}

@@ -28,44 +28,77 @@ export type Role = 'administrator' | 'technician' | 'end_user';
 
 export interface EstadoTicket {
   id: number;
-  nombre: string;
-  descripcion?: string;
+  name: string;
+  description?: string;
   color: string;
-  orden: number;
-  activo: boolean;
+  order: number;
+  active: boolean;
 }
 
 export interface CategoriaTicket {
   id: number;
-  nombre: string;
-  descripcion?: string;
-  activo: boolean;
+  name: string;
+  description?: string;
+  active: boolean;
 }
 
 export interface PrioridadTicket {
   id: number;
-  nombre: string;
-  nivel: number;
+  name: string;
+  level: number;
   color: string;
-  descripcion?: string;
-  activo: boolean;
+  description?: string;
+  active: boolean;
+}
+
+export interface DireccionTicket {
+  id: number;
+  name: string;
+  description?: string;
+  active: boolean;
 }
 
 export interface Ticket {
   id: string;
-  titulo: string;
-  descripcion: string;
-  area_incidente: string;
-  categoria_id: number;
+  title: string;
+  description: string;
+  incident_area_id: number;
+  incident_area_name?: string;
+  category_id: number;
+  category_name?: string;
+  priority_id: number;
+  priority_name?: string;
+  priority_color?: string;
+  priority_level?: number;
+  state_id: number;
+  state_name?: string;
+  state_color?: string;
+  created_by_user_id: number;
+  created_by_user_name?: string;
+  created_by_user_email?: string;
+  assigned_technician_id?: number | null;
+  assigned_technician_name?: string | null;
+  assigned_technician_email?: string | null;
+  image_url?: string | null;
+  images?: string[];
+  created_at: string;
+  updated_at: string;
+  closed_at?: string | null;
+  // Campos legacy en español para compatibilidad (deprecated)
+  titulo?: string;
+  descripcion?: string;
+  area_incidente_id?: number;
+  area_incidente_nombre?: string;
+  categoria_id?: number;
   categoria_nombre?: string;
-  prioridad_id: number;
+  prioridad_id?: number;
   prioridad_nombre?: string;
   prioridad_color?: string;
   prioridad_nivel?: number;
-  estado_id: number;
+  estado_id?: number;
   estado_nombre?: string;
   estado_color?: string;
-  usuario_creador_id: number;
+  usuario_creador_id?: number;
   usuario_creador_nombre?: string;
   usuario_creador_email?: string;
   tecnico_asignado_id?: number | null;
@@ -73,33 +106,33 @@ export interface Ticket {
   tecnico_asignado_email?: string | null;
   imagen_url?: string | null;
   imagenes?: string[];
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
   fecha_cierre?: string | null;
 }
 
 export interface TicketComentario {
   id: number;
   ticket_id: string;
-  usuario_id: number;
-  usuario_nombre: string;
-  usuario_email: string;
-  usuario_rol: string;
-  contenido: string;
-  fecha_creacion: string;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  user_role: string;
+  content: string;
+  created_at: string;
 }
 
 export interface TicketHistorial {
   id: number;
   ticket_id: string;
-  usuario_id: number;
-  usuario_nombre: string;
-  usuario_email: string;
-  tipo_cambio: string;
-  campo_anterior?: string | null;
-  campo_nuevo?: string | null;
-  descripcion?: string | null;
-  fecha_cambio: string;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  change_type: string;
+  previous_field?: string | null;
+  new_field?: string | null;
+  description?: string | null;
+  changed_at: string;
 }
 
 export interface Tecnico {
@@ -134,7 +167,7 @@ export interface TicketFilters {
   estado_id?: number;
   categoria_id?: number;
   prioridad_id?: number;
-  tecnico_asignado_id?: number;
+  assigned_technician_id?: number;
   busqueda?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
