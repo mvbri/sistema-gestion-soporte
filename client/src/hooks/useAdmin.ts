@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -130,11 +130,16 @@ export const useDeletePrioridad = () => {
   });
 };
 
-export const useAdminDirecciones = () => {
+export const useAdminDirecciones = (filters?: DireccionesFilters) => {
   return useQuery({
-    queryKey: ['adminDirecciones'],
-    queryFn: () => adminService.getDirecciones(),
-    select: (response) => response.data,
+    queryKey: ['adminDirecciones', filters],
+    queryFn: () => adminService.getDirecciones(filters),
+    select: (response) => {
+      if (response?.data) {
+        return response.data;
+      }
+      return undefined;
+    },
     staleTime: 5 * 60 * 1000,
   });
 };

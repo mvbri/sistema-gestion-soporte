@@ -38,6 +38,14 @@ export interface UpdateDireccionData {
   active?: boolean;
 }
 
+export interface DireccionesFilters {
+  search?: string;
+  page?: number;
+  limit?: number;
+  orderBy?: 'name' | 'description' | 'active' | 'created_at' | 'updated_at';
+  orderDirection?: 'ASC' | 'DESC';
+}
+
 export const adminService = {
   async getCategorias(): Promise<ApiResponse<CategoriaTicket[]>> {
     const response = await api.get<ApiResponse<CategoriaTicket[]>>('/admin/categorias');
@@ -79,8 +87,18 @@ export const adminService = {
     return response.data;
   },
 
-  async getDirecciones(): Promise<ApiResponse<DireccionTicket[]>> {
-    const response = await api.get<ApiResponse<DireccionTicket[]>>('/admin/direcciones');
+  async getDirecciones(filters?: DireccionesFilters): Promise<ApiResponse<{ direcciones: DireccionTicket[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>> {
+    const params = new URLSearchParams();
+    if (filters) {
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.orderBy) params.append('orderBy', filters.orderBy);
+      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+    }
+    const queryString = params.toString();
+    const url = `/admin/direcciones${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get<ApiResponse<{ direcciones: DireccionTicket[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>>(url);
     return response.data;
   },
 

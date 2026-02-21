@@ -244,19 +244,81 @@ export const deletePrioridad = async (req, res) => {
 };
 
 /**
- * Obtiene todas las direcciones/áreas de incidentes.
+ * Obtiene todas las direcciones/áreas de incidentes con paginación, búsqueda y ordenamiento.
  */
 export const getDirecciones = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM incident_areas ORDER BY name';
+        const {
+            search,
+            page,
+            limit,
+            orderBy,
+            orderDirection
+        } = req.query;
+
+        const pageNum = page ? parseInt(page) : 1;
+        const limitNum = limit ? parseInt(limit) : 10;
+        const orderByValue = orderBy || 'name';
+        const orderDirectionValue = orderDirection || 'ASC';
+
+        const validOrderColumns = ['name', 'description', 'active', 'created_at', 'updated_at'];
+        const validOrderDirections = ['ASC', 'DESC'];
+        
+        const orderColumn = validOrderColumns.includes(orderByValue) ? orderByValue : 'name';
+        const orderDir = validOrderDirections.includes(orderDirectionValue.toUpperCase()) 
+            ? orderDirectionValue.toUpperCase() 
+            : 'ASC';
+
+        let whereClause = '';
+        const params = [];
+
+        if (search) {
+            whereClause = 'WHERE (name LIKE ? OR description LIKE ?)';
+            const searchTerm = `%${search}%`;
+            params.push(searchTerm, searchTerm);
+        }
+
+        const offset = (pageNum - 1) * limitNum;
+        const limitValue = limitNum;
+
+        let countSql = `SELECT COUNT(*) as total FROM incident_areas ${whereClause}`;
+        let sql = `SELECT * FROM incident_areas ${whereClause} ORDER BY ${orderColumn} ${orderDir} LIMIT ? OFFSET ?`;
+
         try {
-            const direcciones = await query(sql);
-            sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+            const countResult = await query(countSql, params);
+            const total = countResult[0].total;
+
+            const direcciones = await query(sql, [...params, limitValue, offset]);
+
+            sendSuccess(res, 'Direcciones obtenidas exitosamente', {
+                direcciones,
+                pagination: {
+                    page: pageNum,
+                    limit: limitValue,
+                    total: Number(total),
+                    totalPages: Math.ceil(Number(total) / limitValue)
+                }
+            });
         } catch (error) {
             if (error.code === 'ER_BAD_FIELD_ERROR') {
-                sql = 'SELECT * FROM incident_areas ORDER BY nombre';
-                const direcciones = await query(sql);
-                sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+                const fallbackOrderColumn = orderColumn === 'name' ? 'nombre' : orderColumn;
+                const fallbackCountSql = `SELECT COUNT(*) as total FROM incident_areas ${whereClause}`;
+                const fallbackSql = `SELECT * FROM incident_areas ${whereClause} ORDER BY ${fallbackOrderColumn} ${orderDir} LIMIT ? OFFSET ?`;
+                
+                const countResult = await query(fallbackCountSql, params);
+                const total = countResult[0].total;
+                
+                const direcciones = await query(fallbackSql, [...params, limitValue, offset]);
+                
+                sendSuccess(res, 'Direcciones obtenidas exitosamente', {
+                    direcciones,
+                    pagination: {
+                        page: pageNum,
+                        limit: limitValue,
+                        total: Number(total),
+                        totalPages: Math.ceil(Number(total) / limitValue)
+                    }
+                });
             } else {
                 throw error;
             }

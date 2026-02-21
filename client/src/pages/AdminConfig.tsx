@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { MainNavbar } from '../components/MainNavbar';
@@ -34,10 +34,33 @@ export const AdminConfig: React.FC = () => {
   const [categoriaToDelete, setCategoriaToDelete] = useState<CategoriaTicket | null>(null);
   const [prioridadToDelete, setPrioridadToDelete] = useState<PrioridadTicket | null>(null);
   const [direccionToDelete, setDireccionToDelete] = useState<DireccionTicket | null>(null);
+  const [direccionesSearchTerm, setDireccionesSearchTerm] = useState('');
+  const [direccionesSearch, setDireccionesSearch] = useState<string | undefined>(undefined);
+  const [direccionesPage, setDireccionesPage] = useState(1);
+  const [direccionesLimit] = useState(5);
+  const [direccionesOrderBy, setDireccionesOrderBy] = useState<'name' | 'description' | 'active' | 'created_at' | 'updated_at'>('name');
+  const [direccionesOrderDirection, setDireccionesOrderDirection] = useState<'ASC' | 'DESC'>('ASC');
 
   const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
   const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
-  const { data: direcciones = [], isLoading: loadingDirecciones } = useAdminDirecciones();
+  const { 
+    data: direccionesData, 
+    isLoading: loadingDirecciones 
+  } = useAdminDirecciones({
+    search: direccionesSearch,
+    page: direccionesPage,
+    limit: direccionesLimit,
+    orderBy: direccionesOrderBy,
+    orderDirection: direccionesOrderDirection,
+  });
+
+  const direcciones = Array.isArray(direccionesData?.direcciones) ? direccionesData.direcciones : [];
+  const direccionesPagination = direccionesData?.pagination || {
+    page: 1,
+    limit: direccionesLimit,
+    total: 0,
+    totalPages: 0,
+  };
   const createCategoriaMutation = useCreateCategoria();
   const updateCategoriaMutation = useUpdateCategoria();
   const deleteCategoriaMutation = useDeleteCategoria();
@@ -221,6 +244,17 @@ export const AdminConfig: React.FC = () => {
         setDireccionToDelete(null);
       },
     });
+  };
+
+  const handleDireccionesSearch = () => {
+    setDireccionesSearch(direccionesSearchTerm || undefined);
+    setDireccionesPage(1);
+  };
+
+  const handleClearDireccionesSearch = () => {
+    setDireccionesSearchTerm('');
+    setDireccionesSearch(undefined);
+    setDireccionesPage(1);
   };
 
   if (user?.role !== 'administrator') {
@@ -810,6 +844,122 @@ export const AdminConfig: React.FC = () => {
                   </button>
                 </div>
 
+                <div className="mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+                    <div className="min-w-0">
+                      <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                        <svg
+                          className="w-4 h-4 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        <span>Buscar</span>
+                      </label>
+                      <div className="flex min-w-0 shadow-sm">
+                        <input
+                          type="text"
+                          value={direccionesSearchTerm}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setDireccionesSearchTerm(value);
+                            if (value === '') {
+                              setDireccionesSearch(undefined);
+                              setDireccionesPage(1);
+                            }
+                          }}
+                          onKeyPress={(e) => e.key === 'Enter' && handleDireccionesSearch()}
+                          placeholder="Nombre o descripción..."
+                          className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                        />
+                        <button
+                          onClick={handleDireccionesSearch}
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 flex-shrink-0 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="min-w-0">
+                      <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                        <svg
+                          className="w-4 h-4 text-purple-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                          />
+                        </svg>
+                        <span>Dirección</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={direccionesOrderDirection}
+                          onChange={(e) => {
+                            setDireccionesOrderDirection(e.target.value as 'ASC' | 'DESC');
+                            setDireccionesPage(1);
+                          }}
+                          className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                        >
+                          <option value="ASC">Ascendente</option>
+                          <option value="DESC">Descendente</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(direccionesSearch || direccionesSearchTerm) && (
+                      <div className="min-w-0 flex items-end">
+                        <button
+                          onClick={handleClearDireccionesSearch}
+                          className="w-full px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
+                        >
+                          Limpiar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {showDireccionForm && !editingDireccion && (
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <h3 className="text-lg font-medium mb-4">Crear Dirección</h3>
@@ -910,78 +1060,143 @@ export const AdminConfig: React.FC = () => {
                 )}
 
                 <div className="space-y-3">
-                  {direcciones.map((direccion) => (
-                    <div
-                      key={direccion.id}
-                      className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900">{direccion.name}</h3>
-                          {direccion.description && (
-                            <p className="text-sm text-gray-600 mt-1">{direccion.description}</p>
-                          )}
-                          <div className="mt-2 flex items-center gap-2">
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded ${
-                                direccion.active
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
+                  {direcciones.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {loadingDirecciones ? 'Cargando...' : 'No se encontraron direcciones'}
+                    </div>
+                  ) : (
+                    direcciones.map((direccion) => (
+                      <div
+                        key={direccion.id}
+                        className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{direccion.name}</h3>
+                            {direccion.description && (
+                              <p className="text-sm text-gray-600 mt-1">{direccion.description}</p>
+                            )}
+                            <div className="mt-2 flex items-center gap-2">
+                              <span
+                                className={`px-2 py-1 text-xs font-medium rounded ${
+                                  direccion.active
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {direccion.active ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingDireccion(direccion);
+                                setShowDireccionForm(false);
+                              }}
+                              className="group p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                              title="Editar"
                             >
-                              {direccion.active ? 'Activo' : 'Inactivo'}
-                            </span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setDireccionToDelete(direccion)}
+                              className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                              title="Eliminar"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingDireccion(direccion);
-                              setShowDireccionForm(false);
-                            }}
-                            className="group p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
-                            title="Editar"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => setDireccionToDelete(direccion)}
-                            className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
-                            title="Eliminar"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
+
+                {direccionesPagination.totalPages > 1 && (
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Mostrando {((direccionesPagination.page - 1) * direccionesPagination.limit) + 1} a{' '}
+                      {Math.min(direccionesPagination.page * direccionesPagination.limit, direccionesPagination.total)} de{' '}
+                      {direccionesPagination.total} direcciones
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setDireccionesPage((prev) => Math.max(1, prev - 1))}
+                        disabled={direccionesPagination.page === 1}
+                        className="px-4 py-2 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      >
+                        Anterior
+                      </button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: direccionesPagination.totalPages }, (_, i) => i + 1)
+                          .filter((page) => {
+                            const current = direccionesPagination.page;
+                            const total = direccionesPagination.totalPages;
+                            return (
+                              page === 1 ||
+                              page === total ||
+                              (page >= current - 1 && page <= current + 1)
+                            );
+                          })
+                          .map((page, index, array) => {
+                            const prevPage = array[index - 1];
+                            const showEllipsis = prevPage && page - prevPage > 1;
+                            return (
+                              <React.Fragment key={page}>
+                                {showEllipsis && (
+                                  <span className="px-2 text-gray-500">...</span>
+                                )}
+                                <button
+                                  onClick={() => setDireccionesPage(page)}
+                                  className={`px-4 py-2 border rounded-lg font-medium transition-all duration-200 ${
+                                    direccionesPagination.page === page
+                                      ? 'bg-blue-600 text-white border-blue-600'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              </React.Fragment>
+                            );
+                          })}
+                      </div>
+                      <button
+                        onClick={() => setDireccionesPage((prev) => Math.min(direccionesPagination.totalPages, prev + 1))}
+                        disabled={direccionesPagination.page === direccionesPagination.totalPages}
+                        className="px-4 py-2 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
