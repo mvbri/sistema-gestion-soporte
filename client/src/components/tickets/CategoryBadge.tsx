@@ -6,7 +6,7 @@ interface CategoryBadgeProps {
 }
 
 export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ categoria, className = '' }) => {
-  const categoriaNombre = typeof categoria === 'string' ? categoria : categoria.nombre;
+  const categoriaNombre = typeof categoria === 'string' ? categoria : categoria.name;
 
   return (
     <span

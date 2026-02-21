@@ -38,7 +38,7 @@ export const AdminConfig: React.FC = () => {
   const [direccionesSearch, setDireccionesSearch] = useState<string | undefined>(undefined);
   const [direccionesPage, setDireccionesPage] = useState(1);
   const [direccionesLimit] = useState(5);
-  const [direccionesOrderBy, setDireccionesOrderBy] = useState<'name' | 'description' | 'active' | 'created_at' | 'updated_at'>('name');
+  const [direccionesOrderBy] = useState<'name' | 'description' | 'active' | 'created_at' | 'updated_at'>('name');
   const [direccionesOrderDirection, setDireccionesOrderDirection] = useState<'ASC' | 'DESC'>('ASC');
 
   const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
@@ -1207,7 +1207,7 @@ export const AdminConfig: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
               <p className="text-gray-700 mb-6">
-                ¿Estás seguro de que deseas eliminar {categoriaToDelete.nombre}?
+                ¿Estás seguro de que deseas eliminar {categoriaToDelete.name}?
               </p>
               <div className="flex justify-end space-x-2">
                 <button
@@ -1234,7 +1234,7 @@ export const AdminConfig: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
               <p className="text-gray-700 mb-6">
-                ¿Estás seguro de que deseas eliminar la prioridad {prioridadToDelete.nombre}?
+                ¿Estás seguro de que deseas eliminar la prioridad {prioridadToDelete.name}?
               </p>
               <div className="flex justify-end space-x-2">
                 <button
@@ -1261,7 +1261,7 @@ export const AdminConfig: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
               <p className="text-gray-700 mb-6">
-                ¿Estás seguro de que deseas eliminar la dirección {direccionToDelete.nombre}?
+                ¿Estás seguro de que deseas eliminar la dirección {direccionToDelete.name}?
               </p>
               <div className="flex justify-end space-x-2">
                 <button

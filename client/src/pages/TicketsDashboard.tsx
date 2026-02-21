@@ -5,11 +5,12 @@ import { useTicketStats } from '../hooks/useTickets';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import type { TicketStats } from '../types';
 
 export const TicketsDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: stats, isLoading: loading } = useTicketStats();
+  const { data: stats, isLoading: loading } = useTicketStats() as { data: TicketStats | undefined; isLoading: boolean };
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -110,7 +111,7 @@ export const TicketsDashboard: React.FC = () => {
                   fill="#8884d8"
                   dataKey="cantidad"
                 >
-                  {stats.porPrioridad.map((_, index) => (
+                  {stats.porPrioridad.map((_: unknown, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

@@ -15,7 +15,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
   colorOverride,
   className = '',
 }) => {
-  const prioridadNombre = typeof prioridad === 'string' ? prioridad : prioridad.nombre;
+  const prioridadNombre = typeof prioridad === 'string' ? prioridad : prioridad.name;
 
   const baseColor =
     typeof prioridad === 'string'

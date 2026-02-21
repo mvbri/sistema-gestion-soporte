@@ -70,10 +70,6 @@ export const useTicketStats = () => {
     queryKey: ['ticketStats'],
     queryFn: () => ticketService.getStats(),
     select: (response) => response.data,
-    onError: (error: any) => {
-      console.error('Error al cargar estadísticas:', error);
-      toast.error(error.response?.data?.message || 'Error al cargar estadísticas');
-    },
   });
 };
 
