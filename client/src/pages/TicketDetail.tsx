@@ -109,6 +109,9 @@ export const TicketDetail: React.FC = () => {
   const onUpdate = (data: UpdateTicketData) => {
     if (!id) return;
     
+    console.log('Datos del formulario:', data);
+    console.log('tecnico_asignado_id:', data.tecnico_asignado_id, typeof data.tecnico_asignado_id);
+    
     const isAssignedTechnician = user?.role === 'technician' && ticket?.assigned_technician_id === user?.id;
     
     if (isAssignedTechnician) {
@@ -135,22 +138,24 @@ export const TicketDetail: React.FC = () => {
         }
       );
     } else {
-      const dataToSend: Record<string, unknown> = {};
+      const dataToSend: UpdateTicketData = {};
       
-      if (data.titulo !== undefined) dataToSend.title = data.titulo;
-      if (data.descripcion !== undefined) dataToSend.description = data.descripcion;
-      if (data.area_incidente_id !== undefined) dataToSend.incident_area_id = data.area_incidente_id;
-      if (data.categoria_id !== undefined) dataToSend.category_id = data.categoria_id;
-      if (data.prioridad_id !== undefined) dataToSend.priority_id = data.prioridad_id;
-      if (data.estado_id !== undefined) dataToSend.state_id = data.estado_id;
+      if (data.titulo !== undefined) dataToSend.titulo = data.titulo;
+      if (data.descripcion !== undefined) dataToSend.descripcion = data.descripcion;
+      if (data.area_incidente_id !== undefined) dataToSend.area_incidente_id = data.area_incidente_id;
+      if (data.categoria_id !== undefined) dataToSend.categoria_id = data.categoria_id;
+      if (data.prioridad_id !== undefined) dataToSend.prioridad_id = data.prioridad_id;
+      if (data.estado_id !== undefined) dataToSend.estado_id = data.estado_id;
       
       if (data.tecnico_asignado_id !== undefined) {
-        dataToSend.assigned_technician_id = 
+        dataToSend.tecnico_asignado_id = 
           data.tecnico_asignado_id === null || 
           (typeof data.tecnico_asignado_id === 'number' && isNaN(data.tecnico_asignado_id))
             ? null 
             : data.tecnico_asignado_id;
       }
+      
+      console.log('Datos a enviar:', dataToSend);
       
       updateTicketMutation.mutate(
         { id, data: dataToSend },
@@ -351,25 +356,33 @@ export const TicketDetail: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Técnico Asignado</label>
-                      <select
-                        {...registerUpdate('tecnico_asignado_id', { 
-                          setValueAs: (value: string) => {
-                            if (value === '' || value === null || value === undefined) {
-                              return null;
-                            }
-                            const numValue = parseInt(value, 10);
-                            return isNaN(numValue) ? null : numValue;
-                          }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      >
-                        <option value="">Sin asignar</option>
-                        {tecnicos.map((tecnico) => (
-                          <option key={tecnico.id} value={tecnico.id}>
-                            {tecnico.full_name}
-                          </option>
-                        ))}
-                      </select>
+                      <Controller
+                        name="tecnico_asignado_id"
+                        control={controlUpdate}
+                        render={({ field }) => (
+                          <select
+                            value={field.value === null || field.value === undefined ? '' : String(field.value)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '' || value === null || value === undefined) {
+                                field.onChange(null);
+                              } else {
+                                const numValue = parseInt(value, 10);
+                                field.onChange(isNaN(numValue) ? null : numValue);
+                              }
+                            }}
+                            onBlur={field.onBlur}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="">Sin asignar</option>
+                            {tecnicos.map((tecnico) => (
+                              <option key={tecnico.id} value={tecnico.id}>
+                                {tecnico.full_name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      />
                     </div>
                   </div>
                 </>

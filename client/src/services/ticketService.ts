@@ -90,8 +90,14 @@ export const ticketService = {
     if (data.prioridad_id !== undefined) mappedData.priority_id = data.prioridad_id;
     if (data.estado_id !== undefined) mappedData.state_id = data.estado_id;
     if (data.tecnico_asignado_id !== undefined) {
-      mappedData.assigned_technician_id = data.tecnico_asignado_id;
+      if (data.tecnico_asignado_id === null) {
+        mappedData.assigned_technician_id = null;
+      } else if (typeof data.tecnico_asignado_id === 'number' && !isNaN(data.tecnico_asignado_id)) {
+        mappedData.assigned_technician_id = data.tecnico_asignado_id;
+      }
     }
+    
+    console.log('Datos mapeados para enviar al backend:', mappedData);
     
     const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}`, mappedData);
     return response.data;

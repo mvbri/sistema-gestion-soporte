@@ -202,10 +202,23 @@ export const updateTicket = async (req, res) => {
             assigned_technician_id: assignedTechnicianIdRaw
         } = req.body;
 
+        console.log('Body recibido:', req.body);
+        console.log('assigned_technician_id recibido:', assignedTechnicianIdRaw, typeof assignedTechnicianIdRaw);
+
         const state_id = stateIdRaw !== undefined ? parseInt(stateIdRaw, 10) : undefined;
-        const assigned_technician_id = assignedTechnicianIdRaw !== undefined && assignedTechnicianIdRaw !== null 
-            ? parseInt(assignedTechnicianIdRaw, 10) 
-            : assignedTechnicianIdRaw;
+        let assigned_technician_id;
+        if (assignedTechnicianIdRaw === null || assignedTechnicianIdRaw === '') {
+            assigned_technician_id = null;
+        } else if (assignedTechnicianIdRaw !== undefined) {
+            const parsed = typeof assignedTechnicianIdRaw === 'number' 
+                ? assignedTechnicianIdRaw 
+                : parseInt(assignedTechnicianIdRaw, 10);
+            assigned_technician_id = isNaN(parsed) ? null : parsed;
+        } else {
+            assigned_technician_id = undefined;
+        }
+        
+        console.log('assigned_technician_id procesado:', assigned_technician_id);
 
         if (role === 'technician') {
             if (ticket.assigned_technician_id !== userId) {
@@ -301,39 +314,44 @@ export const updateTicket = async (req, res) => {
                 });
             }
 
-            if (assigned_technician_id !== undefined && assigned_technician_id !== ticket.assigned_technician_id) {
-                const tecnicoAnterior = ticket.assigned_technician_name || 'Sin asignar';
-                let tecnicoNuevo = 'Sin asignar';
+            if (assigned_technician_id !== undefined) {
+                const tecnicoAnteriorId = ticket.assigned_technician_id;
+                const tecnicoNuevoId = assigned_technician_id;
                 
-                if (assigned_technician_id) {
-                    const tecnico = await Usuario.findById(assigned_technician_id);
-                    tecnicoNuevo = tecnico?.full_name || 'Desconocido';
+                if (tecnicoAnteriorId !== tecnicoNuevoId) {
+                    const tecnicoAnterior = ticket.assigned_technician_name || 'Sin asignar';
+                    let tecnicoNuevo = 'Sin asignar';
                     
-                    if (tecnico && tecnico.email) {
-                        try {
-                            await enviarEmailAsignacion(
-                                tecnico.email,
-                                tecnico.full_name,
-                                ticket.title,
-                                ticket.id
-                            );
-                        } catch (emailError) {
-                            console.error('Error al enviar email de asignación:', emailError);
+                    if (tecnicoNuevoId) {
+                        const tecnico = await Usuario.findById(tecnicoNuevoId);
+                        tecnicoNuevo = tecnico?.full_name || 'Desconocido';
+                        
+                        if (tecnico && tecnico.email) {
+                            try {
+                                await enviarEmailAsignacion(
+                                    tecnico.email,
+                                    tecnico.full_name,
+                                    ticket.title,
+                                    ticket.id
+                                );
+                            } catch (emailError) {
+                                console.error('Error al enviar email de asignación:', emailError);
+                            }
+                        }
+
+                        if (ticket.state_id === 1 && (state_id === undefined || state_id === 1)) {
+                            state_id = 2;
+                            estadoAutoAsignado = true;
+                            console.log(`Estado automáticamente cambiado a "Asignado" (2) para ticket ${id} al asignar técnico ${tecnicoNuevoId}`);
                         }
                     }
 
-                    if (ticket.state_id === 1 && (state_id === undefined || state_id === 1)) {
-                        state_id = 2;
-                        estadoAutoAsignado = true;
-                        console.log(`Estado automáticamente cambiado a "Asignado" (2) para ticket ${id} al asignar técnico ${assigned_technician_id}`);
-                    }
+                    cambios.push({
+                        campo: 'assigned_technician',
+                        anterior: tecnicoAnterior,
+                        nuevo: tecnicoNuevo
+                    });
                 }
-
-                cambios.push({
-                    campo: 'assigned_technician',
-                    anterior: tecnicoAnterior,
-                    nuevo: tecnicoNuevo
-                });
             }
         }
 
@@ -359,17 +377,19 @@ export const updateTicket = async (req, res) => {
 
         const incident_area_id = areaIncidenteIdRaw !== undefined ? parseInt(areaIncidenteIdRaw, 10) : undefined;
 
-        const updateData = role === 'administrator' ? {
-            title,
-            description,
-            incident_area_id,
-            category_id: category_id !== undefined ? parseInt(category_id, 10) : undefined,
-            priority_id: priority_id !== undefined ? parseInt(priority_id, 10) : undefined,
-            state_id,
-            assigned_technician_id
-        } : {
-            state_id
-        };
+        const updateData = {};
+        
+        if (role === 'administrator') {
+            if (title !== undefined) updateData.title = title;
+            if (description !== undefined) updateData.description = description;
+            if (incident_area_id !== undefined) updateData.incident_area_id = incident_area_id;
+            if (category_id !== undefined) updateData.category_id = parseInt(category_id, 10);
+            if (priority_id !== undefined) updateData.priority_id = parseInt(priority_id, 10);
+            if (state_id !== undefined) updateData.state_id = state_id;
+            if (assigned_technician_id !== undefined) updateData.assigned_technician_id = assigned_technician_id;
+        } else {
+            if (state_id !== undefined) updateData.state_id = state_id;
+        }
 
         const updatedTicket = await Ticket.update(id, updateData);
 
