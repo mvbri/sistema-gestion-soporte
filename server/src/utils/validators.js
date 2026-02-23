@@ -37,7 +37,7 @@ export const validateRegistro = [
         .trim()
         .notEmpty().withMessage('El email es requerido')
         .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+        .customSanitizer((value) => typeof value === 'string' ? value.toLowerCase() : value),
     
     body('password')
         .notEmpty().withMessage('La contraseña es requerida')
@@ -72,7 +72,7 @@ export const validateLogin = [
         .trim()
         .notEmpty().withMessage('El email es requerido')
         .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+        .customSanitizer((value) => typeof value === 'string' ? value.toLowerCase() : value),
     
     body('password')
         .notEmpty().withMessage('La contraseña es requerida'),
@@ -86,7 +86,7 @@ export const validateRecuperacionPassword = [
         .trim()
         .notEmpty().withMessage('El email es requerido')
         .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+        .customSanitizer((value) => typeof value === 'string' ? value.toLowerCase() : value),
     
     handleValidationErrors
 ];
@@ -208,7 +208,7 @@ export const validateGetSecurityQuestions = [
         .trim()
         .notEmpty().withMessage('El email es requerido')
         .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+        .customSanitizer((value) => typeof value === 'string' ? value.toLowerCase() : value),
     
     handleValidationErrors
 ];
@@ -219,7 +219,7 @@ export const validateVerifySecurityAnswers = [
         .trim()
         .notEmpty().withMessage('El email es requerido')
         .isEmail().withMessage('El email no es válido')
-        .normalizeEmail(),
+        .customSanitizer((value) => typeof value === 'string' ? value.toLowerCase() : value),
     
     body('answer1')
         .trim()
