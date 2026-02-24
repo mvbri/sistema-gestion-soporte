@@ -58,10 +58,9 @@ export const validateRegistro = [
             return true;
         }),
     
-    body('department')
-        .trim()
-        .notEmpty().withMessage('El departamento es requerido')
-        .isIn(['IT', 'Direccion', 'Secretaria', 'otro']).withMessage('El departamento debe ser uno de los valores permitidos: IT, Direccion, Secretaria, otro'),
+    body('incident_area_id')
+        .notEmpty().withMessage('La dirección es requerida')
+        .isInt({ min: 1 }).withMessage('La dirección seleccionada no es válida'),
     
     handleValidationErrors
 ];
@@ -122,10 +121,9 @@ export const validateUpdateProfile = [
             return true;
         }),
     
-    body('department')
-        .trim()
-        .notEmpty().withMessage('El departamento es requerido')
-        .isIn(['IT', 'Direccion', 'Secretaria', 'otro']).withMessage('El departamento debe ser uno de los valores permitidos: IT, Direccion, Secretaria, otro'),
+    body('incident_area_id')
+        .notEmpty().withMessage('La dirección es requerida')
+        .isInt({ min: 1 }).withMessage('La dirección seleccionada no es válida'),
     
     handleValidationErrors
 ];
@@ -141,10 +139,6 @@ export const validateCreateTicket = [
         .trim()
         .notEmpty().withMessage('Por favor, proporciona una descripción detallada del problema')
         .isLength({ min: 20 }).withMessage('La descripción debe tener al menos 20 caracteres para poder entender mejor el problema'),
-    
-    body('incident_area_id')
-        .notEmpty().withMessage('Debes seleccionar el área del incidente')
-        .isInt({ min: 1 }).withMessage('El área del incidente seleccionada no es válida'),
     
     body('category_id')
         .notEmpty().withMessage('Debes seleccionar una categoría para el ticket')
@@ -171,7 +165,7 @@ export const validateUpdateTicket = [
     
     body('incident_area_id')
         .optional()
-        .isInt({ min: 1 }).withMessage('El área del incidente debe ser un número válido'),
+        .isInt({ min: 1 }).withMessage('La dirección debe ser un número válido'),
     
     body('category_id')
         .optional()

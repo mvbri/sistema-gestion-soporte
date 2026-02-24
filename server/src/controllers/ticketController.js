@@ -53,10 +53,20 @@ export const createTicket = async (req, res) => {
         const {
             title,
             description,
-            incident_area_id,
             category_id,
             priority_id
         } = req.body;
+
+        // Obtener dirección del usuario que crea el ticket
+        const currentUser = await Usuario.findById(req.user.id);
+        if (!currentUser || !currentUser.incident_area_id) {
+            return sendError(
+                res,
+                'No tienes una Dirección configurada en tu perfil. Contacta al administrador o actualiza tu perfil.',
+                null,
+                400
+            );
+        }
 
         const imagenes = buildTicketImagesFromRequest(req);
         const image_url = imagenes.length > 0 ? JSON.stringify(imagenes) : null;
@@ -64,7 +74,7 @@ export const createTicket = async (req, res) => {
         const ticket = await Ticket.create({
             title,
             description,
-            incident_area_id: parseInt(incident_area_id),
+            incident_area_id: Number(currentUser.incident_area_id),
             category_id: parseInt(category_id),
             priority_id: parseInt(priority_id),
             created_by_user_id: req.user.id,

@@ -10,7 +10,8 @@ import {
     updateCurrentUser,
     getSecurityQuestions,
     verifySecurityAnswers,
-    setSecurityQuestions
+    setSecurityQuestions,
+    getDireccionesPublic
 } from '../controllers/authController.js';
 import {
     validateRegistro,
@@ -35,6 +36,9 @@ router.post('/reset-password', validateRestablecerPassword, resetPassword);
 
 router.post('/get-security-questions', validateGetSecurityQuestions, getSecurityQuestions);
 router.post('/verify-security-answers', validateVerifySecurityAnswers, verifySecurityAnswers);
+
+// Direcciones públicas para formularios de registro
+router.get('/direcciones', getDireccionesPublic);
 
 router.get('/current-user', authenticate, getCurrentUser);
 router.put('/profile', authenticate, validateUpdateProfile, updateCurrentUser);

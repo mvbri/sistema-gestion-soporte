@@ -4,7 +4,6 @@ import type { ApiResponse, Ticket, TicketComentario, TicketHistorial, EstadoTick
 export interface CreateTicketData {
   titulo: string;
   descripcion: string;
-  area_incidente_id: number;
   categoria_id: number;
   prioridad_id: number;
   imagen_url?: string;
@@ -13,7 +12,6 @@ export interface CreateTicketData {
 export interface UpdateTicketData {
   titulo?: string;
   descripcion?: string;
-  area_incidente_id?: number;
   categoria_id?: number;
   prioridad_id?: number;
   estado_id?: number;
@@ -85,7 +83,6 @@ export const ticketService = {
     
     if (data.titulo !== undefined) mappedData.title = data.titulo;
     if (data.descripcion !== undefined) mappedData.description = data.descripcion;
-    if (data.area_incidente_id !== undefined) mappedData.incident_area_id = data.area_incidente_id;
     if (data.categoria_id !== undefined) mappedData.category_id = data.categoria_id;
     if (data.prioridad_id !== undefined) mappedData.priority_id = data.prioridad_id;
     if (data.estado_id !== undefined) mappedData.state_id = data.estado_id;

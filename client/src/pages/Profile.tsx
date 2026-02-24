@@ -10,6 +10,7 @@ import type { UpdateProfileData } from '../services/authService';
 import { authService } from '../services/authService';
 import formStyles from '../styles/modules/forms.module.css';
 import { translateRole } from '../utils/roleTranslations';
+import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
 
 const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
   const formatRequiredField = (value: string): string => value.trim();
@@ -23,7 +24,7 @@ const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
   return {
     full_name: formatRequiredField(data.full_name),
     phone: formatOptionalField(data.phone),
-    department: formatRequiredField(data.department),
+    incident_area_id: data.incident_area_id,
   };
 };
 
@@ -37,6 +38,7 @@ interface SecurityQuestionsData {
 export const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();
   const [showSecurityQuestions, setShowSecurityQuestions] = useState(false);
+  const { data: direcciones = [], isLoading: loadingDirecciones } = useDireccionesOptions();
 
   const {
     register,
@@ -48,7 +50,7 @@ export const Profile: React.FC = () => {
     defaultValues: {
       full_name: user?.full_name ?? '',
       phone: user?.phone ?? '',
-      department: user?.department ?? '',
+      incident_area_id: user?.incident_area_id ?? 0,
     },
   });
 
@@ -66,7 +68,7 @@ export const Profile: React.FC = () => {
       reset({
         full_name: user.full_name,
         phone: user.phone ?? '',
-        department: user.department ?? '',
+        incident_area_id: user.incident_area_id ?? 0,
       });
     }
   }, [user, reset]);
@@ -187,22 +189,26 @@ export const Profile: React.FC = () => {
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="department" className="label-field">
-              Departamento
+            <label htmlFor="incident_area_id" className="label-field">
+              Dirección
             </label>
             <select
-              id="department"
-              {...register('department')}
-              className={`input-field ${formStyles.selectField} ${errors.department ? formStyles.inputError : ''}`}
+              id="incident_area_id"
+              {...register('incident_area_id', { valueAsNumber: true })}
+              className={`input-field ${formStyles.selectField} ${errors.incident_area_id ? formStyles.inputError : ''}`}
+              disabled={loadingDirecciones}
             >
-              <option value="">Selecciona un departamento</option>
-              <option value="IT">IT</option>
-              <option value="Direccion">Direccion</option>
-              <option value="Secretaria">Secretaria</option>
-              <option value="otro">otro</option>
+              <option value="">
+                {loadingDirecciones ? 'Cargando direcciones...' : 'Selecciona una dirección'}
+              </option>
+              {direcciones.map((direccion) => (
+                <option key={direccion.id} value={direccion.id}>
+                  {direccion.name}
+                </option>
+              ))}
             </select>
-            {errors.department && (
-              <p className="error-message">{errors.department.message}</p>
+            {errors.incident_area_id && (
+              <p className="error-message">{errors.incident_area_id.message}</p>
             )}
           </div>
 

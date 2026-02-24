@@ -75,7 +75,6 @@ export const TicketDetail: React.FC = () => {
       resetUpdate({
         titulo: ticket.title,
         descripcion: ticket.description,
-        area_incidente_id: ticket.incident_area_id,
         categoria_id: ticket.category_id,
         prioridad_id: ticket.priority_id,
         estado_id: defaultEstadoId,
@@ -142,7 +141,6 @@ export const TicketDetail: React.FC = () => {
       
       if (data.titulo !== undefined) dataToSend.titulo = data.titulo;
       if (data.descripcion !== undefined) dataToSend.descripcion = data.descripcion;
-      if (data.area_incidente_id !== undefined) dataToSend.area_incidente_id = data.area_incidente_id;
       if (data.categoria_id !== undefined) dataToSend.categoria_id = data.categoria_id;
       if (data.prioridad_id !== undefined) dataToSend.prioridad_id = data.prioridad_id;
       if (data.estado_id !== undefined) dataToSend.estado_id = data.estado_id;
@@ -542,7 +540,6 @@ export const TicketDetail: React.FC = () => {
                         resetUpdate({
                           titulo: ticket.title,
                           descripcion: ticket.description,
-                          area_incidente_id: ticket.incident_area_id,
                           categoria_id: ticket.category_id,
                           prioridad_id: ticket.priority_id,
                           estado_id: defaultEstadoId,

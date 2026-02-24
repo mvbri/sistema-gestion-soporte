@@ -59,9 +59,23 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
     console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Error: El puerto ${PORT} ya está en uso.`);
+        console.error(`💡 Soluciones:`);
+        console.error(`   1. Cierra la otra instancia del servidor que está usando el puerto ${PORT}`);
+        console.error(`   2. O cambia el puerto en el archivo .env (PORT=5001)`);
+        console.error(`   3. O mata el proceso: netstat -ano | findstr :${PORT} y luego taskkill /PID <PID> /F\n`);
+        process.exit(1);
+    } else {
+        console.error('Error al iniciar el servidor:', err);
+        process.exit(1);
+    }
 });
 
 

@@ -3,14 +3,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCategorias, usePrioridades, useDirecciones, useCreateTicketWithFormData } from '../hooks/useTickets';
+import { useCategorias, usePrioridades, useCreateTicketWithFormData } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
+import { useAuth } from '../hooks/useAuth';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
-  const { data: direcciones = [] } = useDirecciones();
   const createTicketMutation = useCreateTicketWithFormData();
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
   const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
@@ -70,10 +71,14 @@ export const CreateTicket: React.FC = () => {
   };
 
   const onSubmit = (data: CreateTicketData) => {
+    if (!user?.incident_area_id) {
+      toast.error('No tienes una Dirección configurada. Actualiza tu perfil antes de crear un ticket.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', data.titulo);
     formData.append('description', data.descripcion);
-    formData.append('incident_area_id', data.area_incidente_id.toString());
     formData.append('category_id', data.categoria_id.toString());
     formData.append('priority_id', data.prioridad_id.toString());
 
@@ -125,21 +130,18 @@ export const CreateTicket: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Área del Incidente <span className="text-red-500">*</span>
+                Dirección <span className="text-red-500">*</span>
               </label>
-              <select
-                {...register('area_incidente_id', { valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Seleccione un área</option>
-                {direcciones.map((direccion) => (
-                  <option key={direccion.id} value={direccion.id}>
-                    {direccion.name}
-                  </option>
-                ))}
-              </select>
-              {errors.area_incidente_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.area_incidente_id.message}</p>
+              <input
+                type="text"
+                value={user?.department ?? 'Sin dirección configurada'}
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+              />
+              {!user?.incident_area_id && (
+                <p className="mt-1 text-sm text-red-600">
+                  Debes configurar tu Dirección en tu perfil antes de crear tickets.
+                </p>
               )}
             </div>
 

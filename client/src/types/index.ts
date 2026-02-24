@@ -5,6 +5,7 @@ export interface User {
   role: 'administrator' | 'technician' | 'end_user';
   phone?: string;
   department?: string;
+  incident_area_id?: number | null;
   email_verified: boolean;
 }
 
@@ -87,7 +88,6 @@ export interface Ticket {
   // Campos legacy en español para compatibilidad (deprecated)
   titulo?: string;
   descripcion?: string;
-  area_incidente_id?: number;
   area_incidente_nombre?: string;
   categoria_id?: number;
   categoria_nombre?: string;

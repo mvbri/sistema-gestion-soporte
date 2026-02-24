@@ -9,12 +9,6 @@ export const createTicketSchema = z.object({
   descripcion: z
     .string()
     .min(20, 'La descripción debe tener al menos 20 caracteres'),
-  
-  area_incidente_id: z
-    .number()
-    .int()
-    .min(1, 'El área del incidente es requerida'),
-  
   categoria_id: z
     .number()
     .int()
@@ -40,12 +34,6 @@ export const updateTicketSchema = z.object({
   descripcion: z
     .string()
     .min(20, 'La descripción debe tener al menos 20 caracteres')
-    .optional(),
-  
-  area_incidente_id: z
-    .number()
-    .int()
-    .min(1, 'El área del incidente debe ser válida')
     .optional(),
   
   categoria_id: z

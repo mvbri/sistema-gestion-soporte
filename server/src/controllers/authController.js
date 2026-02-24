@@ -14,7 +14,7 @@ export const register = async (req, res) => {
     let emailSent = false;
 
     try {
-        const { full_name, email, password, phone, department } = req.body;
+        const { full_name, email, password, phone, incident_area_id } = req.body;
 
         const emailExists = await Usuario.emailExists(email);
         if (emailExists) {
@@ -26,7 +26,7 @@ export const register = async (req, res) => {
             email,
             password,
             phone,
-            department
+            incident_area_id: incident_area_id ? Number(incident_area_id) : null
         });
         userId = user.id;
 
@@ -93,10 +93,14 @@ export const login = async (req, res) => {
             return sendError(res, 'Email y contraseña son requeridos', null, 400);
         }
 
+        console.log('🔍 Intentando login con email:', email);
         const user = await Usuario.findByEmail(email);
         if (!user) {
+            console.log('❌ Usuario no encontrado para email:', email);
             return sendError(res, 'Credenciales inválidas', null, 401);
         }
+
+        console.log('✅ Usuario encontrado - ID:', user.id, 'Email:', user.email, 'Email verificado:', user.email_verified);
 
         if (!user.active) {
             return sendError(res, 'Tu cuenta está desactivada. Contacta al administrador.', null, 401);
@@ -108,6 +112,7 @@ export const login = async (req, res) => {
         }
 
         if (!user.email_verified) {
+            console.log('❌ Email no verificado para usuario ID:', user.id, 'Email:', user.email);
             return sendError(res, 'Por favor verifica tu email antes de iniciar sesión', { requires_verification: true }, 403);
         }
 
@@ -130,7 +135,8 @@ export const login = async (req, res) => {
                 email: user.email,
                 role: user.role_name,
                 phone: user.phone,
-                department: user.department
+                department: user.department,
+                incident_area_id: user.incident_area_id || null
             }
         });
     } catch (error) {
@@ -415,6 +421,7 @@ export const getCurrentUser = async (req, res) => {
             role: user.role_name,
             phone: user.phone,
             department: user.department,
+            incident_area_id: user.incident_area_id || null,
             email_verified: user.email_verified
         });
     } catch (error) {
@@ -428,12 +435,12 @@ export const getCurrentUser = async (req, res) => {
  */
 export const updateCurrentUser = async (req, res) => {
     try {
-        const { full_name, phone, department } = req.body;
+        const { full_name, phone, incident_area_id } = req.body;
 
         const updatedUser = await Usuario.updateProfile(req.user.id, {
             full_name,
             phone,
-            department
+            incident_area_id: incident_area_id ? Number(incident_area_id) : null
         });
 
         sendSuccess(res, 'Perfil actualizado exitosamente', {
@@ -443,6 +450,7 @@ export const updateCurrentUser = async (req, res) => {
             role: updatedUser.role_name,
             phone: updatedUser.phone,
             department: updatedUser.department,
+            incident_area_id: updatedUser.incident_area_id || null,
             email_verified: updatedUser.email_verified
         });
     } catch (error) {
@@ -451,3 +459,26 @@ export const updateCurrentUser = async (req, res) => {
     }
 };
 
+/**
+ * Obtener direcciones (áreas de incidente) públicas para formularios de registro
+ */
+export const getDireccionesPublic = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM incident_areas WHERE active = TRUE ORDER BY name';
+        try {
+            const direcciones = await query(sql);
+            sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM incident_areas WHERE activo = TRUE ORDER BY nombre';
+                const direcciones = await query(sql);
+                sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener direcciones públicas:', error);
+        sendError(res, 'Error al obtener direcciones', null, 500);
+    }
+};

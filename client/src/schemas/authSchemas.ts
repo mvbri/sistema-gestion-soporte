@@ -28,13 +28,10 @@ export const registroSchema = z.object({
     .optional()
     .or(z.literal('')),
   
-  department: z
-    .string()
-    .min(1, 'El departamento es requerido')
-    .refine(
-      (val) => ['IT', 'Direccion', 'Secretaria', 'otro'].includes(val),
-      { message: 'Debes seleccionar un departamento válido' }
-    ),
+  incident_area_id: z
+    .number()
+    .int()
+    .min(1, 'La dirección es requerida'),
 });
 
 export const perfilSchema = z.object({
@@ -52,13 +49,10 @@ export const perfilSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  department: z
-    .string()
-    .min(1, 'El departamento es requerido')
-    .refine(
-      (val) => ['IT', 'Direccion', 'Secretaria', 'otro'].includes(val),
-      { message: 'Debes seleccionar un departamento válido' }
-    ),
+  incident_area_id: z
+    .number()
+    .int()
+    .min(1, 'La dirección es requerida'),
 });
 
 export const loginSchema = z.object({
@@ -108,7 +102,9 @@ export const securityQuestionsSchema = z.object({
   answer2: z
     .string()
     .min(3, 'La respuesta debe tener al menos 3 caracteres'),
-});export const verifySecurityAnswersSchema = z.object({
+});
+
+export const verifySecurityAnswersSchema = z.object({
   email: z
     .string()
     .min(1, 'El email es requerido')
@@ -120,3 +116,4 @@ export const securityQuestionsSchema = z.object({
     .string()
     .min(3, 'La respuesta debe tener al menos 3 caracteres'),
 });
+

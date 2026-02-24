@@ -3,24 +3,53 @@ import { query } from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
 class Usuario {
+    static normalizeEmail(email) {
+        if (!email || typeof email !== 'string') return email;
+        return email.trim().toLowerCase();
+    }
+
     static async create(data) {
-        const { full_name, email, password, phone, department, role_id = 3 } = data;
+        const { full_name, email, password, phone, incident_area_id, role_id = 3 } = data;
         
+        const normalizedEmail = this.normalizeEmail(email);
         const passwordHash = await bcrypt.hash(password, 10);
-        
+
+        // Obtener nombre de la dirección para mantener el campo department sincronizado
+        let department = null;
+        if (incident_area_id) {
+            try {
+                const direccion = await query(
+                    'SELECT name FROM incident_areas WHERE id = ?',
+                    [incident_area_id]
+                );
+                department = direccion[0]?.name || null;
+            } catch (error) {
+                console.error('Error al obtener nombre de dirección para el usuario:', error);
+            }
+        }
+
         const sql = `
-            INSERT INTO users (full_name, email, password, phone, department, role_id)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (full_name, email, password, phone, department, incident_area_id, role_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         
-        const result = await query(sql, [full_name, email, passwordHash, phone || null, department || null, role_id]);
+        const result = await query(sql, [
+            full_name,
+            normalizedEmail,
+            passwordHash,
+            phone || null,
+            department,
+            incident_area_id || null,
+            role_id
+        ]);
         
         return {
             id: Number(result.insertId),
             full_name,
-            email,
+            email: normalizedEmail,
             phone,
             department,
+            incident_area_id: incident_area_id || null,
             role_id: Number(role_id),
             email_verified: false
         };
@@ -28,15 +57,16 @@ class Usuario {
 
     static async findByEmail(email) {
         try {
+            const normalizedEmail = this.normalizeEmail(email);
             let sql = `
                 SELECT u.*, r.name as role_name
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
-                WHERE u.email = ?
+                WHERE LOWER(TRIM(u.email)) = ?
             `;
             
             try {
-                const result = await query(sql, [email]);
+                const result = await query(sql, [normalizedEmail]);
                 return result[0] || null;
             } catch (error) {
                 if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
@@ -44,9 +74,9 @@ class Usuario {
                         SELECT u.*, r.nombre as role_name
                         FROM users u
                         JOIN roles r ON u.role_id = r.id
-                        WHERE u.email = ?
+                        WHERE LOWER(TRIM(u.email)) = ?
                     `;
-                    const result = await query(sql, [email]);
+                    const result = await query(sql, [normalizedEmail]);
                     return result[0] || null;
                 }
                 throw error;
@@ -98,15 +128,29 @@ class Usuario {
         const sql = 'UPDATE users SET password = ? WHERE id = ?';
         await query(sql, [passwordHash, id]);
     }
+ 
+    static async updateProfile(id, { full_name, phone, incident_area_id }) {
+        // Mantener department sincronizado con el nombre de la dirección
+        let department = null;
+        if (incident_area_id) {
+            try {
+                const direccion = await query(
+                    'SELECT name FROM incident_areas WHERE id = ?',
+                    [incident_area_id]
+                );
+                department = direccion[0]?.name || null;
+            } catch (error) {
+                console.error('Error al obtener nombre de dirección al actualizar perfil:', error);
+            }
+        }
 
-    static async updateProfile(id, { full_name, phone, department }) {
         const sql = `
             UPDATE users
-            SET full_name = ?, phone = ?, department = ?
+            SET full_name = ?, phone = ?, department = ?, incident_area_id = ?
             WHERE id = ?
         `;
 
-        await query(sql, [full_name, phone || null, department, id]);
+        await query(sql, [full_name, phone || null, department, incident_area_id || null, id]);
 
         return this.findById(id);
     }
@@ -170,8 +214,9 @@ class Usuario {
     }
 
     static async emailExists(email) {
-        const sql = 'SELECT id FROM users WHERE email = ?';
-        const result = await query(sql, [email]);
+        const normalizedEmail = this.normalizeEmail(email);
+        const sql = 'SELECT id FROM users WHERE LOWER(TRIM(email)) = ?';
+        const result = await query(sql, [normalizedEmail]);
         return result.length > 0;
     }
 

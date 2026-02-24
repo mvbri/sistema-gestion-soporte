@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
 import { registroSchema } from '../schemas/authSchemas';
 import type { RegisterData } from '../services/authService';
+import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
 import formStyles from '../styles/modules/forms.module.css';
 
 const formatRegisterData = (data: RegisterData): RegisterData => {
@@ -22,7 +23,7 @@ const formatRegisterData = (data: RegisterData): RegisterData => {
     email: formatRequiredField(data.email),
     password: data.password,
     phone: formatOptionalField(data.phone),
-    department: formatRequiredField(data.department),
+    incident_area_id: data.incident_area_id,
   };
 };
 
@@ -31,6 +32,7 @@ export const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
+  const { data: direcciones = [], isLoading: loadingDirecciones } = useDireccionesOptions();
 
   const {
     register,
@@ -157,22 +159,26 @@ export const Register: React.FC = () => {
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="department" className="label-field">
-              Departamento
+            <label htmlFor="incident_area_id" className="label-field">
+              Dirección
             </label>
             <select
-              id="department"
-              {...register('department')}
-              className={`input-field ${formStyles.selectField} ${errors.department ? formStyles.inputError : ''}`}
+              id="incident_area_id"
+              {...register('incident_area_id', { valueAsNumber: true })}
+              className={`input-field ${formStyles.selectField} ${errors.incident_area_id ? formStyles.inputError : ''}`}
+              disabled={loadingDirecciones}
             >
-              <option value="">Selecciona un departamento</option>
-              <option value="IT">IT</option>
-              <option value="Direccion">Direccion</option>
-              <option value="Secretaria">Secretaria</option>
-              <option value="otro">otro</option>
+              <option value="">
+                {loadingDirecciones ? 'Cargando direcciones...' : 'Selecciona una dirección'}
+              </option>
+              {direcciones.map((direccion) => (
+                <option key={direccion.id} value={direccion.id}>
+                  {direccion.name}
+                </option>
+              ))}
             </select>
-            {errors.department && (
-              <p className="error-message">{errors.department.message}</p>
+            {errors.incident_area_id && (
+              <p className="error-message">{errors.incident_area_id.message}</p>
             )}
           </div>
 

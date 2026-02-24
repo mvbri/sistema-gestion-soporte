@@ -1,12 +1,12 @@
 import api from '../utils/api';
-import type { AuthResponse, ApiResponse, User } from '../types';
+import type { AuthResponse, ApiResponse, User, DireccionTicket } from '../types';
 
 export interface RegisterData {
   full_name: string;
   email: string;
   password: string;
   phone?: string | null;
-  department: string;
+  incident_area_id: number;
 }
 
 export interface LoginData {
@@ -17,7 +17,7 @@ export interface LoginData {
 export interface UpdateProfileData {
   full_name: string;
   phone?: string | null;
-  department: string;
+  incident_area_id: number;
 }
 
 export const authService = {
@@ -87,6 +87,11 @@ export const authService = {
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
     const response = await api.get<ApiResponse<User>>('/auth/current-user');
+    return response.data;
+  },
+
+  async getDirecciones(): Promise<ApiResponse<DireccionTicket[]>> {
+    const response = await api.get<ApiResponse<DireccionTicket[]>>('/auth/direcciones');
     return response.data;
   },
 
