@@ -215,46 +215,7 @@ export const restoreBackup = async (req, res) => {
     }
 };
 
-/**
- * Descarga un archivo de respaldo específico
- */
-export const downloadBackup = async (req, res) => {
-    try {
-        const { filename } = req.params;
 
-        if (!filename) {
-            return sendError(res, 'El nombre del archivo es requerido', null, 400);
-        }
-
-        const backupFilePath = path.join(backupsDirPath, filename);
-
-        if (!fs.existsSync(backupFilePath)) {
-            return sendError(res, 'El archivo de respaldo no existe', null, 404);
-        }
-
-        const stats = fs.statSync(backupFilePath);
-        if (stats.size === 0) {
-            return sendError(res, 'El archivo de respaldo está vacío', null, 400);
-        }
-
-        res.setHeader('Content-Type', 'application/sql');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        
-        const fileStream = fs.createReadStream(backupFilePath);
-        fileStream.pipe(res);
-
-        fileStream.on('error', (error) => {
-            console.error('Error al enviar archivo:', error);
-            if (!res.headersSent) {
-                sendError(res, 'Error al enviar el archivo de respaldo', null, 500);
-            }
-        });
-
-    } catch (error) {
-        console.error('Error al descargar respaldo:', error);
-        sendError(res, 'Error al descargar el archivo de respaldo', null, 500);
-    }
-};
 
 /**
  * Lista todos los archivos de respaldo disponibles con paginación, búsqueda y ordenamiento
