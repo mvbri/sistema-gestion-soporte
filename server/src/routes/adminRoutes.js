@@ -16,6 +16,7 @@ import {
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
 import { handleValidationErrors } from '../utils/validators.js';
+import backupRoutes from './backupRoutes.js';
 
 const router = express.Router();
 
@@ -77,5 +78,7 @@ router.put('/direcciones/:id', [
     handleValidationErrors
 ], updateDireccion);
 router.delete('/direcciones/:id', deleteDireccion);
+
+router.use('/backup', backupRoutes);
 
 export default router;

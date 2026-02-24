@@ -24,12 +24,19 @@ app.use(express.urlencoded({ extended: true }));
 // Servir archivos estáticos (imágenes subidas)
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Servimos tanto /uploads (acceso directo) como /api/uploads (cuando se usa baseURL /api en el frontend)
 const uploadsPath = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsPath));
 app.use('/api/uploads', express.static(uploadsPath));
+
+// Crear directorio de backups si no existe
+const backupsPath = path.join(__dirname, '../backups');
+if (!fs.existsSync(backupsPath)) {
+    fs.mkdirSync(backupsPath, { recursive: true });
+}
 
 // Rutas
 app.use('/api/auth', authRoutes);

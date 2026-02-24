@@ -102,6 +102,12 @@ export const SidebarMenu: React.FC = () => {
       icon: SettingsIcon,
       show: user?.role === 'administrator',
     },
+    {
+      path: '/admin/backup',
+      label: 'Respaldo y Restauración',
+      icon: SettingsIcon,
+      show: user?.role === 'administrator',
+    },
   ].filter((link) => link.show);
 
   return (
