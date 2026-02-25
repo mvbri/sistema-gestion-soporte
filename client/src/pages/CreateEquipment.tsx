@@ -68,31 +68,46 @@ export const CreateEquipment: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Marca <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       {...register('brand')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    {errors.brand && (
+                      <p className="mt-1 text-sm text-red-600">{errors.brand.message}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Modelo <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       {...register('model')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    {errors.model && (
+                      <p className="mt-1 text-sm text-red-600">{errors.model.message}</p>
+                    )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Número de Serie</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Número de Serie <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     {...register('serial_number')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {errors.serial_number && (
+                    <p className="mt-1 text-sm text-red-600">{errors.serial_number.message}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -115,15 +130,6 @@ export const CreateEquipment: React.FC = () => {
                     {errors.type_id && (
                       <p className="mt-1 text-sm text-red-600">{errors.type_id.message}</p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ubicación</label>
-                    <input
-                      type="text"
-                      {...register('location')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
                   </div>
                 </div>
 
@@ -152,7 +158,7 @@ export const CreateEquipment: React.FC = () => {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <label htmlFor="hasWarranty" className="ml-2 block text-sm font-medium text-gray-700">
-                        Si aplica
+                        Si aplica garantía
                       </label>
                     </div>
                     {hasWarranty && (

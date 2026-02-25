@@ -50,6 +50,20 @@ export const EquipmentDetail: React.FC = () => {
     resolver: zodResolver(updateEquipmentSchema),
   });
 
+  const formatDateForInput = (date: string | null | undefined): string => {
+    if (!date) return '';
+    // Si ya viene en formato YYYY-MM-DD lo dejamos tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (equipment) {
       const hasWarrantyValue = !!equipment.warranty_expires_at;
@@ -61,11 +75,10 @@ export const EquipmentDetail: React.FC = () => {
         serial_number: equipment.serial_number,
         type_id: equipment.type_id,
         status: equipment.status,
-        location: equipment.location,
         assigned_to_user_id: equipment.assigned_to_user_id,
         description: equipment.description,
-        purchase_date: equipment.purchase_date,
-        warranty_expires_at: equipment.warranty_expires_at,
+        purchase_date: formatDateForInput(equipment.purchase_date),
+        warranty_expires_at: formatDateForInput(equipment.warranty_expires_at),
       });
     }
   }, [equipment, reset]);
@@ -332,12 +345,7 @@ export const EquipmentDetail: React.FC = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ubicación</label>
-                    <input type="text" {...register('location')} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Compra</label>
                       <input type="date" {...register('purchase_date')} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
@@ -357,7 +365,7 @@ export const EquipmentDetail: React.FC = () => {
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor="hasWarranty" className="ml-2 block text-sm font-medium text-gray-700">
-                          Si aplica
+                          Si aplica garantía
                         </label>
                       </div>
                       {hasWarranty && (

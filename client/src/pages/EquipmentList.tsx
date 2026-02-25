@@ -29,6 +29,7 @@ export const EquipmentList: React.FC = () => {
     equipmentId: null,
     equipmentName: '',
   });
+  const [showMyAssigned, setShowMyAssigned] = useState(false);
 
   const { data: equipmentData, isLoading: loadingEquipment } = useEquipment(filters);
   const { data: types = [] } = useEquipmentTypes();
@@ -55,6 +56,36 @@ export const EquipmentList: React.FC = () => {
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilters(initialFilters);
+    setShowMyAssigned(false);
+  };
+
+  const handleToggleMyAssigned = () => {
+    if (!user?.id) {
+      return;
+    }
+
+    setShowMyAssigned((prev) => {
+      const next = !prev;
+
+      setFilters((prevFilters: EquipmentFilters) => {
+        if (next) {
+          return {
+            ...prevFilters,
+            status: 'assigned',
+            assigned_to_user_id: user.id,
+            page: 1,
+          };
+        }
+
+        const { assigned_to_user_id, status, ...rest } = prevFilters;
+        return {
+          ...rest,
+          page: 1,
+        };
+      });
+
+      return next;
+    });
   };
 
   const handleDelete = (id: number, name: string) => {
@@ -71,9 +102,10 @@ export const EquipmentList: React.FC = () => {
     }
   };
 
-  const canEdit = user?.role === 'administrator';
-  const canDelete = user?.role === 'administrator';
-  const canCreate = user?.role === 'administrator';
+  const isAdministrator = user?.role === 'administrator';
+  const canEdit = isAdministrator;
+  const canDelete = isAdministrator;
+  const canCreate = isAdministrator;
 
   return (
     <>
@@ -88,14 +120,29 @@ export const EquipmentList: React.FC = () => {
                   <p className="mt-1 text-sm text-gray-600">Solo puedes ver equipos disponibles</p>
                 )}
               </div>
-              {canCreate && (
-                <button
-                  onClick={() => navigate('/equipment/crear')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Crear Equipo
-                </button>
-              )}
+              <div className="flex items-center space-x-3">
+                {isAdministrator && (
+                  <button
+                    type="button"
+                    onClick={handleToggleMyAssigned}
+                    className={`px-4 py-2 rounded-md text-sm font-medium border ${
+                      showMyAssigned
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {showMyAssigned ? 'Ver todo el inventario' : 'Mis equipos asignados'}
+                  </button>
+                )}
+                {canCreate && (
+                  <button
+                    onClick={() => navigate('/equipment/crear')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Crear Equipo
+                  </button>
+                )}
+              </div>
             </div>
 
             {(canEdit || canDelete) && (

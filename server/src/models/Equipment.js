@@ -170,6 +170,7 @@ class Equipment {
             brand,
             model,
             serial_number,
+            type_id,
             type,
             status,
             location,

@@ -8,21 +8,18 @@ export const createEquipmentSchema = z.object({
   
   brand: z
     .string()
-    .max(100, 'La marca no puede exceder 100 caracteres')
-    .optional()
-    .nullable(),
+    .min(1, 'La marca es requerida')
+    .max(100, 'La marca no puede exceder 100 caracteres'),
   
   model: z
     .string()
-    .max(100, 'El modelo no puede exceder 100 caracteres')
-    .optional()
-    .nullable(),
+    .min(1, 'El modelo es requerido')
+    .max(100, 'El modelo no puede exceder 100 caracteres'),
   
   serial_number: z
     .string()
-    .max(100, 'El número de serie no puede exceder 100 caracteres')
-    .optional()
-    .nullable(),
+    .min(1, 'El número de serie es requerido')
+    .max(100, 'El número de serie no puede exceder 100 caracteres'),
   
   type_id: z
     .number()
