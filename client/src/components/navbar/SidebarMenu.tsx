@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useMenu } from '../../contexts/MenuContext';
+import { useMenu } from '../../hooks/useMenu';
 import { useAuth } from '../../hooks/useAuth';
 import { MenuToggleButton } from './MenuToggleButton';
 import { NavLink } from './NavLink';

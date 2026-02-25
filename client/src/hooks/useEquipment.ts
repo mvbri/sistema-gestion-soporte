@@ -5,7 +5,7 @@ import {
   type UpdateEquipmentData,
   type AssignEquipmentData
 } from '../services/equipmentService';
-import type { EquipmentFilters } from '../types';
+import type { EquipmentFilters, AxiosErrorResponse } from '../types';
 import { toast } from 'react-toastify';
 import { useTecnicos as useTecnicosFromTickets } from './useTickets';
 
@@ -64,10 +64,10 @@ export const useCreateEquipment = () => {
         toast.success('Equipo creado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err: any) => {
+        errorData.errors.forEach((err) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -93,10 +93,10 @@ export const useUpdateEquipment = () => {
         toast.success('Equipo actualizado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err: any) => {
+        errorData.errors.forEach((err) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -118,7 +118,7 @@ export const useDeleteEquipment = () => {
         toast.success('Equipo eliminado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar equipo');
     },
   });
@@ -138,7 +138,7 @@ export const useAssignEquipment = () => {
         toast.success('Equipo asignado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al asignar equipo');
     },
   });
@@ -157,7 +157,7 @@ export const useUnassignEquipment = () => {
         toast.success('Equipo desasignado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al desasignar equipo');
     },
   });

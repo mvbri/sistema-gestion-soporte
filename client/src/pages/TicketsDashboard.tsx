@@ -103,7 +103,7 @@ export const TicketsDashboard: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={true}
-                  label={(entry: any) => {
+                  label={(entry: { percent?: number; nombre?: string; cantidad?: number }) => {
                     const percent = entry?.percent ?? 0;
                     if (percent < 0.05) return '';
                     return `${entry?.nombre}: ${entry?.cantidad}`;
@@ -121,8 +121,9 @@ export const TicketsDashboard: React.FC = () => {
                   labelFormatter={(label: unknown) => String(label ?? '')}
                 />
                 <Legend 
-                  formatter={(_value: string, entry: any) => {
-                    const { nombre, cantidad } = entry.payload as { nombre: string; cantidad: number };
+                  formatter={(_value: string, entry: unknown) => {
+                    const e = entry as { payload?: { nombre?: string; cantidad?: number } };
+                    const { nombre, cantidad } = e.payload ?? { nombre: '', cantidad: 0 };
                     return `${nombre} (${cantidad})`;
                   }}
                 />

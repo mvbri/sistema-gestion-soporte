@@ -45,7 +45,7 @@ export const ToolsList: React.FC = () => {
     totalPages: 0,
   };
 
-  const handleFilterChange = (key: keyof ToolFilters, value: any) => {
+  const handleFilterChange = (key: keyof ToolFilters, value: string | number | boolean | undefined) => {
     setFilters((prev: ToolFilters) => ({ ...prev, [key]: value, page: 1 }));
   };
 
@@ -77,6 +77,7 @@ export const ToolsList: React.FC = () => {
           };
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { assigned_to_user_id, status, ...rest } = prevFilters;
         return {
           ...rest,

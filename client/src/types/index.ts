@@ -25,6 +25,17 @@ export interface ApiResponse<T = unknown> {
   errors?: Array<{ msg: string; param: string }>;
 }
 
+export interface AxiosErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+      errors?: Array<{ msg?: string; message?: string; param?: string }>;
+    };
+    status?: number;
+  };
+  message?: string;
+}
+
 export type Role = 'administrator' | 'technician' | 'end_user';
 
 export interface EstadoTicket {

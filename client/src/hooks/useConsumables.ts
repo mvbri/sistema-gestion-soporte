@@ -4,7 +4,7 @@ import {
   type CreateConsumableData as CreateConsumablePayload,
   type UpdateConsumableData as UpdateConsumablePayload,
 } from '../services/consumableService';
-import type { ConsumableFilters } from '../types';
+import type { ConsumableFilters, AxiosErrorResponse } from '../types';
 import { toast } from 'react-toastify';
 
 export const useConsumables = (filters?: ConsumableFilters) => {
@@ -62,10 +62,10 @@ export const useCreateConsumable = () => {
         toast.success('Consumible creado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err: any) => {
+        errorData.errors.forEach((err) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -91,10 +91,10 @@ export const useUpdateConsumable = () => {
         toast.success('Consumible actualizado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err: any) => {
+        errorData.errors.forEach((err) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -116,7 +116,7 @@ export const useDeleteConsumable = () => {
         toast.success('Consumible eliminado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar consumible');
     },
   });

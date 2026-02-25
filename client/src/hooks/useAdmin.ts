@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData } from '../services/adminService';
 import { toast } from 'react-toastify';
+import type { AxiosErrorResponse } from '../types';
 
 export const useAdminCategorias = () => {
   return useQuery({
@@ -32,7 +33,7 @@ export const useCreateCategoria = () => {
         toast.success('Categoría creada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al crear categoría');
     },
   });
@@ -51,7 +52,7 @@ export const useUpdateCategoria = () => {
         toast.success('Categoría actualizada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al actualizar categoría');
     },
   });
@@ -69,7 +70,7 @@ export const useDeleteCategoria = () => {
         toast.success('Categoría eliminada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar categoría');
     },
   });
@@ -87,7 +88,7 @@ export const useCreatePrioridad = () => {
         toast.success('Prioridad creada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al crear prioridad');
     },
   });
@@ -106,7 +107,7 @@ export const useUpdatePrioridad = () => {
         toast.success('Prioridad actualizada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al actualizar prioridad');
     },
   });
@@ -124,7 +125,7 @@ export const useDeletePrioridad = () => {
         toast.success('Prioridad eliminada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
         toast.error(error.response?.data?.message || 'Error al eliminar prioridad');
     },
   });
@@ -156,7 +157,7 @@ export const useCreateDireccion = () => {
         toast.success('Dirección creada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al crear dirección');
     },
   });
@@ -175,7 +176,7 @@ export const useUpdateDireccion = () => {
         toast.success('Dirección actualizada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al actualizar dirección');
     },
   });
@@ -193,7 +194,7 @@ export const useDeleteDireccion = () => {
         toast.success('Dirección eliminada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar dirección');
     },
   });
@@ -220,7 +221,7 @@ export const useCreateEquipmentType = () => {
         toast.success('Tipo de equipo creado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al crear tipo de equipo');
     },
   });
@@ -239,7 +240,7 @@ export const useUpdateEquipmentType = () => {
         toast.success('Tipo de equipo actualizado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al actualizar tipo de equipo');
     },
   });
@@ -257,7 +258,7 @@ export const useDeleteEquipmentType = () => {
         toast.success('Tipo de equipo eliminado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de equipo');
     },
   });
@@ -284,7 +285,7 @@ export const useCreateConsumableType = () => {
         toast.success('Tipo de consumible creado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al crear tipo de consumible');
     },
   });
@@ -303,7 +304,7 @@ export const useUpdateConsumableType = () => {
         toast.success('Tipo de consumible actualizado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al actualizar tipo de consumible');
     },
   });
@@ -321,7 +322,7 @@ export const useDeleteConsumableType = () => {
         toast.success('Tipo de consumible eliminado exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de consumible');
     },
   });

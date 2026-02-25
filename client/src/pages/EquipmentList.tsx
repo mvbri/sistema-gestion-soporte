@@ -45,7 +45,7 @@ export const EquipmentList: React.FC = () => {
     totalPages: 0,
   };
 
-  const handleFilterChange = (key: keyof EquipmentFilters, value: any) => {
+  const handleFilterChange = (key: keyof EquipmentFilters, value: string | number | boolean | undefined) => {
     setFilters((prev: EquipmentFilters) => ({ ...prev, [key]: value, page: 1 }));
   };
 
@@ -77,6 +77,7 @@ export const EquipmentList: React.FC = () => {
           };
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { assigned_to_user_id, status, ...rest } = prevFilters;
         return {
           ...rest,

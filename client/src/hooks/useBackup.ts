@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { backupService, type BackupListFilters } from '../services/backupService';
 import { toast } from 'react-toastify';
+import type { AxiosErrorResponse } from '../types';
 
 export const useListBackups = (filters?: BackupListFilters) => {
   return useQuery({
@@ -37,7 +38,7 @@ export const useGenerateBackup = () => {
       queryClient.invalidateQueries({ queryKey: ['backups'] });
       toast.success('Respaldo generado y descargado exitosamente');
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al generar el respaldo');
     },
   });
@@ -54,7 +55,7 @@ export const useRestoreBackup = () => {
         toast.success('Base de datos restaurada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al restaurar el respaldo');
     },
   });
@@ -71,7 +72,7 @@ export const useRestoreBackupFromFile = () => {
         toast.success('Base de datos restaurada exitosamente');
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al restaurar el respaldo');
     },
   });
