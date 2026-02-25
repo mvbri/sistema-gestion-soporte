@@ -11,7 +11,11 @@ import {
     getDirecciones,
     createDireccion,
     updateDireccion,
-    deleteDireccion
+    deleteDireccion,
+    getEquipmentTypes,
+    createEquipmentType,
+    updateEquipmentType,
+    deleteEquipmentType
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
@@ -78,6 +82,20 @@ router.put('/direcciones/:id', [
     handleValidationErrors
 ], updateDireccion);
 router.delete('/direcciones/:id', deleteDireccion);
+
+router.get('/equipment-types', getEquipmentTypes);
+router.post('/equipment-types', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
+    handleValidationErrors
+], createEquipmentType);
+router.put('/equipment-types/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateEquipmentType);
+router.delete('/equipment-types/:id', deleteEquipmentType);
 
 router.use('/backup', backupRoutes);
 

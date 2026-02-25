@@ -40,8 +40,8 @@ export const BackupRestore: React.FC = () => {
     orderDirection,
   });
   
-  const backups = backupsData?.backups || [];
-  const pagination = backupsData?.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 };
+  const backups = (backupsData && 'backups' in backupsData ? backupsData.backups : []) || [];
+  const pagination = (backupsData && 'pagination' in backupsData ? backupsData.pagination : { page: 1, limit: 10, total: 0, totalPages: 0 }) || { page: 1, limit: 10, total: 0, totalPages: 0 };
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -585,7 +585,14 @@ export const BackupRestore: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {backups.map((backup) => (
+                      {backups.map((backup) => {
+                        const backupFile: { filename: string; size: number; created_at: string; modified_at: string } = {
+                          filename: backup.filename,
+                          size: backup.size,
+                          created_at: backup.created_at,
+                          modified_at: backup.modified_at || backup.created_at
+                        };
+                        return (
                         <tr key={backup.filename} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -636,7 +643,7 @@ export const BackupRestore: React.FC = () => {
                                 Descargar
                               </button>
                               <button
-                                onClick={() => handleRestoreFromList(backup)}
+                                onClick={() => handleRestoreFromList(backupFile)}
                                 disabled={restoreBackupFromFileMutation.isPending}
                                 className="text-green-600 hover:text-green-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                                 title="Restaurar desde este respaldo"
@@ -659,7 +666,8 @@ export const BackupRestore: React.FC = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -396,6 +396,127 @@ export const updateDireccion = async (req, res) => {
 /**
  * Elimina una dirección/área de incidente por id.
  */
+/**
+ * Obtiene todos los tipos de equipos.
+ */
+export const getEquipmentTypes = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM equipment_types ORDER BY name';
+        try {
+            const tipos = await query(sql);
+            sendSuccess(res, 'Tipos de equipos obtenidos exitosamente', tipos);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM equipment_types ORDER BY nombre';
+                const tipos = await query(sql);
+                sendSuccess(res, 'Tipos de equipos obtenidos exitosamente', tipos);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener tipos de equipos:', error);
+        sendError(res, 'Error al obtener tipos de equipos', null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo tipo de equipo.
+ */
+export const createEquipmentType = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const sql = 'INSERT INTO equipment_types (name, description) VALUES (?, ?)';
+        const result = await query(sql, [name, description || null]);
+
+        const nuevoTipo = await query('SELECT * FROM equipment_types WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Tipo de equipo creado exitosamente', nuevoTipo[0], 201);
+    } catch (error) {
+        console.error('Error al crear tipo de equipo:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de equipo con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al crear tipo de equipo', null, 500);
+    }
+};
+
+/**
+ * Actualiza un tipo de equipo existente.
+ */
+export const updateEquipmentType = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, active } = req.body;
+
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        params.push(id);
+        const sql = `UPDATE equipment_types SET ${updates.join(', ')} WHERE id = ?`;
+        await query(sql, params);
+
+        const tipo = await query('SELECT * FROM equipment_types WHERE id = ?', [id]);
+        sendSuccess(res, 'Tipo de equipo actualizado exitosamente', tipo[0]);
+    } catch (error) {
+        console.error('Error al actualizar tipo de equipo:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de equipo con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar tipo de equipo', null, 500);
+    }
+};
+
+/**
+ * Elimina un tipo de equipo por id.
+ */
+export const deleteEquipmentType = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const tipo = await query('SELECT * FROM equipment_types WHERE id = ?', [id]);
+        if (tipo.length === 0) {
+            return sendError(res, 'El tipo de equipo no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM equipment_types WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar el tipo de equipo porque tiene equipos asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Tipo de equipo eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar tipo de equipo:', error);
+        sendError(res, 'Error al eliminar tipo de equipo', null, 500);
+    }
+};
+
 export const deleteDireccion = async (req, res) => {
     try {
         const { id } = req.params;

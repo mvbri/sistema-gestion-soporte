@@ -67,11 +67,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateProfile = async (data: UpdateProfileData): Promise<void> => {
-    const response = await authService.updateProfile(data);
-    if (response.success && response.data) {
-      setUser(response.data);
-    } else {
+    try {
+      const response = await authService.updateProfile(data);
+
+      if (response.success && response.data) {
+        setUser(response.data);
+        return;
+      }
+
+      const errorMessage = response.message?.toLowerCase() || '';
+      if (errorMessage.includes('dirección') || errorMessage.includes('incident_area_id')) {
+        throw new Error('dirección_obligatoria');
+      }
       throw new Error(response.message || 'Error al actualizar perfil');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        const backendMessage = axiosError.response?.data?.message?.toLowerCase() || '';
+
+        if (backendMessage.includes('dirección') || backendMessage.includes('incident_area_id')) {
+          throw new Error('dirección_obligatoria');
+        }
+
+        if (axiosError.response?.data?.message) {
+          throw new Error(axiosError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error('Error al actualizar perfil');
     }
   };
 

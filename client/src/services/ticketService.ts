@@ -7,6 +7,7 @@ export interface CreateTicketData {
   categoria_id: number;
   prioridad_id: number;
   imagen_url?: string;
+  equipment_ids?: number[];
 }
 
 export interface UpdateTicketData {
@@ -16,6 +17,7 @@ export interface UpdateTicketData {
   prioridad_id?: number;
   estado_id?: number;
   tecnico_asignado_id?: number | null;
+  equipment_ids?: number[];
 }
 
 export interface CommentData {
@@ -93,8 +95,9 @@ export const ticketService = {
         mappedData.assigned_technician_id = data.tecnico_asignado_id;
       }
     }
-    
-    console.log('Datos mapeados para enviar al backend:', mappedData);
+    if (data.equipment_ids !== undefined) {
+      mappedData.equipment_ids = data.equipment_ids;
+    }
     
     const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}`, mappedData);
     return response.data;

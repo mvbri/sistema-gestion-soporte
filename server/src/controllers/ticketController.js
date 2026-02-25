@@ -54,7 +54,8 @@ export const createTicket = async (req, res) => {
             title,
             description,
             category_id,
-            priority_id
+            priority_id,
+            equipment_ids
         } = req.body;
 
         // Obtener dirección del usuario que crea el ticket
@@ -71,6 +72,19 @@ export const createTicket = async (req, res) => {
         const imagenes = buildTicketImagesFromRequest(req);
         const image_url = imagenes.length > 0 ? JSON.stringify(imagenes) : null;
 
+        let parsedEquipmentIds = null;
+        if (equipment_ids) {
+            if (typeof equipment_ids === 'string') {
+                try {
+                    parsedEquipmentIds = JSON.parse(equipment_ids);
+                } catch {
+                    parsedEquipmentIds = equipment_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                }
+            } else if (Array.isArray(equipment_ids)) {
+                parsedEquipmentIds = equipment_ids.map(id => parseInt(id)).filter(id => !isNaN(id));
+            }
+        }
+
         const ticket = await Ticket.create({
             title,
             description,
@@ -78,7 +92,8 @@ export const createTicket = async (req, res) => {
             category_id: parseInt(category_id),
             priority_id: parseInt(priority_id),
             created_by_user_id: req.user.id,
-            image_url
+            image_url,
+            equipment_ids: parsedEquipmentIds
         });
 
         await TicketHistorial.create({
@@ -174,7 +189,8 @@ export const getTicketById = async (req, res) => {
 
         const ticketConImagenes = {
             ...ticket,
-            imagenes: parseTicketImages(ticket.image_url)
+            imagenes: parseTicketImages(ticket.image_url),
+            equipment: ticket.equipment || []
         };
 
         sendSuccess(res, 'Ticket obtenido exitosamente', {
@@ -209,7 +225,8 @@ export const updateTicket = async (req, res) => {
             category_id,
             priority_id,
             state_id: stateIdRaw,
-            assigned_technician_id: assignedTechnicianIdRaw
+            assigned_technician_id: assignedTechnicianIdRaw,
+            equipment_ids
         } = req.body;
 
         console.log('Body recibido:', req.body);
@@ -387,6 +404,21 @@ export const updateTicket = async (req, res) => {
 
         const incident_area_id = areaIncidenteIdRaw !== undefined ? parseInt(areaIncidenteIdRaw, 10) : undefined;
 
+        let parsedEquipmentIds = undefined;
+        if (equipment_ids !== undefined) {
+            if (typeof equipment_ids === 'string') {
+                try {
+                    parsedEquipmentIds = JSON.parse(equipment_ids);
+                } catch {
+                    parsedEquipmentIds = equipment_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                }
+            } else if (Array.isArray(equipment_ids)) {
+                parsedEquipmentIds = equipment_ids.map(id => parseInt(id)).filter(id => !isNaN(id));
+            } else if (equipment_ids === null || equipment_ids === '') {
+                parsedEquipmentIds = [];
+            }
+        }
+
         const updateData = {};
         
         if (role === 'administrator') {
@@ -397,11 +429,31 @@ export const updateTicket = async (req, res) => {
             if (priority_id !== undefined) updateData.priority_id = parseInt(priority_id, 10);
             if (state_id !== undefined) updateData.state_id = state_id;
             if (assigned_technician_id !== undefined) updateData.assigned_technician_id = assigned_technician_id;
+            if (parsedEquipmentIds !== undefined) updateData.equipment_ids = parsedEquipmentIds;
         } else {
             if (state_id !== undefined) updateData.state_id = state_id;
         }
 
         const updatedTicket = await Ticket.update(id, updateData);
+
+        if (parsedEquipmentIds !== undefined && role === 'administrator') {
+            const equipmentAnterior = ticket.equipment || [];
+            const equipmentNuevo = updatedTicket.equipment || [];
+            
+            const nombresAnteriores = equipmentAnterior.map(eq => eq.name || `Equipo #${eq.id}`).join(', ') || 'Ninguno';
+            const nombresNuevos = equipmentNuevo.map(eq => eq.name || `Equipo #${eq.id}`).join(', ') || 'Ninguno';
+            
+            if (nombresAnteriores !== nombresNuevos) {
+                await TicketHistorial.create({
+                    ticket_id: id,
+                    user_id: userId,
+                    change_type: 'UPDATE',
+                    previous_field: nombresAnteriores,
+                    new_field: nombresNuevos,
+                    description: `Equipos asociados cambiados de "${nombresAnteriores}" a "${nombresNuevos}"`
+                });
+            }
+        }
 
         for (const cambio of cambios) {
             await TicketHistorial.create({

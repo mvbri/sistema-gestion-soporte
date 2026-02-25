@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -33,6 +33,17 @@ export interface CreateDireccionData {
 }
 
 export interface UpdateDireccionData {
+  name?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface CreateEquipmentTypeData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateEquipmentTypeData {
   name?: string;
   description?: string;
   active?: boolean;
@@ -114,6 +125,26 @@ export const adminService = {
 
   async deleteDireccion(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/direcciones/${id}`);
+    return response.data;
+  },
+
+  async getEquipmentTypes(): Promise<ApiResponse<EquipmentType[]>> {
+    const response = await api.get<ApiResponse<EquipmentType[]>>('/admin/equipment-types');
+    return response.data;
+  },
+
+  async createEquipmentType(data: CreateEquipmentTypeData): Promise<ApiResponse<EquipmentType>> {
+    const response = await api.post<ApiResponse<EquipmentType>>('/admin/equipment-types', data);
+    return response.data;
+  },
+
+  async updateEquipmentType(id: number, data: UpdateEquipmentTypeData): Promise<ApiResponse<EquipmentType>> {
+    const response = await api.put<ApiResponse<EquipmentType>>(`/admin/equipment-types/${id}`, data);
+    return response.data;
+  },
+
+  async deleteEquipmentType(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/equipment-types/${id}`);
     return response.data;
   },
 };

@@ -109,6 +109,8 @@ export interface Ticket {
   fecha_creacion?: string;
   fecha_actualizacion?: string;
   fecha_cierre?: string | null;
+  equipment?: Equipment[];
+  equipment_ids?: number[];
 }
 
 export interface TicketComentario {
@@ -175,3 +177,80 @@ export interface TicketFilters {
   limit?: number;
 }
 
+export interface EquipmentType {
+  id: number;
+  name: string;
+  description?: string | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type EquipmentStatus = 'available' | 'assigned' | 'maintenance' | 'retired';
+
+export interface Equipment {
+  id: number;
+  name: string;
+  brand?: string | null;
+  model?: string | null;
+  serial_number?: string | null;
+  type_id?: number;
+  type?: string | null;
+  type_name?: string | null;
+  type_description?: string | null;
+  status: EquipmentStatus;
+  location?: string | null;
+  assigned_to_user_id?: number | null;
+  assigned_to_user_name?: string | null;
+  assigned_to_user_email?: string | null;
+  description?: string | null;
+  purchase_date?: string | null;
+  warranty_expires_at?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EquipmentTypeOption {
+  value: string;
+  label: string;
+  id?: number;
+  description?: string;
+}
+
+export interface EquipmentStatusOption {
+  value: EquipmentStatus;
+  label: string;
+  color: string;
+}
+
+export interface EquipmentFilters {
+  status?: EquipmentStatus;
+  type?: string | number;
+  assigned_to_user_id?: number;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface EquipmentStats {
+  byStatus: Array<{
+    status: EquipmentStatus;
+    count: number;
+  }>;
+  byType: Array<{
+    type: string;
+    count: number;
+  }>;
+  total: number;
+}
+
+export interface EquipmentResponse {
+  equipment: Equipment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

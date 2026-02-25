@@ -22,6 +22,10 @@ import { TechnicianDashboard } from './pages/TechnicianDashboard';
 import { AdminConfig } from './pages/AdminConfig';
 import { BackupRestore } from './pages/BackupRestore';
 import { Profile } from './pages/Profile';
+import { EquipmentList } from './pages/EquipmentList';
+import { CreateEquipment } from './pages/CreateEquipment';
+import { EquipmentDetail } from './pages/EquipmentDetail';
+import { EquipmentDashboard } from './pages/EquipmentDashboard';
 
 function App() {
   return (
@@ -119,6 +123,46 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/equipment"
+            element={
+              <ProtectedRoute>
+                <EquipmentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/equipment/crear"
+            element={
+              <ProtectedRoute>
+                <CreateEquipment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/equipment/:id"
+            element={
+              <ProtectedRoute>
+                <EquipmentDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/equipment/:id/editar"
+            element={
+              <ProtectedRoute>
+                <EquipmentDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/equipment/analytics"
+            element={
+              <ProtectedRoute>
+                <EquipmentDashboard />
               </ProtectedRoute>
             }
           />

@@ -6,15 +6,19 @@ import { toast } from 'react-toastify';
 import { useCategorias, usePrioridades, useCreateTicketWithFormData } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
 import { useAuth } from '../hooks/useAuth';
+import { useEquipment } from '../hooks/useEquipment';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
+  const { data: equipmentData } = useEquipment({ status: 'available', limit: 1000 });
+  const equipos = equipmentData?.equipment || [];
   const createTicketMutation = useCreateTicketWithFormData();
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
   const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -81,6 +85,10 @@ export const CreateTicket: React.FC = () => {
     formData.append('description', data.descripcion);
     formData.append('category_id', data.categoria_id.toString());
     formData.append('priority_id', data.prioridad_id.toString());
+
+    if (selectedEquipmentIds.length > 0) {
+      formData.append('equipment_ids', JSON.stringify(selectedEquipmentIds));
+    }
 
     imagenFiles.forEach((file) => {
       formData.append('imagenes', file);
@@ -185,6 +193,60 @@ export const CreateTicket: React.FC = () => {
                   <p className="mt-1 text-sm text-red-600">{errors.prioridad_id.message}</p>
                 )}
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="equipment-select" className="block text-sm font-medium text-gray-700 mb-1">
+                Equipos Informáticos (Opcional)
+              </label>
+              <select
+                id="equipment-select"
+                name="equipment_ids"
+                multiple
+                value={selectedEquipmentIds.map(String)}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                  setSelectedEquipmentIds(selected);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                size={5}
+                aria-label="Seleccionar equipos informáticos"
+              >
+                {equipos.length === 0 ? (
+                  <option disabled>No hay equipos disponibles</option>
+                ) : (
+                  equipos.map((equipo) => (
+                    <option key={equipo.id} value={equipo.id}>
+                      {equipo.name} {equipo.brand && equipo.model ? `(${equipo.brand} ${equipo.model})` : ''} {equipo.serial_number ? `- SN: ${equipo.serial_number}` : ''}
+                    </option>
+                  ))
+                )}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples equipos
+              </p>
+              {selectedEquipmentIds.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedEquipmentIds.map((id) => {
+                    const equipo = equipos.find(e => e.id === id);
+                    return equipo ? (
+                      <span
+                        key={id}
+                        className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm"
+                      >
+                        {equipo.name}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedEquipmentIds(prev => prev.filter(eid => eid !== id))}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
 
             <div>

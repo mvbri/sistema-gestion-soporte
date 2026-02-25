@@ -9,9 +9,6 @@ export const useListBackups = (filters?: BackupListFilters) => {
     select: (response) => response.data || { backups: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } },
     staleTime: 30 * 1000,
     retry: 1,
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Error al cargar la lista de respaldos');
-    },
   });
 };
 

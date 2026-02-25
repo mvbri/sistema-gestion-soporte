@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -195,6 +195,70 @@ export const useDeleteDireccion = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar dirección');
+    },
+  });
+};
+
+export const useAdminEquipmentTypes = () => {
+  return useQuery({
+    queryKey: ['adminEquipmentTypes'],
+    queryFn: () => adminService.getEquipmentTypes(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateEquipmentType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateEquipmentTypeData) => adminService.createEquipmentType(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentTypes'] });
+        toast.success('Tipo de equipo creado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear tipo de equipo');
+    },
+  });
+};
+
+export const useUpdateEquipmentType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateEquipmentTypeData }) =>
+      adminService.updateEquipmentType(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentTypes'] });
+        toast.success('Tipo de equipo actualizado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar tipo de equipo');
+    },
+  });
+};
+
+export const useDeleteEquipmentType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteEquipmentType(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentTypes'] });
+        toast.success('Tipo de equipo eliminado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar tipo de equipo');
     },
   });
 };

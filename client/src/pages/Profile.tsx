@@ -21,10 +21,15 @@ const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
     return trimmed === '' ? null : trimmed;
   };
 
+  let incidentAreaId = data.incident_area_id;
+  if (!incidentAreaId || incidentAreaId === 0 || isNaN(incidentAreaId)) {
+    throw new Error('dirección_obligatoria');
+  }
+
   return {
     full_name: formatRequiredField(data.full_name),
     phone: formatOptionalField(data.phone),
-    incident_area_id: data.incident_area_id,
+    incident_area_id: incidentAreaId,
   };
 };
 
@@ -50,7 +55,7 @@ export const Profile: React.FC = () => {
     defaultValues: {
       full_name: user?.full_name ?? '',
       phone: user?.phone ?? '',
-      incident_area_id: user?.incident_area_id ?? 0,
+      incident_area_id: user?.incident_area_id && user.incident_area_id > 0 ? user.incident_area_id : undefined,
     },
   });
 
@@ -68,7 +73,7 @@ export const Profile: React.FC = () => {
       reset({
         full_name: user.full_name,
         phone: user.phone ?? '',
-        incident_area_id: user.incident_area_id ?? 0,
+        incident_area_id: user.incident_area_id && user.incident_area_id > 0 ? user.incident_area_id : undefined,
       });
     }
   }, [user, reset]);
@@ -79,13 +84,11 @@ export const Profile: React.FC = () => {
       await updateProfile(cleanData);
       toast.success('Perfil actualizado correctamente');
     } catch (err) {
-      let errorMessage = 'Error al actualizar perfil';
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
+      if (err instanceof Error && err.message === 'dirección_obligatoria') {
+        toast.error('La dirección es obligatoria');
+        return;
       }
-
-      toast.error(errorMessage);
+      toast.error('Error al actualizar perfil');
     }
   };
 
@@ -137,7 +140,7 @@ export const Profile: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className={formStyles.formGroup}>
             <label htmlFor="full_name" className="label-field">
-              Nombre Completo
+              Nombre Completo <span className="text-red-500">*</span>
             </label>
             <input
               id="full_name"
@@ -190,11 +193,28 @@ export const Profile: React.FC = () => {
 
           <div className={formStyles.formGroup}>
             <label htmlFor="incident_area_id" className="label-field">
-              Dirección
+              Dirección <span className="text-red-500">*</span>
             </label>
             <select
               id="incident_area_id"
-              {...register('incident_area_id', { valueAsNumber: true })}
+              {...register('incident_area_id', {
+                valueAsNumber: true,
+                required: 'La dirección es requerida',
+                validate: (value) => {
+                  const numericValue = Number(value);
+
+                  if (
+                    value === null ||
+                    value === undefined ||
+                    Number.isNaN(numericValue) ||
+                    numericValue === 0
+                  ) {
+                    return 'La dirección es requerida';
+                  }
+
+                  return numericValue > 0 || 'La dirección seleccionada no es válida';
+                },
+              })}
               className={`input-field ${formStyles.selectField} ${errors.incident_area_id ? formStyles.inputError : ''}`}
               disabled={loadingDirecciones}
             >

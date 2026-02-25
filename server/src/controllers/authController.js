@@ -437,11 +437,39 @@ export const updateCurrentUser = async (req, res) => {
     try {
         const { full_name, phone, incident_area_id } = req.body;
 
+        console.log('Actualizando perfil para usuario ID:', req.user.id);
+        console.log('Datos recibidos:', { full_name, phone, incident_area_id });
+        console.log('Tipo de incident_area_id:', typeof incident_area_id);
+
+        if (!full_name || typeof full_name !== 'string' || full_name.trim().length === 0) {
+            return sendError(res, 'El nombre completo es requerido', null, 400);
+        }
+
+        let parsedIncidentAreaId = null;
+        if (incident_area_id !== undefined && incident_area_id !== null && incident_area_id !== '' && incident_area_id !== 0) {
+            if (typeof incident_area_id === 'string' && !isNaN(parseInt(incident_area_id)) && parseInt(incident_area_id) > 0) {
+                parsedIncidentAreaId = parseInt(incident_area_id);
+            } else if (typeof incident_area_id === 'number' && incident_area_id > 0) {
+                parsedIncidentAreaId = incident_area_id;
+            } else {
+                console.warn('incident_area_id no es un número válido:', incident_area_id);
+                return sendError(res, 'La dirección seleccionada no es válida', null, 400);
+            }
+        } else {
+            return sendError(res, 'La dirección es requerida', null, 400);
+        }
+
+        console.log('incident_area_id parseado:', parsedIncidentAreaId);
+
         const updatedUser = await Usuario.updateProfile(req.user.id, {
-            full_name,
-            phone,
-            incident_area_id: incident_area_id ? Number(incident_area_id) : null
+            full_name: full_name.trim(),
+            phone: phone ? phone.trim() : null,
+            incident_area_id: parsedIncidentAreaId
         });
+
+        if (!updatedUser) {
+            return sendError(res, 'Usuario no encontrado después de la actualización', null, 404);
+        }
 
         sendSuccess(res, 'Perfil actualizado exitosamente', {
             id: updatedUser.id,
@@ -455,7 +483,20 @@ export const updateCurrentUser = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al actualizar perfil de usuario:', error);
-        sendError(res, 'Error al actualizar perfil de usuario', null, 500);
+        console.error('Stack trace:', error.stack);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        let errorMessage = 'Error al actualizar perfil de usuario';
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            errorMessage = 'Error en la estructura de la base de datos. Contacta al administrador.';
+        } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+            errorMessage = 'Error en la estructura de la base de datos. Verifica las migraciones.';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        sendError(res, errorMessage, null, 500);
     }
 };
 

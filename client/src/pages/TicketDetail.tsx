@@ -14,6 +14,7 @@ import {
   useStartProgress, 
   useMarkAsResolved 
 } from '../hooks/useTickets';
+import { useEquipment } from '../hooks/useEquipment';
 import { updateTicketSchema, commentSchema, type UpdateTicketData, type CommentData } from '../schemas/ticketSchemas';
 import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
@@ -30,8 +31,11 @@ export const TicketDetail: React.FC = () => {
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
   const { data: tecnicos = [] } = useTecnicos();
+  const { data: equipmentData } = useEquipment({ limit: 1000 });
+  const equipos = equipmentData?.equipment || [];
   
   const updateTicketMutation = useUpdateTicket();
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<number[]>([]);
   const addCommentMutation = useAddComment();
   const startProgressMutation = useStartProgress();
   const markAsResolvedMutation = useMarkAsResolved();
@@ -79,7 +83,10 @@ export const TicketDetail: React.FC = () => {
         prioridad_id: ticket.priority_id,
         estado_id: defaultEstadoId,
         tecnico_asignado_id: ticket.assigned_technician_id || null,
+        equipment_ids: ticket.equipment?.map(eq => eq.id) || [],
       });
+      
+      setSelectedEquipmentIds(ticket.equipment?.map(eq => eq.id) || []);
 
       if (location.pathname.includes('/editar')) {
         if (user?.role === 'administrator' || isAssignedTechnician) {
@@ -151,6 +158,10 @@ export const TicketDetail: React.FC = () => {
           (typeof data.tecnico_asignado_id === 'number' && isNaN(data.tecnico_asignado_id))
             ? null 
             : data.tecnico_asignado_id;
+      }
+      
+      if (user?.role === 'administrator' && isEditing) {
+        dataToSend.equipment_ids = selectedEquipmentIds;
       }
       
       console.log('Datos a enviar:', dataToSend);
@@ -383,6 +394,57 @@ export const TicketDetail: React.FC = () => {
                       />
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Equipos Informáticos
+                    </label>
+                    <select
+                      multiple
+                      value={selectedEquipmentIds.map(String)}
+                      onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                        setSelectedEquipmentIds(selected);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                      size={5}
+                    >
+                      {equipos.length === 0 ? (
+                        <option disabled>No hay equipos disponibles</option>
+                      ) : (
+                        equipos.map((equipo) => (
+                          <option key={equipo.id} value={equipo.id}>
+                            {equipo.name} {equipo.brand && equipo.model ? `(${equipo.brand} ${equipo.model})` : ''} {equipo.serial_number ? `- SN: ${equipo.serial_number}` : ''}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples equipos
+                    </p>
+                    {selectedEquipmentIds.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedEquipmentIds.map((id) => {
+                          const equipo = equipos.find(e => e.id === id);
+                          return equipo ? (
+                            <span
+                              key={id}
+                              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm"
+                            >
+                              {equipo.name}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedEquipmentIds(prev => prev.filter(eid => eid !== id))}
+                                className="ml-2 text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <div>
@@ -571,6 +633,64 @@ export const TicketDetail: React.FC = () => {
             </>
           )}
         </div>
+
+        {ticket.equipment && ticket.equipment.length > 0 && (
+          <div className="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Equipos Informáticos Asociados ({ticket.equipment.length})</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ticket.equipment.map((equipo) => (
+                <div
+                  key={equipo.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{equipo.name}</h3>
+                    {equipo.type_name && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        {equipo.type_name}
+                      </span>
+                    )}
+                  </div>
+                  {equipo.brand && equipo.model && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-medium">Marca/Modelo:</span> {equipo.brand} {equipo.model}
+                    </p>
+                  )}
+                  {equipo.serial_number && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-medium">Número de Serie:</span> {equipo.serial_number}
+                    </p>
+                  )}
+                  {equipo.location && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-medium">Ubicación:</span> {equipo.location}
+                    </p>
+                  )}
+                  {equipo.assigned_to_user_name && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Asignado a:</span> {equipo.assigned_to_user_name}
+                    </p>
+                  )}
+                  {equipo.status && (
+                    <div className="mt-2">
+                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                        equipo.status === 'available' ? 'bg-green-100 text-green-800' :
+                        equipo.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                        equipo.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {equipo.status === 'available' ? 'Disponible' :
+                         equipo.status === 'assigned' ? 'Asignado' :
+                         equipo.status === 'maintenance' ? 'En Mantenimiento' :
+                         equipo.status}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {canComment && (
           <div className="bg-white shadow rounded-lg p-6 mb-6">

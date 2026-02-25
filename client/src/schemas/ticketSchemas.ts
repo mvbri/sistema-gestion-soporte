@@ -22,6 +22,9 @@ export const createTicketSchema = z.object({
   imagen: z
     .any()
     .optional(),
+  equipment_ids: z
+    .array(z.number().int().min(1))
+    .optional(),
 });
 
 export const updateTicketSchema = z.object({
@@ -59,6 +62,9 @@ export const updateTicketSchema = z.object({
       z.number().int().min(1, 'El técnico asignado debe ser válido'),
       z.null(),
     ])
+    .optional(),
+  equipment_ids: z
+    .array(z.number().int().min(1))
     .optional(),
 });
 

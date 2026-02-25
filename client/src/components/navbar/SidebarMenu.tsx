@@ -9,6 +9,7 @@ import { TicketsIcon } from '../icons/TicketsIcon';
 import { AnalyticsIcon } from '../icons/AnalyticsIcon';
 import { SettingsIcon } from '../icons/SettingsIcon';
 import { CreateTicketIcon } from '../icons/CreateTicketIcon';
+import { EquipmentIcon } from '../icons/EquipmentIcon';
 
 export const SidebarMenu: React.FC = () => {
   const { menuOpen, setMenuOpen } = useMenu();
@@ -67,6 +68,17 @@ export const SidebarMenu: React.FC = () => {
       return location.pathname === '/analytics';
     }
 
+    if (path === '/equipment') {
+      return (
+        location.pathname.startsWith('/equipment') &&
+        !location.pathname.startsWith('/equipment/analytics')
+      );
+    }
+
+    if (path === '/equipment/analytics') {
+      return location.pathname === '/equipment/analytics';
+    }
+
     return location.pathname.startsWith(path + '/');
   };
 
@@ -93,6 +105,18 @@ export const SidebarMenu: React.FC = () => {
     {
       path: '/analytics',
       label: 'Analíticas',
+      icon: AnalyticsIcon,
+      show: user?.role === 'administrator',
+    },
+    {
+      path: '/equipment',
+      label: 'Inventario',
+      icon: EquipmentIcon,
+      show: true,
+    },
+    {
+      path: '/equipment/analytics',
+      label: 'Analíticas de Inventario',
       icon: AnalyticsIcon,
       show: user?.role === 'administrator',
     },

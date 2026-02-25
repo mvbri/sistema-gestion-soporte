@@ -122,8 +122,17 @@ export const validateUpdateProfile = [
         }),
     
     body('incident_area_id')
-        .notEmpty().withMessage('La dirección es requerida')
-        .isInt({ min: 1 }).withMessage('La dirección seleccionada no es válida'),
+        .custom((value) => {
+            if (value === undefined || value === null || value === '' || value === 0) {
+                throw new Error('La dirección es requerida');
+            }
+            const numValue = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+            if (isNaN(numValue) || numValue < 1) {
+                throw new Error('La dirección seleccionada no es válida');
+            }
+            return true;
+        })
+        .toInt(),
     
     handleValidationErrors
 ];
@@ -249,6 +258,131 @@ export const validateSetSecurityQuestions = [
         .trim()
         .notEmpty().withMessage('La segunda respuesta es requerida')
         .isLength({ min: 3 }).withMessage('La respuesta debe tener al menos 3 caracteres'),
+    
+    handleValidationErrors
+];
+
+// Validaciones para crear equipo
+export const validateCreateEquipment = [
+    body('name')
+        .trim()
+        .notEmpty().withMessage('El nombre del equipo es requerido')
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+    
+    body('brand')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('La marca no puede exceder 100 caracteres'),
+    
+    body('model')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El modelo no puede exceder 100 caracteres'),
+    
+    body('serial_number')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El número de serie no puede exceder 100 caracteres'),
+    
+    body('type')
+        .optional()
+        .isIn(['laptop', 'desktop', 'monitor', 'printer', 'network_device', 'other'])
+        .withMessage('El tipo de equipo no es válido'),
+    
+    body('status')
+        .optional()
+        .isIn(['available', 'assigned', 'maintenance', 'retired'])
+        .withMessage('El estado del equipo no es válido'),
+    
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+    
+    body('assigned_to_user_id')
+        .optional()
+        .isInt({ min: 1 }).withMessage('El ID del usuario asignado debe ser un número válido'),
+    
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+    
+    body('purchase_date')
+        .optional({ checkFalsy: true })
+        .isISO8601().withMessage('La fecha de compra debe ser una fecha válida'),
+    
+    body('warranty_expires_at')
+        .optional({ checkFalsy: true })
+        .isISO8601().withMessage('La fecha de expiración de garantía debe ser una fecha válida'),
+    
+    handleValidationErrors
+];
+
+// Validaciones para actualizar equipo
+export const validateUpdateEquipment = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+    
+    body('brand')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('La marca no puede exceder 100 caracteres'),
+    
+    body('model')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El modelo no puede exceder 100 caracteres'),
+    
+    body('serial_number')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El número de serie no puede exceder 100 caracteres'),
+    
+    body('type')
+        .optional()
+        .isIn(['laptop', 'desktop', 'monitor', 'printer', 'network_device', 'other'])
+        .withMessage('El tipo de equipo no es válido'),
+    
+    body('status')
+        .optional()
+        .isIn(['available', 'assigned', 'maintenance', 'retired'])
+        .withMessage('El estado del equipo no es válido'),
+    
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+    
+    body('assigned_to_user_id')
+        .optional()
+        .custom((value) => {
+            if (value === null || value === undefined || value === '') return true;
+            return Number.isInteger(Number(value)) && Number(value) >= 1;
+        })
+        .withMessage('El ID del usuario asignado debe ser un número válido o null'),
+    
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+    
+    body('purchase_date')
+        .optional({ checkFalsy: true })
+        .isISO8601().withMessage('La fecha de compra debe ser una fecha válida'),
+    
+    body('warranty_expires_at')
+        .optional({ checkFalsy: true })
+        .isISO8601().withMessage('La fecha de expiración de garantía debe ser una fecha válida'),
+    
+    handleValidationErrors
+];
+
+// Validaciones para asignar equipo
+export const validateAssignEquipment = [
+    body('user_id')
+        .notEmpty().withMessage('El ID del usuario es requerido')
+        .isInt({ min: 1 }).withMessage('El ID del usuario debe ser un número válido'),
     
     handleValidationErrors
 ];

@@ -134,13 +134,26 @@ class Usuario {
         let department = null;
         if (incident_area_id) {
             try {
-                const direccion = await query(
-                    'SELECT name FROM incident_areas WHERE id = ?',
-                    [incident_area_id]
-                );
+                let direccion;
+                try {
+                    direccion = await query(
+                        'SELECT name FROM incident_areas WHERE id = ?',
+                        [incident_area_id]
+                    );
+                } catch (error) {
+                    if (error.code === 'ER_BAD_FIELD_ERROR' || error.message?.includes('Unknown column')) {
+                        direccion = await query(
+                            'SELECT nombre as name FROM incident_areas WHERE id = ?',
+                            [incident_area_id]
+                        );
+                    } else {
+                        throw error;
+                    }
+                }
                 department = direccion[0]?.name || null;
             } catch (error) {
                 console.error('Error al obtener nombre de dirección al actualizar perfil:', error);
+                department = null;
             }
         }
 
@@ -150,9 +163,21 @@ class Usuario {
             WHERE id = ?
         `;
 
-        await query(sql, [full_name, phone || null, department, incident_area_id || null, id]);
+        try {
+            await query(sql, [full_name, phone || null, department, incident_area_id || null, id]);
+        } catch (error) {
+            console.error('Error al actualizar usuario en updateProfile:', error);
+            console.error('SQL:', sql);
+            console.error('Parámetros:', [full_name, phone || null, department, incident_area_id || null, id]);
+            throw error;
+        }
 
-        return this.findById(id);
+        try {
+            return await this.findById(id);
+        } catch (error) {
+            console.error('Error al obtener usuario actualizado:', error);
+            throw error;
+        }
     }
 
     static async updateSecurityQuestions(id, { question1, answer1, question2, answer2 }) {

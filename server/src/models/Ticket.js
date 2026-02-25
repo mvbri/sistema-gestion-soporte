@@ -10,7 +10,8 @@ class Ticket {
             category_id,
             priority_id,
             created_by_user_id,
-            image_url
+            image_url,
+            equipment_ids
         } = data;
 
         const ticketId = randomUUID();
@@ -34,6 +35,14 @@ class Ticket {
                 created_by_user_id,
                 image_url || null
             ]);
+
+            if (equipment_ids && Array.isArray(equipment_ids) && equipment_ids.length > 0) {
+                try {
+                    await this.setEquipment(ticketId, equipment_ids);
+                } catch (error) {
+                    console.warn('Error al asociar equipos al ticket:', error.message);
+                }
+            }
         } catch (error) {
             throw error;
         }
@@ -68,7 +77,11 @@ class Ticket {
 
         try {
             const result = await query(sql, [id]);
-            return result[0] ? this._normalizeTicket(result[0]) : null;
+            if (!result[0]) return null;
+            
+            const ticket = this._normalizeTicket(result[0]);
+            ticket.equipment = await this.getEquipment(id);
+            return ticket;
         } catch (error) {
             throw error;
         }
@@ -101,7 +114,13 @@ class Ticket {
         
         try {
             const results = await this._executeFindAll(sql, filters, false);
-            return results.map(ticket => this._normalizeTicket(ticket));
+            const tickets = results.map(ticket => this._normalizeTicket(ticket));
+            
+            for (const ticket of tickets) {
+                ticket.equipment = await this.getEquipment(ticket.id);
+            }
+            
+            return tickets;
         } catch (error) {
             throw error;
         }
@@ -183,7 +202,8 @@ class Ticket {
             category_id,
             priority_id,
             state_id,
-            assigned_technician_id
+            assigned_technician_id,
+            equipment_ids
         } = data;
 
         let updates = [];
@@ -229,14 +249,19 @@ class Ticket {
             params.push(assigned_technician_id);
         }
 
-        if (updates.length === 0) {
-            return await this.findById(id);
+        if (updates.length > 0) {
+            params.push(id);
+            let sql = `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`;
+            await query(sql, params);
         }
 
-        params.push(id);
-        let sql = `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`;
-
-        await query(sql, params);
+        if (equipment_ids !== undefined) {
+            try {
+                await this.setEquipment(id, equipment_ids);
+            } catch (error) {
+                console.warn('Error al actualizar equipos del ticket:', error.message);
+            }
+        }
 
         return await this.findById(id);
     }
@@ -349,6 +374,58 @@ class Ticket {
         `;
 
         return await query(sql);
+    }
+
+    static async getEquipment(ticketId) {
+        const sql = `
+            SELECT 
+                e.id,
+                e.name,
+                e.brand,
+                e.model,
+                e.serial_number,
+                e.type_id,
+                et.name as type_name,
+                e.status,
+                e.location,
+                e.assigned_to_user_id,
+                u.full_name as assigned_to_user_name
+            FROM ticket_equipment te
+            INNER JOIN equipment e ON te.equipment_id = e.id
+            LEFT JOIN equipment_types et ON e.type_id = et.id
+            LEFT JOIN users u ON e.assigned_to_user_id = u.id
+            WHERE te.ticket_id = ?
+            ORDER BY e.name
+        `;
+
+        try {
+            return await query(sql, [ticketId]);
+        } catch (error) {
+            if (error.code === 'ER_NO_SUCH_TABLE' || error.code === 'ER_BAD_FIELD_ERROR') {
+                return [];
+            }
+            throw error;
+        }
+    }
+
+    static async setEquipment(ticketId, equipmentIds) {
+        try {
+            const deleteSql = 'DELETE FROM ticket_equipment WHERE ticket_id = ?';
+            await query(deleteSql, [ticketId]);
+
+            if (equipmentIds && equipmentIds.length > 0) {
+                const placeholders = equipmentIds.map(() => '(?, ?)').join(', ');
+                const insertSql = `INSERT INTO ticket_equipment (ticket_id, equipment_id) VALUES ${placeholders}`;
+                const values = equipmentIds.flatMap(eqId => [ticketId, eqId]);
+                await query(insertSql, values);
+            }
+        } catch (error) {
+            if (error.code === 'ER_NO_SUCH_TABLE' || error.code === 'ER_BAD_FIELD_ERROR') {
+                console.warn('Tabla ticket_equipment no existe. Ejecuta la migración migration_add_ticket_equipment.sql');
+                return;
+            }
+            throw error;
+        }
     }
 }
 

@@ -49,10 +49,20 @@ export const perfilSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  incident_area_id: z
-    .number()
-    .int()
-    .min(1, 'La dirección es requerida'),
+  incident_area_id: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined || val === 0) return undefined;
+      const num = Number(val);
+      return isNaN(num) || num <= 0 ? undefined : num;
+    },
+    z
+      .number({
+        required_error: 'La dirección es requerida',
+        invalid_type_error: 'La dirección es requerida',
+      })
+      .int('La dirección es requerida')
+      .min(1, 'La dirección es requerida')
+  ),
 });
 
 export const loginSchema = z.object({

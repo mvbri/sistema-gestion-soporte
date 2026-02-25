@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import equipmentRoutes from './routes/equipmentRoutes.js';
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ if (!fs.existsSync(backupsPath)) {
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/equipment', equipmentRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
