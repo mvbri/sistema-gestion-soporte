@@ -85,6 +85,10 @@ export const SidebarMenu: React.FC = () => {
       return location.pathname === '/analytics';
     }
 
+    if (path === '/admin/users') {
+      return location.pathname === '/admin/users';
+    }
+
     return location.pathname.startsWith(path + '/');
   };
 
@@ -111,6 +115,12 @@ export const SidebarMenu: React.FC = () => {
     {
       path: '/admin/config',
       label: 'Configuración',
+      icon: SettingsIcon,
+      show: user?.role === 'administrator',
+    },
+    {
+      path: '/admin/users',
+      label: 'Gestión de Usuarios',
       icon: SettingsIcon,
       show: user?.role === 'administrator',
     },

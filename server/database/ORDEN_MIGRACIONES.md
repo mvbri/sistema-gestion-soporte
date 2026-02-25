@@ -2,6 +2,13 @@
 
 ## Migraciones Ordenadas por Fecha (Más Reciente Primero)
 
+### ⚠️ Migraciones Urgentes (25/02/2026)
+
+1. **`migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql`** - 25/2/2026 5:39:53 PM
+   - **Propósito:** Agrega la columna `incident_area_id` a la tabla `users` si no existe
+   - **Acción:** Agrega columna, índice y foreign key de forma segura
+   - **Estado:** ⚠️ **EJECUTAR URGENTE** (corrige error "Unknown column 'incident_area_id'")
+
 ### ✅ Migraciones Más Recientes (24/02/2026)
 
 1. **`migration_fix_equipment_type_id_simple.sql`** - 24/2/2026 9:14:45 PM
@@ -69,11 +76,15 @@
 
 ### Si tienes errores actuales:
 
-1. **PRIMERO:** `migration_fix_equipment_type_id_simple.sql`
+1. **PRIMERO:** `migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql`
+   - Corrige el error "Unknown column 'incident_area_id' in 'INSERT INTO'"
+   - Ejecutar: ✅ **URGENTE** (necesario para registro de usuarios)
+
+2. **SEGUNDO:** `migration_fix_equipment_type_id_simple.sql`
    - Corrige el error "Unknown column 'type_id'"
    - Ejecutar: ✅ **URGENTE**
 
-2. **SEGUNDO:** `migration_add_ticket_equipment.sql`
+3. **TERCERO:** `migration_add_ticket_equipment.sql`
    - Habilita la asociación de equipos a tickets
    - Ejecutar: ✅ **NECESARIO**
 

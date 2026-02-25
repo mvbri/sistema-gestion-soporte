@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType, ConsumableType } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType, ConsumableType, User } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -66,6 +66,50 @@ export interface DireccionesFilters {
   limit?: number;
   orderBy?: 'name' | 'description' | 'active' | 'created_at' | 'updated_at';
   orderDirection?: 'ASC' | 'DESC';
+}
+
+export interface CreateUserData {
+  full_name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  incident_area_id?: number;
+  role_id?: number;
+  active?: boolean;
+}
+
+export interface UpdateUserStatusData {
+  active: boolean;
+}
+
+export interface UpdateUserData {
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  incident_area_id?: number;
+  role_id?: number;
+  active?: boolean;
+  password?: string;
+}
+
+export interface UsersFilters {
+  active?: boolean;
+  role_id?: number;
+  search?: string;
+  page?: number;
+  limit?: number;
+  orderBy?: 'id' | 'full_name' | 'email' | 'created_at' | 'updated_at' | 'active';
+  orderDirection?: 'ASC' | 'DESC';
+}
+
+export interface UsersResponse {
+  users: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export const adminService = {
@@ -176,6 +220,43 @@ export const adminService = {
 
   async deleteConsumableType(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/consumable-types/${id}`);
+    return response.data;
+  },
+
+  async getUsers(filters?: UsersFilters): Promise<ApiResponse<UsersResponse>> {
+    const params = new URLSearchParams();
+    if (filters) {
+      if (filters.active !== undefined) params.append('active', filters.active.toString());
+      if (filters.role_id !== undefined) params.append('role_id', filters.role_id.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.limit) params.append('limit', filters.limit.toString());
+      if (filters.orderBy) params.append('orderBy', filters.orderBy);
+      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+    }
+    const queryString = params.toString();
+    const url = `/admin/users${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get<ApiResponse<UsersResponse>>(url);
+    return response.data;
+  },
+
+  async createUser(data: CreateUserData): Promise<ApiResponse<User>> {
+    const response = await api.post<ApiResponse<User>>('/admin/users', data);
+    return response.data;
+  },
+
+  async updateUserStatus(id: number, data: UpdateUserStatusData): Promise<ApiResponse<User>> {
+    const response = await api.patch<ApiResponse<User>>(`/admin/users/${id}/status`, data);
+    return response.data;
+  },
+
+  async updateUser(id: number, data: UpdateUserData): Promise<ApiResponse<User>> {
+    const response = await api.put<ApiResponse<User>>(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  async deleteUser(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/users/${id}`);
     return response.data;
   },
 };

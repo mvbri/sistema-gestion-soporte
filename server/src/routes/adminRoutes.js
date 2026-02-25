@@ -19,7 +19,12 @@ import {
     getConsumableTypesAdmin,
     createConsumableType,
     updateConsumableType,
-    deleteConsumableType
+    deleteConsumableType,
+    getUsers,
+    createUser,
+    updateUserStatus,
+    updateUser,
+    deleteUser
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
@@ -114,6 +119,35 @@ router.put('/consumable-types/:id', [
     handleValidationErrors
 ], updateConsumableType);
 router.delete('/consumable-types/:id', deleteConsumableType);
+
+router.get('/users', getUsers);
+router.post('/users', [
+    body('full_name').trim().notEmpty().withMessage('El nombre completo es requerido'),
+    body('email').trim().isEmail().withMessage('El email debe ser válido'),
+    body('password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('La contraseña debe contener al menos una mayúscula, una minúscula y un número'),
+    body('phone').optional().trim(),
+    body('incident_area_id').optional().isInt().withMessage('El ID de dirección debe ser un número entero'),
+    body('role_id').optional().isInt({ min: 1, max: 3 }).withMessage('El ID de rol debe ser entre 1 y 3'),
+    body('active').optional().isBoolean().withMessage('El campo active debe ser un booleano'),
+    handleValidationErrors
+], createUser);
+router.patch('/users/:id/status', [
+    body('active').isBoolean().withMessage('El campo active es requerido y debe ser un booleano'),
+    handleValidationErrors
+], updateUserStatus);
+router.put('/users/:id', [
+    body('full_name').optional().trim().notEmpty().withMessage('El nombre completo no puede estar vacío'),
+    body('email').optional().trim().isEmail().withMessage('El email debe ser válido'),
+    body('password').optional().isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('La contraseña debe contener al menos una mayúscula, una minúscula y un número'),
+    body('phone').optional().trim(),
+    body('incident_area_id').optional().isInt().withMessage('El ID de dirección debe ser un número entero'),
+    body('role_id').optional().isInt({ min: 1, max: 3 }).withMessage('El ID de rol debe ser entre 1 y 3'),
+    body('active').optional().isBoolean().withMessage('El campo active debe ser un booleano'),
+    handleValidationErrors
+], updateUser);
+router.delete('/users/:id', deleteUser);
 
 router.use('/backup', backupRoutes);
 

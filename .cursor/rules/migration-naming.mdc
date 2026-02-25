@@ -35,9 +35,7 @@ migration_YYYY-MM-DD_HH-MM-SS_description.sql
 3. Use hyphens (`-`) to separate date components and time components
 4. Use underscore (`_`) to separate date, time, and description
 5. Description should be concise and in snake_case
-6. The timestamp should reflect when the migration was created
-
-## When Creating New Migrations
+6. The timestamp should reflect when the migration was created## When Creating New Migrations
 - Generate the filename with the current date and time
 - Use format: `migration_YYYY-MM-DD_HH-MM-SS_description.sql`
 - Ensure the description clearly indicates what the migration does

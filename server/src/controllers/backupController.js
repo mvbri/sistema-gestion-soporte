@@ -33,6 +33,15 @@ export const generateBackup = async (req, res) => {
             `-h${dbHost}`,
             `-P${dbPort}`,
             `-u${dbUser}`,
+            `--single-transaction`,
+            `--routines`,
+            `--triggers`,
+            `--events`,
+            `--add-drop-table`,
+            `--lock-tables=false`,
+            `--complete-insert`,
+            `--extended-insert=false`,
+            `--no-tablespaces`,
             dbName
         ];
 
@@ -158,7 +167,9 @@ export const restoreBackup = async (req, res) => {
         }
 
         await new Promise((resolve, reject) => {
-            const mysql = spawn('mysql', mysqlArgs);
+            const mysql = spawn('mysql', mysqlArgs, {
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
             const readStream = fs.createReadStream(tempFilePath);
 
             readStream.pipe(mysql.stdin);
@@ -345,7 +356,9 @@ export const restoreBackupFromFile = async (req, res) => {
         }
 
         await new Promise((resolve, reject) => {
-            const mysql = spawn('mysql', mysqlArgs);
+            const mysql = spawn('mysql', mysqlArgs, {
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
             const readStream = fs.createReadStream(backupFilePath);
 
             readStream.pipe(mysql.stdin);

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type UsersFilters } from '../services/adminService';
 import { toast } from 'react-toastify';
 import type { AxiosErrorResponse } from '../types';
 
@@ -324,6 +324,96 @@ export const useDeleteConsumableType = () => {
     },
     onError: (error: AxiosErrorResponse) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de consumible');
+    },
+  });
+};
+
+export const useAdminUsers = (filters?: UsersFilters) => {
+  return useQuery({
+    queryKey: ['adminUsers', filters],
+    queryFn: () => adminService.getUsers(filters),
+    select: (response) => {
+      if (!response.success) {
+        console.error('Error en respuesta de getUsers:', response);
+        return undefined;
+      }
+      return response.data;
+    },
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+    onError: (error: AxiosErrorResponse) => {
+      console.error('Error al obtener usuarios:', error);
+      toast.error(error.response?.data?.message || 'Error al obtener usuarios');
+    },
+  });
+};
+
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateUserData) => adminService.createUser(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        toast.success('Usuario creado exitosamente');
+      }
+    },
+    onError: (error: AxiosErrorResponse) => {
+      toast.error(error.response?.data?.message || 'Error al crear usuario');
+    },
+  });
+};
+
+export const useUpdateUserStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateUserStatusData }) =>
+      adminService.updateUserStatus(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        toast.success(response.message || 'Estado del usuario actualizado exitosamente');
+      }
+    },
+    onError: (error: AxiosErrorResponse) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar estado del usuario');
+    },
+  });
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateUserData }) =>
+      adminService.updateUser(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        toast.success('Usuario actualizado exitosamente');
+      }
+    },
+    onError: (error: AxiosErrorResponse) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar usuario');
+    },
+  });
+};
+
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteUser(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        toast.success('Usuario eliminado exitosamente');
+      }
+    },
+    onError: (error: AxiosErrorResponse) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar usuario');
     },
   });
 };

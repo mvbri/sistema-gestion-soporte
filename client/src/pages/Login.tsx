@@ -35,12 +35,28 @@ export const Login: React.FC = () => {
         const axiosError = err as { response?: { data?: { message?: string; data?: { requires_verification?: boolean } } } };
         if (axiosError.response?.data) {
           errorMessage = axiosError.response.data.message || errorMessage;
+          
+          // Caso: Email no verificado
           if (axiosError.response.data.data?.requires_verification ||
               errorMessage.includes('verifica tu email') ||
               errorMessage.includes('email antes de iniciar')) {
             navigate('/solicitar-verificacion', {
               state: { email: data.email }
             });
+            return;
+          }
+          
+          // Caso: Usuario verificado pero inactivo
+          if (errorMessage.includes('verificada pero inactiva') ||
+              errorMessage.includes('inactiva. Contacta al administrador para activar')) {
+            toast.error(errorMessage);
+            return;
+          }
+          
+          // Caso: Usuario inactivo (sin verificar)
+          if (errorMessage.includes('desactivada') ||
+              errorMessage.includes('desactivado')) {
+            toast.error(errorMessage);
             return;
           }
         }

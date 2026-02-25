@@ -7,6 +7,8 @@ export interface User {
   department?: string;
   incident_area_id?: number | null;
   email_verified: boolean;
+  active: boolean;
+  created_at?: string;
 }
 
 export interface AuthResponse {

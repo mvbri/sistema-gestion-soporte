@@ -100,11 +100,7 @@ export const login = async (req, res) => {
             return sendError(res, 'Credenciales inválidas', null, 401);
         }
 
-        console.log('✅ Usuario encontrado - ID:', user.id, 'Email:', user.email, 'Email verificado:', user.email_verified);
-
-        if (!user.active) {
-            return sendError(res, 'Tu cuenta está desactivada. Contacta al administrador.', null, 401);
-        }
+        console.log('✅ Usuario encontrado - ID:', user.id, 'Email:', user.email, 'Email verificado:', user.email_verified, 'Activo:', user.active);
 
         const validPassword = await Usuario.verifyPassword(password, user.password);
         if (!validPassword) {
@@ -113,7 +109,15 @@ export const login = async (req, res) => {
 
         if (!user.email_verified) {
             console.log('❌ Email no verificado para usuario ID:', user.id, 'Email:', user.email);
+            if (!user.active) {
+                return sendError(res, 'Tu cuenta está desactivada. Contacta al administrador.', null, 401);
+            }
             return sendError(res, 'Por favor verifica tu email antes de iniciar sesión', { requires_verification: true }, 403);
+        }
+
+        if (!user.active) {
+            console.log('❌ Usuario verificado pero inactivo - ID:', user.id, 'Email:', user.email);
+            return sendError(res, 'Tu cuenta está verificada pero inactiva. Contacta al administrador para activar tu cuenta.', null, 401);
         }
 
         if (!user.role_name) {
@@ -260,25 +264,55 @@ export const requestRecovery = async (req, res) => {
     try {
         const { email } = req.body;
 
+        if (!email) {
+            return sendError(res, 'Email requerido');
+        }
+
         const user = await Usuario.findByEmail(email);
         if (!user) {
             return sendSuccess(res, 'Si el email existe, se enviará un enlace de recuperación');
         }
 
-        await Token.deleteByUser(user.id, 'password_recovery');
+        try {
+            await Token.deleteByUser(user.id, 'password_recovery');
+        } catch (error) {
+            console.error('Error al eliminar tokens anteriores:', error);
+        }
+
         const recoveryToken = generarTokenVerificacion();
-        await Token.create(user.id, recoveryToken, 'password_recovery', 1);
+        
+        try {
+            await Token.create(user.id, recoveryToken, 'password_recovery', 1);
+        } catch (error) {
+            console.error('Error al crear token de recuperación:', error);
+            return sendError(res, 'Error al generar token de recuperación', null, 500);
+        }
 
         try {
             await enviarEmailRecuperacion(user.email, recoveryToken, user.full_name);
         } catch (error) {
-            console.error('Error al enviar email:', error);
-            return sendError(res, 'Error al enviar email de recuperación', null, 500);
+            console.error('Error al enviar email de recuperación:', error);
+            console.error('Detalles del error:', {
+                message: error.message,
+                code: error.code,
+                response: error.response
+            });
+            
+            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+                return sendError(res, 'Configuración de email incompleta. Por favor contacta al administrador.', null, 500);
+            }
+            
+            if (!process.env.FRONTEND_URL) {
+                return sendError(res, 'URL del frontend no configurada. Por favor contacta al administrador.', null, 500);
+            }
+            
+            return sendError(res, 'Error al enviar email de recuperación. Por favor intenta más tarde.', null, 500);
         }
 
         sendSuccess(res, 'Si el email existe, se enviará un enlace de recuperación');
     } catch (error) {
         console.error('Error en solicitud de recuperación:', error);
+        console.error('Stack trace:', error.stack);
         sendError(res, 'Error al procesar solicitud de recuperación', null, 500);
     }
 };
@@ -318,6 +352,11 @@ export const getSecurityQuestions = async (req, res) => {
             return sendError(res, 'Email requerido');
         }
 
+        const user = await Usuario.findByEmail(email);
+        if (!user) {
+            return sendError(res, 'No se encontró un usuario con ese email');
+        }
+
         const questions = await Usuario.getSecurityQuestions(email);
         
         if (!questions) {
@@ -327,6 +366,12 @@ export const getSecurityQuestions = async (req, res) => {
         sendSuccess(res, 'Preguntas de seguridad obtenidas', questions);
     } catch (error) {
         console.error('Error al obtener preguntas de seguridad:', error);
+        console.error('Stack trace:', error.stack);
+        
+        if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
+            return sendError(res, 'Las columnas de preguntas de seguridad no existen en la base de datos. Por favor ejecuta la migración correspondiente.', null, 500);
+        }
+        
         sendError(res, 'Error al obtener preguntas de seguridad', null, 500);
     }
 };

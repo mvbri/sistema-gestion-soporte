@@ -50,7 +50,8 @@ export const RequestPasswordRecovery: React.FC = () => {
             }
           });
         } else {
-          toast.error(response.message || 'No se encontraron preguntas de seguridad para este usuario');
+          const errorMessage = response.message || 'No se encontraron preguntas de seguridad para este usuario';
+          toast.error(errorMessage);
         }
       }
     } catch (err: unknown) {

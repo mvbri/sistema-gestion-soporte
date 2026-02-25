@@ -20,6 +20,7 @@ import { TicketDetail } from './pages/TicketDetail';
 import { TicketsDashboard } from './pages/TicketsDashboard';
 import { TechnicianDashboard } from './pages/TechnicianDashboard';
 import { AdminConfig } from './pages/AdminConfig';
+import { AdminUsers } from './pages/AdminUsers';
 import { BackupRestore } from './pages/BackupRestore';
 import { Profile } from './pages/Profile';
 import { EquipmentList } from './pages/EquipmentList';
@@ -114,6 +115,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminConfig />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminUsers />
               </ProtectedRoute>
             }
           />

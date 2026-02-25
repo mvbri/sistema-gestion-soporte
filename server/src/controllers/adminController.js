@@ -1,5 +1,6 @@
 import { query } from '../config/database.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
+import Usuario from '../models/Usuario.js';
 
 /**
  * Obtiene todas las categorías de ticket.
@@ -665,5 +666,246 @@ export const deleteDireccion = async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar dirección:', error);
         sendError(res, 'Error al eliminar dirección', null, 500);
+    }
+};
+
+/**
+ * Obtiene todos los usuarios con filtros opcionales.
+ */
+export const getUsers = async (req, res) => {
+    try {
+        const { active, role_id, search, page, limit, orderBy, orderDirection } = req.query;
+
+        const filters = {};
+        if (active !== undefined) {
+            filters.active = active === 'true';
+        }
+        if (role_id !== undefined) {
+            filters.role_id = Number(role_id);
+        }
+        if (search) {
+            filters.search = search;
+        }
+        if (page) {
+            filters.page = Number(page);
+        }
+        if (limit) {
+            filters.limit = Number(limit);
+        }
+        if (orderBy) {
+            filters.orderBy = orderBy;
+        }
+        if (orderDirection) {
+            filters.orderDirection = orderDirection;
+        }
+
+        console.log('🔍 Filtros aplicados para getUsers:', filters);
+        const result = await Usuario.findAll(filters);
+        console.log('✅ Usuarios encontrados:', result.users.length, 'Total:', result.pagination.total);
+        
+        // Mapear role_name a role para consistencia con el frontend
+        const users = result.users.map(user => {
+            const userObj = { ...user };
+            // Asegurar que role esté presente
+            if (!userObj.role && userObj.role_name) {
+                userObj.role = userObj.role_name;
+            }
+            // Convertir active de 0/1 a boolean si es necesario
+            if (typeof userObj.active === 'number') {
+                userObj.active = userObj.active === 1;
+            }
+            // Convertir email_verified de 0/1 a boolean si es necesario
+            if (typeof userObj.email_verified === 'number') {
+                userObj.email_verified = userObj.email_verified === 1;
+            }
+            return userObj;
+        });
+        
+        sendSuccess(res, 'Usuarios obtenidos exitosamente', {
+            users,
+            pagination: result.pagination
+        });
+    } catch (error) {
+        console.error('Error al obtener usuarios:', error);
+        console.error('Stack trace:', error.stack);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        sendError(res, `Error al obtener usuarios: ${error.message}`, null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo usuario (solo administrador).
+ */
+export const createUser = async (req, res) => {
+    try {
+        const { full_name, email, password, phone, incident_area_id, role_id, active } = req.body;
+
+        if (!full_name || !email || !password) {
+            return sendError(res, 'Nombre completo, email y contraseña son requeridos', null, 400);
+        }
+
+        const emailExists = await Usuario.emailExists(email);
+        if (emailExists) {
+            return sendError(res, 'El email ya está registrado', null, 400);
+        }
+
+        const user = await Usuario.create({
+            full_name,
+            email,
+            password,
+            phone: phone || null,
+            incident_area_id: incident_area_id ? Number(incident_area_id) : null,
+            role_id: role_id ? Number(role_id) : 3,
+            active: active === true || active === 'true'
+        });
+
+        const responseData = {
+            id: user.id,
+            full_name: user.full_name,
+            email: user.email,
+            active: user.active,
+            email_verified: user.email_verified
+        };
+
+        sendSuccess(res, 'Usuario creado exitosamente', responseData, 201);
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        sendError(res, 'Error al crear usuario', null, 500);
+    }
+};
+
+/**
+ * Actualiza el estado activo/inactivo de un usuario.
+ */
+export const updateUserStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { active } = req.body;
+
+        if (active === undefined || typeof active !== 'boolean') {
+            return sendError(res, 'El campo active es requerido y debe ser un booleano', null, 400);
+        }
+
+        const user = await Usuario.findById(id);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado', null, 404);
+        }
+
+        const updatedUser = await Usuario.updateActiveStatus(id, active);
+        
+        sendSuccess(res, `Usuario ${active ? 'activado' : 'desactivado'} exitosamente`, {
+            id: updatedUser.id,
+            full_name: updatedUser.full_name,
+            email: updatedUser.email,
+            active: updatedUser.active
+        });
+    } catch (error) {
+        console.error('Error al actualizar estado del usuario:', error);
+        sendError(res, 'Error al actualizar estado del usuario', null, 500);
+    }
+};
+
+/**
+ * Actualiza un usuario existente.
+ */
+export const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { full_name, email, phone, incident_area_id, role_id, active, password } = req.body;
+
+        const user = await Usuario.findById(id);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado', null, 404);
+        }
+
+        // Verificar si el email ya existe en otro usuario
+        if (email && email !== user.email) {
+            const emailExists = await Usuario.emailExists(email);
+            if (emailExists) {
+                return sendError(res, 'El email ya está registrado en otro usuario', null, 400);
+            }
+        }
+
+        const updateData = {};
+        if (full_name !== undefined) updateData.full_name = full_name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        if (incident_area_id !== undefined) updateData.incident_area_id = incident_area_id;
+        if (role_id !== undefined) updateData.role_id = role_id;
+        if (active !== undefined) updateData.active = active;
+        if (password !== undefined && password !== '') updateData.password = password;
+
+        const updatedUser = await Usuario.update(id, updateData);
+        
+        // Mapear role_name a role
+        const userResponse = {
+            ...updatedUser,
+            role: updatedUser.role_name || updatedUser.role
+        };
+        
+        sendSuccess(res, 'Usuario actualizado exitosamente', userResponse);
+    } catch (error) {
+        console.error('Error al actualizar usuario:', error);
+        if (error.message === 'No hay campos para actualizar') {
+            return sendError(res, error.message, null, 400);
+        }
+        sendError(res, 'Error al actualizar usuario', null, 500);
+    }
+};
+
+/**
+ * Elimina un usuario.
+ */
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await Usuario.findById(id);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado', null, 404);
+        }
+
+        // Verificar si el usuario tiene tickets creados
+        const ticketsCreated = await query(
+            'SELECT COUNT(*) as count FROM tickets WHERE created_by_user_id = ?',
+            [id]
+        );
+        if (ticketsCreated[0]?.count > 0) {
+            return sendError(
+                res,
+                'No se puede eliminar el usuario porque tiene tickets asociados',
+                null,
+                400
+            );
+        }
+
+        // Verificar si el usuario tiene tickets asignados
+        const ticketsAssigned = await query(
+            'SELECT COUNT(*) as count FROM tickets WHERE assigned_technician_id = ?',
+            [id]
+        );
+        if (ticketsAssigned[0]?.count > 0) {
+            return sendError(
+                res,
+                'No se puede eliminar el usuario porque tiene tickets asignados',
+                null,
+                400
+            );
+        }
+
+        await Usuario.delete(id);
+        sendSuccess(res, 'Usuario eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+            return sendError(
+                res,
+                'No se puede eliminar el usuario porque tiene registros asociados',
+                null,
+                400
+            );
+        }
+        sendError(res, 'Error al eliminar usuario', null, 500);
     }
 };

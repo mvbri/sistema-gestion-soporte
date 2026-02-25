@@ -25,7 +25,14 @@ export const AdministratorDashboard: React.FC = () => {
         className="p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
       >
         <h3 className="font-bold text-lg mb-2">Configuración</h3>
-        <p className="text-sm">Gestionarr categorías, prioridades, direcciones...</p>
+        <p className="text-sm">Gestiona categorías, prioridades, direcciones...</p>
+      </button>
+      <button
+        onClick={() => navigate('/admin/users')}
+        className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+      >
+        <h3 className="font-bold text-lg mb-2">Gestión de Usuarios</h3>
+        <p className="text-sm">Crea, activa y gestiona usuarios del sistema</p>
       </button>
     </div>
   );
