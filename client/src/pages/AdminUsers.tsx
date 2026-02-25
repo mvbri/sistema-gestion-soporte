@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
-import { useAdminUsers, useCreateUser, useUpdateUserStatus, useUpdateUser, useDeleteUser } from '../hooks/useAdmin';
+import { useAdminUsers, useCreateUser, useUpdateUserStatus, useUpdateUser, useDeleteUser, useVerifyUserEmail } from '../hooks/useAdmin';
 import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
 import { EditIcon } from '../components/icons/EditIcon';
 import { DeleteIcon } from '../components/icons/DeleteIcon';
 import { ToggleIcon } from '../components/icons/ToggleIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
 import type { User } from '../types';
-import type { UsersFilters } from '../services/adminService';
+import type { UsersFilters, UpdateUserData, UsersResponse } from '../services/adminService';
 
 export const AdminUsers: React.FC = () => {
   const { user } = useAuth();
@@ -44,6 +44,7 @@ export const AdminUsers: React.FC = () => {
   const updateUserStatusMutation = useUpdateUserStatus();
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
+  const verifyUserEmailMutation = useVerifyUserEmail();
 
   useEffect(() => {
     if (isError) {
@@ -54,8 +55,8 @@ export const AdminUsers: React.FC = () => {
     }
   }, [isError, error, usersData]);
 
-  const users = usersData?.users || [];
-  const pagination = usersData?.pagination || {
+  const users: User[] = (usersData as UsersResponse | undefined)?.users || [];
+  const pagination = (usersData as UsersResponse | undefined)?.pagination || {
     page: 1,
     limit,
     total: 0,
@@ -137,7 +138,7 @@ export const AdminUsers: React.FC = () => {
     const role_id = formData.get('role_id') ? Number(formData.get('role_id')) : undefined;
     const active = formData.get('active') === 'on';
 
-    const updateData: any = {
+    const updateData: UpdateUserData = {
       full_name,
       email,
       phone: phone || undefined,
@@ -175,6 +176,13 @@ export const AdminUsers: React.FC = () => {
         setUserToDelete(null);
       },
     });
+  };
+
+  const handleVerifyUserEmail = (user: User) => {
+    if (user.email_verified) {
+      return;
+    }
+    verifyUserEmailMutation.mutate(user.id);
   };
 
   const getRoleName = (role: string): string => {
@@ -689,6 +697,17 @@ export const AdminUsers: React.FC = () => {
                                 <EditIcon className="h-4 w-4" />
                                 <span>Editar</span>
                               </button>
+                              {!user.email_verified && (
+                                <button
+                                  onClick={() => handleVerifyUserEmail(user)}
+                                  className="flex items-center gap-1 text-green-600 hover:text-green-900 transition-colors"
+                                  title="Verificar email"
+                                  disabled={verifyUserEmailMutation.isPending}
+                                >
+                                  <span className="text-sm">✓</span>
+                                  <span>Verificar</span>
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleToggleUserStatus(user)}
                                 className={`flex items-center gap-1 transition-colors ${

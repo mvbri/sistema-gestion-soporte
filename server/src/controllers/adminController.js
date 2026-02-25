@@ -855,6 +855,37 @@ export const updateUser = async (req, res) => {
 };
 
 /**
+ * Verifica el email de un usuario manualmente (solo administrador).
+ */
+export const verifyUserEmail = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await Usuario.findById(id);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado', null, 404);
+        }
+
+        if (user.email_verified) {
+            return sendError(res, 'El email del usuario ya está verificado', null, 400);
+        }
+
+        await Usuario.verifyEmail(id);
+        const updatedUser = await Usuario.findById(id);
+        
+        sendSuccess(res, 'Email verificado exitosamente', {
+            id: updatedUser.id,
+            full_name: updatedUser.full_name,
+            email: updatedUser.email,
+            email_verified: updatedUser.email_verified
+        });
+    } catch (error) {
+        console.error('Error al verificar email del usuario:', error);
+        sendError(res, 'Error al verificar email del usuario', null, 500);
+    }
+};
+
+/**
  * Elimina un usuario.
  */
 export const deleteUser = async (req, res) => {

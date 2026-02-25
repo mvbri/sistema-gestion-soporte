@@ -24,6 +24,7 @@ import {
     createUser,
     updateUserStatus,
     updateUser,
+    verifyUserEmail,
     deleteUser
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
@@ -136,6 +137,7 @@ router.patch('/users/:id/status', [
     body('active').isBoolean().withMessage('El campo active es requerido y debe ser un booleano'),
     handleValidationErrors
 ], updateUserStatus);
+router.patch('/users/:id/verify-email', verifyUserEmail);
 router.put('/users/:id', [
     body('full_name').optional().trim().notEmpty().withMessage('El nombre completo no puede estar vacío'),
     body('email').optional().trim().isEmail().withMessage('El email debe ser válido'),

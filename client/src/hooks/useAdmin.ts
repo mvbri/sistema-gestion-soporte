@@ -417,3 +417,20 @@ export const useDeleteUser = () => {
     },
   });
 };
+
+export const useVerifyUserEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.verifyUserEmail(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        toast.success('Email verificado exitosamente');
+      }
+    },
+    onError: (error: AxiosErrorResponse) => {
+      toast.error(error.response?.data?.message || 'Error al verificar email del usuario');
+    },
+  });
+};

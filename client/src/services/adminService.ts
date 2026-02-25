@@ -259,4 +259,9 @@ export const adminService = {
     const response = await api.delete<ApiResponse<null>>(`/admin/users/${id}`);
     return response.data;
   },
+
+  async verifyUserEmail(id: number): Promise<ApiResponse<User>> {
+    const response = await api.patch<ApiResponse<User>>(`/admin/users/${id}/verify-email`);
+    return response.data;
+  },
 };
