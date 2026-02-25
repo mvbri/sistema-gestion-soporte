@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import equipmentRoutes from './routes/equipmentRoutes.js';
+import consumableRoutes from './routes/consumableRoutes.js';
+import toolRoutes from './routes/toolRoutes.js';
 
 dotenv.config();
 
@@ -44,6 +46,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/equipment', equipmentRoutes);
+app.use('/api/consumables', consumableRoutes);
+app.use('/api/tools', toolRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

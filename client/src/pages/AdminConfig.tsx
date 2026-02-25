@@ -8,6 +8,7 @@ import {
   useAdminPrioridades,
   useAdminDirecciones,
   useAdminEquipmentTypes,
+  useAdminConsumableTypes,
   useCreateCategoria,
   useUpdateCategoria,
   useDeleteCategoria,
@@ -20,27 +21,33 @@ import {
   useCreateEquipmentType,
   useUpdateEquipmentType,
   useDeleteEquipmentType,
+  useCreateConsumableType,
+  useUpdateConsumableType,
+  useDeleteConsumableType,
 } from '../hooks/useAdmin';
-import type { CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType } from '../types';
+import type { CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType, ConsumableType } from '../types';
 
 export const AdminConfig: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'direcciones' | 'equipment-types'>('categorias');
+  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'direcciones' | 'equipment-types' | 'consumable-types'>('categorias');
   const [editingCategoria, setEditingCategoria] = useState<CategoriaTicket | null>(null);
   const [editingPrioridad, setEditingPrioridad] = useState<PrioridadTicket | null>(null);
   const [editingDireccion, setEditingDireccion] = useState<DireccionTicket | null>(null);
   const [editingEquipmentType, setEditingEquipmentType] = useState<EquipmentType | null>(null);
+  const [editingConsumableType, setEditingConsumableType] = useState<ConsumableType | null>(null);
   const [showCategoriaForm, setShowCategoriaForm] = useState(false);
   const [showPrioridadForm, setShowPrioridadForm] = useState(false);
   const [showDireccionForm, setShowDireccionForm] = useState(false);
   const [showEquipmentTypeForm, setShowEquipmentTypeForm] = useState(false);
+  const [showConsumableTypeForm, setShowConsumableTypeForm] = useState(false);
   const [prioridadNivel, setPrioridadNivel] = useState<string>('');
   const [prioridadColor, setPrioridadColor] = useState<string>('');
   const [categoriaToDelete, setCategoriaToDelete] = useState<CategoriaTicket | null>(null);
   const [prioridadToDelete, setPrioridadToDelete] = useState<PrioridadTicket | null>(null);
   const [direccionToDelete, setDireccionToDelete] = useState<DireccionTicket | null>(null);
   const [equipmentTypeToDelete, setEquipmentTypeToDelete] = useState<EquipmentType | null>(null);
+  const [consumableTypeToDelete, setConsumableTypeToDelete] = useState<ConsumableType | null>(null);
   const [direccionesSearchTerm, setDireccionesSearchTerm] = useState('');
   const [direccionesSearch, setDireccionesSearch] = useState<string | undefined>(undefined);
   const [direccionesPage, setDireccionesPage] = useState(1);
@@ -51,6 +58,7 @@ export const AdminConfig: React.FC = () => {
   const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
   const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
   const { data: equipmentTypes = [], isLoading: loadingEquipmentTypes } = useAdminEquipmentTypes();
+  const { data: consumableTypes = [], isLoading: loadingConsumableTypes } = useAdminConsumableTypes();
   const { 
     data: direccionesData, 
     isLoading: loadingDirecciones 
@@ -81,8 +89,11 @@ export const AdminConfig: React.FC = () => {
   const createEquipmentTypeMutation = useCreateEquipmentType();
   const updateEquipmentTypeMutation = useUpdateEquipmentType();
   const deleteEquipmentTypeMutation = useDeleteEquipmentType();
+  const createConsumableTypeMutation = useCreateConsumableType();
+  const updateConsumableTypeMutation = useUpdateConsumableType();
+  const deleteConsumableTypeMutation = useDeleteConsumableType();
 
-  const loading = loadingCategorias || loadingPrioridades || loadingDirecciones || loadingEquipmentTypes;
+  const loading = loadingCategorias || loadingPrioridades || loadingDirecciones || loadingEquipmentTypes || loadingConsumableTypes;
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -343,7 +354,7 @@ export const AdminConfig: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Configuración de Administración</h1>
-          <p className="text-gray-600 mt-2">Gestiona categorías, prioridades, direcciones y tipos de equipos del sistema</p>
+          <p className="text-gray-600 mt-2">Gestiona categorías, prioridades, direcciones, tipos de equipos y tipos de consumibles del sistema</p>
         </div>
 
         <div className="bg-white shadow rounded-lg">
@@ -388,6 +399,16 @@ export const AdminConfig: React.FC = () => {
                 }`}
               >
                 Tipos de Equipos
+              </button>
+              <button
+                onClick={() => setActiveTab('consumable-types')}
+                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'consumable-types'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                }`}
+              >
+                Tipos de Consumibles
               </button>
             </nav>
           </div>
@@ -1477,6 +1498,256 @@ export const AdminConfig: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {activeTab === 'consumable-types' && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Tipos de Consumibles</h2>
+                  <button
+                    onClick={() => {
+                      setShowConsumableTypeForm(true);
+                      setEditingConsumableType(null);
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    Nuevo Tipo de Consumible
+                  </button>
+                </div>
+
+                {showConsumableTypeForm && !editingConsumableType && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Crear Tipo de Consumible</h3>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const name = formData.get('name') as string;
+                        const description = formData.get('description') as string;
+
+                        createConsumableTypeMutation.mutate(
+                          { name, description },
+                          {
+                            onSuccess: () => {
+                              setShowConsumableTypeForm(false);
+                            },
+                          }
+                        );
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Descripción
+                        </label>
+                        <textarea
+                          name="description"
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Crear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowConsumableTypeForm(false)}
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {editingConsumableType && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Editar Tipo de Consumible</h3>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!editingConsumableType) return;
+
+                        const formData = new FormData(e.currentTarget);
+                        const name = formData.get('name') as string;
+                        const description = formData.get('description') as string;
+                        const active = formData.get('active') === 'on';
+
+                        updateConsumableTypeMutation.mutate(
+                          {
+                            id: editingConsumableType.id,
+                            data: { name, description, active },
+                          },
+                          {
+                            onSuccess: () => {
+                              setEditingConsumableType(null);
+                            },
+                          }
+                        );
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          defaultValue={editingConsumableType.name}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Descripción
+                        </label>
+                        <textarea
+                          name="description"
+                          defaultValue={editingConsumableType.description || ''}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            name="active"
+                            defaultChecked={editingConsumableType.active}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-700">Activo</span>
+                        </label>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingConsumableType(null)}
+                          className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {consumableTypes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {loadingConsumableTypes ? 'Cargando...' : 'No se encontraron tipos de consumibles'}
+                    </div>
+                  ) : (
+                    consumableTypes.map((consumableType) => (
+                      <div
+                        key={consumableType.id}
+                        className={`p-4 border rounded-lg flex justify-between items-center ${
+                          !consumableType.active ? 'bg-gray-100 opacity-60' : 'bg-white'
+                        }`}
+                      >
+                        <div>
+                          <h3 className="font-medium">{consumableType.name}</h3>
+                          {consumableType.description && (
+                            <p className="text-sm text-gray-500">{consumableType.description}</p>
+                          )}
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              consumableType.active
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {consumableType.active ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingConsumableType(consumableType);
+                              setShowConsumableTypeForm(false);
+                            }}
+                            className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                            title="Editar"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 transition-all duration-200.ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => setConsumableTypeToDelete(consumableType)}
+                            className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                            title="Eliminar"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1580,6 +1851,40 @@ export const AdminConfig: React.FC = () => {
                   type="button"
                   onClick={handleDeleteEquipmentType}
                   className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {consumableTypeToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex.items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+              <p className="text-gray-700 mb-6">
+                ¿Estás seguro de que deseas eliminar el tipo de consumible {consumableTypeToDelete.name}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setConsumableTypeToDelete(null)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!consumableTypeToDelete) return;
+                    deleteConsumableTypeMutation.mutate(consumableTypeToDelete.id, {
+                      onSuccess: () => {
+                        setConsumableTypeToDelete(null);
+                      },
+                    });
+                  }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all.duration-200.ease-in-out"
                 >
                   Eliminar
                 </button>

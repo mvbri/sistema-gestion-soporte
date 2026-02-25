@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -259,6 +259,70 @@ export const useDeleteEquipmentType = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de equipo');
+    },
+  });
+};
+
+export const useAdminConsumableTypes = () => {
+  return useQuery({
+    queryKey: ['adminConsumableTypes'],
+    queryFn: () => adminService.getConsumableTypes(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateConsumableType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateConsumableTypeData) => adminService.createConsumableType(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminConsumableTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['consumableTypes'] });
+        toast.success('Tipo de consumible creado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear tipo de consumible');
+    },
+  });
+};
+
+export const useUpdateConsumableType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateConsumableTypeData }) =>
+      adminService.updateConsumableType(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminConsumableTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['consumableTypes'] });
+        toast.success('Tipo de consumible actualizado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar tipo de consumible');
+    },
+  });
+};
+
+export const useDeleteConsumableType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteConsumableType(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminConsumableTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['consumableTypes'] });
+        toast.success('Tipo de consumible eliminado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar tipo de consumible');
     },
   });
 };

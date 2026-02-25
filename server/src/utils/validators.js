@@ -294,11 +294,6 @@ export const validateCreateEquipment = [
         .isIn(['available', 'assigned', 'maintenance', 'retired'])
         .withMessage('El estado del equipo no es válido'),
     
-    body('location')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
-    
     body('assigned_to_user_id')
         .optional()
         .isInt({ min: 1 }).withMessage('El ID del usuario asignado debe ser un número válido'),
@@ -350,11 +345,6 @@ export const validateUpdateEquipment = [
         .isIn(['available', 'assigned', 'maintenance', 'retired'])
         .withMessage('El estado del equipo no es válido'),
     
-    body('location')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
-    
     body('assigned_to_user_id')
         .optional()
         .custom((value) => {
@@ -384,5 +374,184 @@ export const validateAssignEquipment = [
         .notEmpty().withMessage('El ID del usuario es requerido')
         .isInt({ min: 1 }).withMessage('El ID del usuario debe ser un número válido'),
     
+    handleValidationErrors
+];
+
+// Validaciones para crear consumible
+export const validateCreateConsumable = [
+    body('name')
+        .trim()
+        .notEmpty().withMessage('El nombre del consumible es requerido')
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+
+    body('type_id')
+        .notEmpty().withMessage('El tipo de consumible es requerido')
+        .isInt({ min: 1 }).withMessage('El tipo de consumible no es válido'),
+
+    body('unit')
+        .trim()
+        .notEmpty().withMessage('La unidad es requerida')
+        .isLength({ max: 50 }).withMessage('La unidad no puede exceder 50 caracteres'),
+
+    body('quantity')
+        .optional()
+        .isInt({ min: 0 }).withMessage('La cantidad debe ser un número entero mayor o igual a 0'),
+
+    body('minimum_quantity')
+        .optional()
+        .isInt({ min: 0 }).withMessage('La cantidad mínima debe ser un número entero mayor o igual a 0'),
+
+    body('status')
+        .optional()
+        .isIn(['available', 'low_stock', 'out_of_stock', 'inactive'])
+        .withMessage('El estado del consumible no es válido'),
+
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+
+    handleValidationErrors
+];
+
+// Validaciones para actualizar consumible
+export const validateUpdateConsumable = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+
+    body('type_id')
+        .optional()
+        .isInt({ min: 1 }).withMessage('El tipo de consumible no es válido'),
+
+    body('unit')
+        .optional()
+        .trim()
+        .isLength({ max: 50 }).withMessage('La unidad no puede exceder 50 caracteres'),
+
+    body('quantity')
+        .optional()
+        .isInt({ min: 0 }).withMessage('La cantidad debe ser un número entero mayor o igual a 0'),
+
+    body('minimum_quantity')
+        .optional()
+        .isInt({ min: 0 }).withMessage('La cantidad mínima debe ser un número entero mayor o igual a 0'),
+
+    body('status')
+        .optional()
+        .isIn(['available', 'low_stock', 'out_of_stock', 'inactive'])
+        .withMessage('El estado del consumible no es válido'),
+
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+
+    handleValidationErrors
+];
+
+// Validaciones para crear herramienta
+export const validateCreateTool = [
+    body('name')
+        .trim()
+        .notEmpty().withMessage('El nombre de la herramienta es requerido')
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+
+    body('code')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El código no puede exceder 100 caracteres'),
+
+    body('type_id')
+        .notEmpty().withMessage('El tipo de herramienta es requerido')
+        .isInt({ min: 1 }).withMessage('El tipo de herramienta no es válido'),
+
+    body('status')
+        .optional()
+        .isIn(['available', 'assigned', 'maintenance', 'lost', 'retired'])
+        .withMessage('El estado de la herramienta no es válido'),
+
+    body('condition')
+        .optional()
+        .isIn(['new', 'good', 'worn', 'broken'])
+        .withMessage('La condición de la herramienta no es válida'),
+
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+
+    body('assigned_to_user_id')
+        .optional()
+        .isInt({ min: 1 }).withMessage('El ID del usuario asignado debe ser un número válido'),
+
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+
+    handleValidationErrors
+];
+
+// Validaciones para actualizar herramienta
+export const validateUpdateTool = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 255 }).withMessage('El nombre debe tener entre 3 y 255 caracteres'),
+
+    body('code')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 }).withMessage('El código no puede exceder 100 caracteres'),
+
+    body('type_id')
+        .optional()
+        .isInt({ min: 1 }).withMessage('El tipo de herramienta no es válido'),
+
+    body('status')
+        .optional()
+        .isIn(['available', 'assigned', 'maintenance', 'lost', 'retired'])
+        .withMessage('El estado de la herramienta no es válido'),
+
+    body('condition')
+        .optional()
+        .isIn(['new', 'good', 'worn', 'broken'])
+        .withMessage('La condición de la herramienta no es válida'),
+
+    body('location')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder 255 caracteres'),
+
+    body('assigned_to_user_id')
+        .optional()
+        .custom((value) => {
+            if (value === null || value === undefined || value === '') return true;
+            return Number.isInteger(Number(value)) && Number(value) >= 1;
+        })
+        .withMessage('El ID del usuario asignado debe ser un número válido o null'),
+
+    body('description')
+        .optional({ checkFalsy: true })
+        .trim(),
+
+    handleValidationErrors
+];
+
+// Validaciones para asignar herramienta
+export const validateAssignTool = [
+    body('user_id')
+        .notEmpty().withMessage('El ID del usuario es requerido')
+        .isInt({ min: 1 }).withMessage('El ID del usuario debe ser un número válido'),
+
     handleValidationErrors
 ];

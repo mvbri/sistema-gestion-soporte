@@ -186,6 +186,15 @@ export interface EquipmentType {
   updated_at?: string;
 }
 
+export interface ConsumableType {
+  id: number;
+  name: string;
+  description?: string | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type EquipmentStatus = 'available' | 'assigned' | 'maintenance' | 'retired';
 
 export interface Equipment {
@@ -247,6 +256,144 @@ export interface EquipmentStats {
 
 export interface EquipmentResponse {
   equipment: Equipment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export type ConsumableStatus = 'available' | 'low_stock' | 'out_of_stock' | 'inactive';
+
+export interface Consumable {
+  id: number;
+  name: string;
+  type_id: number;
+  type_name?: string | null;
+  type_description?: string | null;
+  unit: string;
+  quantity: number;
+  minimum_quantity: number;
+  status: ConsumableStatus;
+  location?: string | null;
+  description?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsumableTypeOption {
+  value: string;
+  label: string;
+  id?: number;
+  description?: string;
+}
+
+export interface ConsumableStatusOption {
+  value: ConsumableStatus;
+  label: string;
+  color: string;
+}
+
+export interface ConsumableFilters {
+  status?: ConsumableStatus;
+  type?: string | number;
+  search?: string;
+  below_minimum?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface ConsumableStats {
+  byStatus: Array<{
+    status: ConsumableStatus;
+    count: number;
+  }>;
+  byType: Array<{
+    type: string;
+    count: number;
+  }>;
+  total: number;
+}
+
+export interface ConsumableResponse {
+  consumables: Consumable[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export type ToolStatus = 'available' | 'assigned' | 'maintenance' | 'lost' | 'retired';
+
+export interface ToolType {
+  id: number;
+  name: string;
+  description?: string | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Tool {
+  id: number;
+  name: string;
+  code?: string | null;
+  type_id?: number;
+  type?: string | null;
+  type_name?: string | null;
+  type_description?: string | null;
+  status: ToolStatus;
+  condition: 'new' | 'good' | 'worn' | 'broken';
+  location?: string | null;
+  assigned_to_user_id?: number | null;
+  assigned_to_user_name?: string | null;
+  assigned_to_user_email?: string | null;
+  description?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ToolTypeOption {
+  value: string;
+  label: string;
+  id?: number;
+  description?: string;
+}
+
+export interface ToolStatusOption {
+  value: ToolStatus;
+  label: string;
+  color: string;
+}
+
+export interface ToolFilters {
+  status?: ToolStatus;
+  type?: string | number;
+  assigned_to_user_id?: number;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ToolStats {
+  byStatus: Array<{
+    status: ToolStatus;
+    count: number;
+  }>;
+  byType: Array<{
+    type: string;
+    count: number;
+  }>;
+  total: number;
+}
+
+export interface ToolResponse {
+  tools: Tool[];
   pagination: {
     page: number;
     limit: number;

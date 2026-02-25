@@ -517,6 +517,127 @@ export const deleteEquipmentType = async (req, res) => {
     }
 };
 
+/**
+ * Obtiene todos los tipos de consumibles.
+ */
+export const getConsumableTypesAdmin = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM consumable_types ORDER BY name';
+        try {
+            const tipos = await query(sql);
+            sendSuccess(res, 'Tipos de consumibles obtenidos exitosamente', tipos);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM consumable_types ORDER BY nombre';
+                const tipos = await query(sql);
+                sendSuccess(res, 'Tipos de consumibles obtenidos exitosamente', tipos);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener tipos de consumibles:', error);
+        sendError(res, 'Error al obtener tipos de consumibles', null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo tipo de consumible.
+ */
+export const createConsumableType = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const sql = 'INSERT INTO consumable_types (name, description) VALUES (?, ?)';
+        const result = await query(sql, [name, description || null]);
+
+        const nuevoTipo = await query('SELECT * FROM consumable_types WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Tipo de consumible creado exitosamente', nuevoTipo[0], 201);
+    } catch (error) {
+        console.error('Error al crear tipo de consumible:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de consumible con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al crear tipo de consumible', null, 500);
+    }
+};
+
+/**
+ * Actualiza un tipo de consumible existente.
+ */
+export const updateConsumableType = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, active } = req.body;
+
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        params.push(id);
+        const sql = `UPDATE consumable_types SET ${updates.join(', ')} WHERE id = ?`;
+        await query(sql, params);
+
+        const tipo = await query('SELECT * FROM consumable_types WHERE id = ?', [id]);
+        sendSuccess(res, 'Tipo de consumible actualizado exitosamente', tipo[0]);
+    } catch (error) {
+        console.error('Error al actualizar tipo de consumible:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de consumible con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar tipo de consumible', null, 500);
+    }
+};
+
+/**
+ * Elimina un tipo de consumible por id.
+ */
+export const deleteConsumableType = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const tipo = await query('SELECT * FROM consumable_types WHERE id = ?', [id]);
+        if (tipo.length === 0) {
+            return sendError(res, 'El tipo de consumible no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM consumable_types WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar el tipo de consumible porque tiene consumibles asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Tipo de consumible eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar tipo de consumible:', error);
+        sendError(res, 'Error al eliminar tipo de consumible', null, 500);
+    }
+};
+
 export const deleteDireccion = async (req, res) => {
     try {
         const { id } = req.params;

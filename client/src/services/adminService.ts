@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType, ConsumableType } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -44,6 +44,17 @@ export interface CreateEquipmentTypeData {
 }
 
 export interface UpdateEquipmentTypeData {
+  name?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface CreateConsumableTypeData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateConsumableTypeData {
   name?: string;
   description?: string;
   active?: boolean;
@@ -145,6 +156,26 @@ export const adminService = {
 
   async deleteEquipmentType(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/equipment-types/${id}`);
+    return response.data;
+  },
+
+  async getConsumableTypes(): Promise<ApiResponse<ConsumableType[]>> {
+    const response = await api.get<ApiResponse<ConsumableType[]>>('/admin/consumable-types');
+    return response.data;
+  },
+
+  async createConsumableType(data: CreateConsumableTypeData): Promise<ApiResponse<ConsumableType>> {
+    const response = await api.post<ApiResponse<ConsumableType>>('/admin/consumable-types', data);
+    return response.data;
+  },
+
+  async updateConsumableType(id: number, data: UpdateConsumableTypeData): Promise<ApiResponse<ConsumableType>> {
+    const response = await api.put<ApiResponse<ConsumableType>>(`/admin/consumable-types/${id}`, data);
+    return response.data;
+  },
+
+  async deleteConsumableType(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/consumable-types/${id}`);
     return response.data;
   },
 };

@@ -26,6 +26,13 @@ import { EquipmentList } from './pages/EquipmentList';
 import { CreateEquipment } from './pages/CreateEquipment';
 import { EquipmentDetail } from './pages/EquipmentDetail';
 import { EquipmentDashboard } from './pages/EquipmentDashboard';
+import { ConsumablesList } from './pages/ConsumablesList';
+import { CreateConsumable } from './pages/CreateConsumable';
+import { ConsumableDetail } from './pages/ConsumableDetail';
+import { ConsumablesDashboard } from './pages/ConsumablesDashboard';
+import { ToolsList } from './pages/ToolsList';
+import { CreateTool } from './pages/CreateTool';
+import { ToolDetail } from './pages/ToolDetail';
 
 function App() {
   return (
@@ -163,6 +170,78 @@ function App() {
             element={
               <ProtectedRoute>
                 <EquipmentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumables"
+            element={
+              <ProtectedRoute>
+                <ConsumablesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumables/crear"
+            element={
+              <ProtectedRoute>
+                <CreateConsumable />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumables/:id"
+            element={
+              <ProtectedRoute>
+                <ConsumableDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumables/:id/editar"
+            element={
+              <ProtectedRoute>
+                <ConsumableDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumables/analytics"
+            element={
+              <ProtectedRoute>
+                <ConsumablesDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools"
+            element={
+              <ProtectedRoute>
+                <ToolsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools/crear"
+            element={
+              <ProtectedRoute>
+                <CreateTool />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools/:id"
+            element={
+              <ProtectedRoute>
+                <ToolDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools/:id/editar"
+            element={
+              <ProtectedRoute>
+                <ToolDetail />
               </ProtectedRoute>
             }
           />

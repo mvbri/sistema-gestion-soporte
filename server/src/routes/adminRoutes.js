@@ -15,7 +15,11 @@ import {
     getEquipmentTypes,
     createEquipmentType,
     updateEquipmentType,
-    deleteEquipmentType
+    deleteEquipmentType,
+    getConsumableTypesAdmin,
+    createConsumableType,
+    updateConsumableType,
+    deleteConsumableType
 } from '../controllers/adminController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
@@ -96,6 +100,20 @@ router.put('/equipment-types/:id', [
     handleValidationErrors
 ], updateEquipmentType);
 router.delete('/equipment-types/:id', deleteEquipmentType);
+
+router.get('/consumable-types', getConsumableTypesAdmin);
+router.post('/consumable-types', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
+    handleValidationErrors
+], createConsumableType);
+router.put('/consumable-types/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateConsumableType);
+router.delete('/consumable-types/:id', deleteConsumableType);
 
 router.use('/backup', backupRoutes);
 
