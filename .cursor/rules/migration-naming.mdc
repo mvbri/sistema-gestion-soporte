@@ -1,3 +1,44 @@
 ---
 alwaysApply: true
 ---
+# Migration File Naming Convention
+
+All database migration files must follow a strict naming pattern organized by date and time.
+
+## Format
+All migration files must use the following format:
+```
+migration_YYYY-MM-DD_HH-MM-SS_description.sql
+```
+
+## Components
+- **Prefix**: Always start with `migration_`
+- **Date**: `YYYY-MM-DD` format (e.g., `2026-02-24`)
+- **Time**: `HH-MM-SS` format (e.g., `18-22-55`)
+- **Description**: Short, descriptive name in snake_case describing what the migration does
+- **Extension**: Always `.sql`
+
+## Examples
+✅ Correct:
+- `migration_2026-02-24_18-22-55_add_user_incident_area.sql`
+- `migration_2026-02-24_20-38-56_add_equipment.sql`
+- `migration_2026-02-24_21-10-00_add_ticket_equipment.sql`
+
+❌ Incorrect:
+- `migration_add_incident_areas.sql` (missing date/time)
+- `migration_rename_tables.sql` (missing date/time)
+- `migration_2026-02-24_add_user.sql` (missing time)
+
+## Rules
+1. **Always include date and time** in the filename
+2. Use 24-hour format for time (HH-MM-SS)
+3. Use hyphens (`-`) to separate date components and time components
+4. Use underscore (`_`) to separate date, time, and description
+5. Description should be concise and in snake_case
+6. The timestamp should reflect when the migration was created
+
+## When Creating New Migrations
+- Generate the filename with the current date and time
+- Use format: `migration_YYYY-MM-DD_HH-MM-SS_description.sql`
+- Ensure the description clearly indicates what the migration does
+- Store all migrations in `server/database/` directory

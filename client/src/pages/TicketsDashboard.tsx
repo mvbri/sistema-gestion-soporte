@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTicketStats } from '../hooks/useTickets';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from 'recharts';
 import type { TicketStats } from '../types';
 
 export const TicketsDashboard: React.FC = () => {
@@ -102,12 +102,13 @@ export const TicketsDashboard: React.FC = () => {
                   data={stats.porPrioridad}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={(entry) => {
-                    const data = entry as unknown as { nombre: string; cantidad: number };
-                    return `${data.nombre}: ${data.cantidad}`;
+                  labelLine={true}
+                  label={(entry: { nombre: string; cantidad: number; percent?: number }) => {
+                    const percent = entry.percent || 0;
+                    if (percent < 0.05) return '';
+                    return `${entry.nombre}: ${entry.cantidad}`;
                   }}
-                  outerRadius={80}
+                  outerRadius={70}
                   fill="#8884d8"
                   dataKey="cantidad"
                 >
@@ -115,7 +116,16 @@ export const TicketsDashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: number) => [`${value} tickets`, 'Cantidad']}
+                  labelFormatter={(label: string) => label}
+                />
+                <Legend 
+                  formatter={(_value: string, entry: any) => {
+                    const { nombre, cantidad } = entry.payload as { nombre: string; cantidad: number };
+                    return `${nombre} (${cantidad})`;
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
