@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMenu } from '../hooks/useMenu';
+import { useMenu } from '../contexts/MenuContext';
 import { NavbarHeader } from './navbar/NavbarHeader';
 import { UserMenu } from './navbar/UserMenu';
 import { SidebarOverlay } from './navbar/SidebarOverlay';

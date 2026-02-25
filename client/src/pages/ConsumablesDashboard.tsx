@@ -121,10 +121,7 @@ export const ConsumablesDashboard: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(props: unknown) => {
-                        const p = props as { name?: string; cantidad?: number };
-                        return `${p.name ?? ''}: ${p.cantidad ?? 0}`;
-                      }}
+                      label={(props: any) => `${props.name}: ${props.cantidad}`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="cantidad"

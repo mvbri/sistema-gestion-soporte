@@ -21,7 +21,7 @@ const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
     return trimmed === '' ? null : trimmed;
   };
 
-  const incidentAreaId = data.incident_area_id;
+  let incidentAreaId = data.incident_area_id;
   if (!incidentAreaId || incidentAreaId === 0 || isNaN(incidentAreaId)) {
     throw new Error('dirección_obligatoria');
   }

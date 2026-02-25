@@ -7,7 +7,7 @@ export interface User {
   department?: string;
   incident_area_id?: number | null;
   email_verified: boolean;
-  active: boolean;
+  active?: boolean;
   created_at?: string;
 }
 
@@ -25,17 +25,6 @@ export interface ApiResponse<T = unknown> {
   message: string;
   data?: T;
   errors?: Array<{ msg: string; param: string }>;
-}
-
-export interface AxiosErrorResponse {
-  response?: {
-    data?: {
-      message?: string;
-      errors?: Array<{ msg?: string; message?: string; param?: string }>;
-    };
-    status?: number;
-  };
-  message?: string;
 }
 
 export type Role = 'administrator' | 'technician' | 'end_user';

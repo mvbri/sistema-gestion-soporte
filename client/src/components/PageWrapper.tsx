@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { useMenu } from '../hooks/useMenu';
+import { useMenu } from '../contexts/MenuContext';
 
 interface PageWrapperProps {
   children: ReactNode;

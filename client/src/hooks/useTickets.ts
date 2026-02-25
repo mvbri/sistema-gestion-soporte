@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ticketService, type CreateTicketData, type UpdateTicketData, type CommentData } from '../services/ticketService';
-import type { TicketFilters, AxiosErrorResponse } from '../types';
+import type { TicketFilters } from '../types';
 import { toast } from 'react-toastify';
 
 export const useTickets = (filters?: TicketFilters) => {
@@ -84,7 +84,7 @@ export const useCreateTicket = () => {
         toast.success('Ticket creado exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al crear ticket');
     },
   });
@@ -101,10 +101,10 @@ export const useCreateTicketWithFormData = () => {
         toast.success('Ticket creado exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err) => {
+        errorData.errors.forEach((err: any) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -127,7 +127,7 @@ export const useUpdateTicket = () => {
         toast.success('Ticket actualizado exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al actualizar ticket');
     },
   });
@@ -162,10 +162,10 @@ export const useAddComment = () => {
         toast.success('Comentario agregado exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err) => {
+        errorData.errors.forEach((err: any) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -187,7 +187,7 @@ export const useStartProgress = () => {
         toast.success('Ticket marcado como "En Proceso"');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al iniciar progreso');
     },
   });
@@ -205,7 +205,7 @@ export const useMarkAsResolved = () => {
         toast.success('Ticket marcado como "Resuelto"');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al marcar como resuelto');
     },
   });

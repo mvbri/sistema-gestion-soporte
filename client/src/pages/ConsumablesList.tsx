@@ -42,7 +42,7 @@ export const ConsumablesList: React.FC = () => {
     totalPages: 0,
   };
 
-  const handleFilterChange = (key: keyof ConsumableFilters, value: string | number | boolean | undefined) => {
+  const handleFilterChange = (key: keyof ConsumableFilters, value: any) => {
     setFilters((prev: ConsumableFilters) => ({ ...prev, [key]: value, page: 1 }));
   };
 

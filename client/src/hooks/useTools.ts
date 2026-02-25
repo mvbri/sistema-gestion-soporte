@@ -5,7 +5,7 @@ import {
   type UpdateToolData,
   type AssignToolData,
 } from '../services/toolService';
-import type { ToolFilters, AxiosErrorResponse } from '../types';
+import type { ToolFilters } from '../types';
 import { toast } from 'react-toastify';
 import { useTecnicos as useTecnicosFromTickets } from './useTickets';
 
@@ -64,10 +64,10 @@ export const useCreateTool = () => {
         toast.success('Herramienta creada exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err) => {
+        errorData.errors.forEach((err: any) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -93,10 +93,10 @@ export const useUpdateTool = () => {
         toast.success('Herramienta actualizada exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       const errorData = error.response?.data;
       if (errorData?.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-        errorData.errors.forEach((err) => {
+        errorData.errors.forEach((err: any) => {
           toast.error(err.message || 'Error de validación');
         });
       } else {
@@ -118,7 +118,7 @@ export const useDeleteTool = () => {
         toast.success('Herramienta eliminada exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar herramienta');
     },
   });
@@ -138,7 +138,7 @@ export const useAssignTool = () => {
         toast.success('Herramienta asignada exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al asignar herramienta');
     },
   });
@@ -157,7 +157,7 @@ export const useUnassignTool = () => {
         toast.success('Herramienta desasignada exitosamente');
       }
     },
-    onError: (error: AxiosErrorResponse) => {
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al desasignar herramienta');
     },
   });

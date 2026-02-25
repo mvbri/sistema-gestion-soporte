@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useMenu } from '../../hooks/useMenu';
+import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../hooks/useAuth';
 import { MenuToggleButton } from './MenuToggleButton';
 import { NavLink } from './NavLink';
@@ -85,10 +85,6 @@ export const SidebarMenu: React.FC = () => {
       return location.pathname === '/analytics';
     }
 
-    if (path === '/admin/users') {
-      return location.pathname === '/admin/users';
-    }
-
     return location.pathname.startsWith(path + '/');
   };
 
@@ -115,12 +111,6 @@ export const SidebarMenu: React.FC = () => {
     {
       path: '/admin/config',
       label: 'Configuración',
-      icon: SettingsIcon,
-      show: user?.role === 'administrator',
-    },
-    {
-      path: '/admin/users',
-      label: 'Gestión de Usuarios',
       icon: SettingsIcon,
       show: user?.role === 'administrator',
     },

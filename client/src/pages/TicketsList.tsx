@@ -39,7 +39,7 @@ export const TicketsList: React.FC = () => {
     totalPages: 0,
   };
 
-  const handleFilterChange = (key: keyof TicketFilters, value: string | number | boolean | undefined) => {
+  const handleFilterChange = (key: keyof TicketFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
