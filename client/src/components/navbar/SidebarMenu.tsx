@@ -10,6 +10,13 @@ import { AnalyticsIcon } from '../icons/AnalyticsIcon';
 import { SettingsIcon } from '../icons/SettingsIcon';
 import { CreateTicketIcon } from '../icons/CreateTicketIcon';
 import { EquipmentIcon } from '../icons/EquipmentIcon';
+import { UsersIcon } from '../icons/UsersIcon';
+import { ConsumablesIcon } from '../icons/ConsumablesIcon';
+import { ToolsIcon } from '../icons/ToolsIcon';
+import { TicketAnalyticsIcon } from '../icons/TicketAnalyticsIcon';
+import { EquipmentAnalyticsIcon } from '../icons/EquipmentAnalyticsIcon';
+import { ConsumablesAnalyticsIcon } from '../icons/ConsumablesAnalyticsIcon';
+import { BackupIcon } from '../icons/BackupIcon';
 
 export const SidebarMenu: React.FC = () => {
   const { menuOpen, setMenuOpen } = useMenu();
@@ -85,6 +92,18 @@ export const SidebarMenu: React.FC = () => {
       return location.pathname === '/analytics';
     }
 
+    if (path === '/admin/users') {
+      return location.pathname.startsWith('/admin/users');
+    }
+
+    if (path === '/admin/backup') {
+      return location.pathname.startsWith('/admin/backup');
+    }
+
+    if (path === '/admin/config') {
+      return location.pathname.startsWith('/admin/config');
+    }
+
     return location.pathname.startsWith(path + '/');
   };
 
@@ -101,7 +120,7 @@ export const SidebarMenu: React.FC = () => {
       icon: DashboardIcon,
       show: user?.role === 'technician',
     },
-    { path: '/tickets', label: 'Ver Tickets', icon: TicketsIcon, show: true },
+    { path: '/tickets', label: 'Tickets', icon: TicketsIcon, show: true },
     {
       path: '/tickets/crear',
       label: 'Crear Ticket',
@@ -109,15 +128,9 @@ export const SidebarMenu: React.FC = () => {
       show: user?.role === 'end_user',
     },
     {
-      path: '/admin/config',
-      label: 'Configuración',
-      icon: SettingsIcon,
-      show: user?.role === 'administrator',
-    },
-    {
-      path: '/admin/backup',
-      label: 'Respaldo y Restauración',
-      icon: SettingsIcon,
+      path: '/admin/users',
+      label: 'Gestión de Usuarios',
+      icon: UsersIcon,
       show: user?.role === 'administrator',
     },
   ].filter((link) => link.show);
@@ -125,12 +138,13 @@ export const SidebarMenu: React.FC = () => {
   return (
     <div
       ref={menuRef}
-      className={`fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+      className={`fixed top-0 left-0 h-full w-80 shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
         menuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
+      style={{ backgroundColor: '#5B7FA8' }}
     >
       <div className="pb-4">
-        <div className="px-5 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+        <div className="px-5 py-5 border-b border-blue-400/30" style={{ backgroundColor: '#4A6FA5' }}>
           <div className="flex items-center space-x-3">
             <MenuToggleButton
               isOpen={menuOpen}
@@ -140,9 +154,14 @@ export const SidebarMenu: React.FC = () => {
             <Link
               to="/dashboard"
               onClick={() => setMenuOpen(false)}
-              className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors flex-1"
+              className="flex items-center space-x-2 text-lg font-bold text-white hover:text-blue-100 transition-colors flex-1"
             >
-              Gestión de Soporte Técnico
+              <img
+                src="/alcado.webp"
+                alt="Logo Alcaldía"
+                className="h-8 w-auto object-contain"
+              />
+              <span>Gestión de Soporte Técnico</span>
             </Link>
           </div>
         </div>
@@ -165,14 +184,14 @@ export const SidebarMenu: React.FC = () => {
               onClick={() => setInventoryOpen(!inventoryOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 inventoryOpen
-                  ? 'bg-blue-50 text-blue-700 shadow-sm border-l-4 border-blue-700'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-blue-400/30 text-white shadow-sm border-l-4 border-blue-200'
+                  : 'text-blue-50 hover:bg-blue-400/20 hover:text-white'
               }`}
             >
               <span className="flex items-center gap-3">
                 <EquipmentIcon
                   className={`flex-shrink-0 h-5 w-5 ${
-                    inventoryOpen ? 'text-blue-700' : 'text-gray-500'
+                    inventoryOpen ? 'text-white' : 'text-blue-200'
                   }`}
                 />
                 <span>Inventario</span>
@@ -193,21 +212,21 @@ export const SidebarMenu: React.FC = () => {
                 <NavLink
                   path="/equipment"
                   label="Equipos"
-                  icon={undefined}
+                  icon={EquipmentIcon}
                   isActive={isActive('/equipment')}
                   onClick={() => setMenuOpen(false)}
                 />
                 <NavLink
                   path="/consumables"
                   label="Consumibles"
-                  icon={undefined}
+                  icon={ConsumablesIcon}
                   isActive={isActive('/consumables')}
                   onClick={() => setMenuOpen(false)}
                 />
                 <NavLink
                   path="/tools"
                   label="Herramientas"
-                  icon={undefined}
+                  icon={ToolsIcon}
                   isActive={isActive('/tools')}
                   onClick={() => setMenuOpen(false)}
                 />
@@ -222,14 +241,14 @@ export const SidebarMenu: React.FC = () => {
               onClick={() => setAnalyticsOpen(!analyticsOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 analyticsOpen
-                  ? 'bg-blue-50 text-blue-700 shadow-sm border-l-4 border-blue-700'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-blue-400/30 text-white shadow-sm border-l-4 border-blue-200'
+                  : 'text-blue-50 hover:bg-blue-400/20 hover:text-white'
               }`}
             >
               <span className="flex items-center gap-3">
                 <AnalyticsIcon
                   className={`flex-shrink-0 h-5 w-5 ${
-                    analyticsOpen ? 'text-blue-700' : 'text-gray-500'
+                    analyticsOpen ? 'text-white' : 'text-blue-200'
                   }`}
                 />
                 <span>Analíticas</span>
@@ -250,27 +269,49 @@ export const SidebarMenu: React.FC = () => {
                 <NavLink
                   path="/analytics"
                   label="Analíticas de Tickets"
-                  icon={undefined}
+                  icon={TicketAnalyticsIcon}
                   isActive={isActive('/analytics')}
                   onClick={() => setMenuOpen(false)}
                 />
                 <NavLink
                   path="/equipment/analytics"
-                  label="Analíticas de Inventario"
-                  icon={undefined}
+                  label="Analíticas de Equipos"
+                  icon={EquipmentAnalyticsIcon}
                   isActive={isActive('/equipment/analytics')}
                   onClick={() => setMenuOpen(false)}
                 />
                 <NavLink
                   path="/consumables/analytics"
                   label="Analíticas de Consumibles"
-                  icon={undefined}
+                  icon={ConsumablesAnalyticsIcon}
                   isActive={isActive('/consumables/analytics')}
                   onClick={() => setMenuOpen(false)}
                 />
               </div>
             )}
           </div>
+
+          {/* Respaldo y Restauración */}
+          {user?.role === 'administrator' && (
+            <NavLink
+              path="/admin/backup"
+              label="Respaldo y Restauración"
+              icon={BackupIcon}
+              isActive={isActive('/admin/backup')}
+              onClick={() => setMenuOpen(false)}
+            />
+          )}
+
+          {/* Configuración */}
+          {user?.role === 'administrator' && (
+            <NavLink
+              path="/admin/config"
+              label="Configuración"
+              icon={SettingsIcon}
+              isActive={isActive('/admin/config')}
+              onClick={() => setMenuOpen(false)}
+            />
+          )}
         </nav>
       </div>
     </div>

@@ -70,18 +70,31 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className={`${formStyles.formContainer} card`}>
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat relative"
+      style={{
+        backgroundImage: 'url(/alcaldiaheres.jpg.jpeg)',
+      }}
+    >
+      <div className="absolute inset-0 bg-blue-900/40"></div>
+      <div className={`${formStyles.formContainer} card relative z-10`} style={{ backgroundColor: '#5B7FA8' }}>
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Iniciar Sesión</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <div className="flex justify-center mb-4">
+            <img
+              src="/alcado.webp"
+              alt="Logo Alcaldía"
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+          <h2 className="text-3xl font-bold text-white">Iniciar Sesión</h2>
+          <p className="mt-2 text-sm text-blue-100">
             Sistema de Gestión de Soporte Técnico
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className={formStyles.formGroup}>
-            <label htmlFor="email" className="label-field">
+            <label htmlFor="email" className="label-field text-blue-50">
               Email
             </label>
             <input
@@ -92,12 +105,12 @@ export const Login: React.FC = () => {
               placeholder="tu@email.com"
             />
             {errors.email && (
-              <p className="error-message">{errors.email.message}</p>
+              <p className="error-message text-red-200">{errors.email.message}</p>
             )}
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="password" className="label-field">
+            <label htmlFor="password" className="label-field text-blue-50">
               Contraseña
             </label>
             <input
@@ -108,7 +121,7 @@ export const Login: React.FC = () => {
               placeholder="••••••••"
             />
             {errors.password && (
-              <p className="error-message">{errors.password.message}</p>
+              <p className="error-message text-red-200">{errors.password.message}</p>
             )}
           </div>
 
@@ -120,11 +133,11 @@ export const Login: React.FC = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-700">Mantenerme conectado</span>
+              <span className="ml-2 text-sm text-blue-50">Mantenerme conectado</span>
             </label>
             <Link
               to="/recuperar-password"
-              className="text-sm text-primary-600 hover:text-primary-700"
+              className="text-sm text-blue-200 hover:text-white"
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -143,9 +156,9 @@ export const Login: React.FC = () => {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-blue-100">
           ¿No tienes una cuenta?{' '}
-          <Link to="/registro" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link to="/registro" className="text-blue-200 hover:text-white font-medium">
             Regístrate
           </Link>
         </p>

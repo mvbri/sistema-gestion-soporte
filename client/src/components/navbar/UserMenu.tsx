@@ -41,16 +41,16 @@ export const UserMenu: React.FC = () => {
       <button
         type="button"
         onClick={() => setUserMenuOpen((prev) => !prev)}
-        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg hover:bg-blue-400/20 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
       >
-        <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center">
-          <UserProfileIcon className="h-5 w-5 text-gray-600" />
+        <div className="h-9 w-9 rounded-full bg-blue-300/30 flex items-center justify-center">
+          <UserProfileIcon className="h-5 w-5 text-white" />
         </div>
-        <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+        <span className="text-sm font-medium text-white hidden sm:inline">
           {user?.full_name}
         </span>
         <svg
-          className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+          className={`h-4 w-4 text-white transition-transform duration-200 ${
             userMenuOpen ? 'rotate-180' : ''
           }`}
           fill="none"

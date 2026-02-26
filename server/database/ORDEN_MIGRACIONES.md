@@ -1,109 +1,102 @@
-# 📋 Orden de Ejecución de Migraciones
+## 📋 Orden de Ejecución de Migraciones (para replicar en otra PC)
 
-## Migraciones Ordenadas por Fecha (Más Reciente Primero)
-
-### ⚠️ Migraciones Urgentes (25/02/2026)
-
-1. **`migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql`** - 25/2/2026 5:39:53 PM
-   - **Propósito:** Agrega la columna `incident_area_id` a la tabla `users` si no existe
-   - **Acción:** Agrega columna, índice y foreign key de forma segura
-   - **Estado:** ⚠️ **EJECUTAR URGENTE** (corrige error "Unknown column 'incident_area_id'")
-
-### ✅ Migraciones Más Recientes (24/02/2026)
-
-1. **`migration_fix_equipment_type_id_simple.sql`** - 24/2/2026 9:14:45 PM
-   - **Propósito:** Corrige el error "Unknown column 'type_id'" en la tabla equipment
-   - **Acción:** Agrega la columna `type_id` a la tabla `equipment` si no existe
-   - **Estado:** ⚠️ **EJECUTAR PRIMERO** (corrige error actual)
-
-2. **`migration_fix_equipment_type_id.sql`** - 24/2/2026 9:12:29 PM
-   - **Propósito:** Versión alternativa de la migración anterior (usar la simple)
-   - **Acción:** Similar a la anterior pero con sintaxis más compleja
-   - **Estado:** ⚠️ **NO EJECUTAR** (usar la versión simple en su lugar)
-
-3. **`migration_add_ticket_equipment.sql`** - 24/2/2026 9:10:00 PM
-   - **Propósito:** Crea la relación entre tickets y equipos
-   - **Acción:** Crea la tabla `ticket_equipment` para asociar equipos a tickets
-   - **Estado:** ⚠️ **EJECUTAR SEGUNDO** (necesaria para asociar equipos)
-
-4. **`migration_add_equipment.sql`** - 24/2/2026 8:38:56 PM
-   - **Propósito:** Crea la tabla de equipos (inventario)
-   - **Acción:** Crea la tabla `equipment` con todos sus campos
-   - **Estado:** ✅ Ya ejecutada (pero falta la columna type_id)
-
-5. **`migration_add_equipment_types.sql`** - 24/2/2026 8:38:56 PM
-   - **Propósito:** Crea la tabla de tipos de equipos
-   - **Acción:** Crea la tabla `equipment_types` con tipos por defecto
-   - **Estado:** ✅ Ya ejecutada
-
-### Migraciones Anteriores (21/02/2026)
-
-6. **`migration_add_user_incident_area.sql`** - 24/2/2026 6:22:55 PM
-   - **Propósito:** Agrega campo `incident_area_id` a usuarios
-   - **Estado:** ✅ Ya ejecutada
-
-7. **`migration_add_incident_areas.sql`** - 21/2/2026 2:19:23 PM
-   - **Propósito:** Crea tabla de áreas de incidentes
-   - **Estado:** ✅ Ya ejecutada
-
-8. **`migration_verify_all_columns_english.sql`** - 21/2/2026 2:14:41 PM
-   - **Propósito:** Verifica que todas las columnas estén en inglés
-   - **Estado:** ✅ Ya ejecutada
-
-9. **`migration_fix_tickets_columns.sql`** - 21/2/2026 2:05:37 PM
-   - **Propósito:** Corrige nombres de columnas en tickets
-   - **Estado:** ✅ Ya ejecutada
-
-10. **`migration_rename_columns_to_english.sql`** - 21/2/2026 2:05:35 PM
-    - **Propósito:** Renombra columnas a inglés
-    - **Estado:** ✅ Ya ejecutada
-
-11. **`migration_rename_tables_to_english.sql`** - 21/2/2026 1:29:20 PM
-    - **Propósito:** Renombra tablas a inglés
-    - **Estado:** ✅ Ya ejecutada
-
-12. **`migration_security_questions_fixed.sql`** - 21/2/2026 1:06:59 PM
-    - **Propósito:** Corrige preguntas de seguridad
-    - **Estado:** ✅ Ya ejecutada
-
-13. **`migration_security_questions.sql`** - 21/2/2026 1:06:59 PM
-    - **Propósito:** Crea tabla de preguntas de seguridad
-    - **Estado:** ✅ Ya ejecutada
+> Este documento refleja **solo** las migraciones que actualmente existen en `server/database/`
+> y en el **orden correcto de dependencias** para levantar una base vacía en otra máquina.
 
 ---
 
-## 🚀 Orden de Ejecución Recomendado
+## ✅ Orden recomendado desde una base vacía
 
-### Si tienes errores actuales:
+Ejecutar estas migraciones **en este orden**:
 
-1. **PRIMERO:** `migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql`
-   - Corrige el error "Unknown column 'incident_area_id' in 'INSERT INTO'"
-   - Ejecutar: ✅ **URGENTE** (necesario para registro de usuarios)
+1. **`migration_2026-02-25_22-00-00_create_roles.sql`**
+   - Crea la base de datos `sistema_soporte` y la tabla `roles`.
 
-2. **SEGUNDO:** `migration_fix_equipment_type_id_simple.sql`
-   - Corrige el error "Unknown column 'type_id'"
-   - Ejecutar: ✅ **URGENTE**
+2. **`migration_2026-02-25_22-01-00_create_incident_areas.sql`**
+   - Crea la tabla `incident_areas`.
 
-3. **TERCERO:** `migration_add_ticket_equipment.sql`
-   - Habilita la asociación de equipos a tickets
-   - Ejecutar: ✅ **NECESARIO**
+3. **`migration_2026-02-25_22-02-00_create_users.sql`**
+   - Crea la tabla `users` con `role_id` y `incident_area_id`.
 
-### Si todo está funcionando:
+4. **`migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql`**
+   - Asegura columna, índice y foreign key `incident_area_id` en `users` (seguro aunque ya exista).
 
-Las migraciones anteriores ya deberían estar ejecutadas. Solo necesitas las dos más recientes.
+5. **`migration_2026-02-25_17-19-57_add_security_questions_columns.sql`**
+   - Agrega las columnas de preguntas/respuestas de seguridad a `users` si no existen.
+
+6. **`migration_2026-02-25_22-03-00_create_verification_tokens.sql`**
+   - Crea la tabla `verification_tokens` (FK a `users`).
+
+7. **`migration_2026-02-25_22-04-00_create_ticket_states.sql`**
+   - Crea la tabla `ticket_states`.
+
+8. **`migration_2026-02-25_22-05-00_create_ticket_categories.sql`**
+   - Crea la tabla `ticket_categories`.
+
+9. **`migration_2026-02-25_22-06-00_create_ticket_priorities.sql`**
+   - Crea la tabla `ticket_priorities`.
+
+10. **`migration_2026-02-25_22-07-00_create_tickets.sql`**
+    - Crea la tabla `tickets` con sus foreign keys a `users`, `incident_areas`, `ticket_*`.
+
+11. **`migration_2026-02-25_22-08-00_create_ticket_comments.sql`**
+    - Crea la tabla `ticket_comments` (FK a `tickets` y `users`).
+
+12. **`migration_2026-02-25_22-09-00_create_ticket_history.sql`**
+    - Crea la tabla `ticket_history` (FK a `tickets` y `users`).
+
+13. **`migration_2026-02-24_20-38-56_add_equipment_types.sql`**
+    - Crea la tabla `equipment_types` y carga tipos por defecto.
+
+14. **`migration_2026-02-24_20-38-56_add_equipment.sql`**
+    - Crea la tabla `equipment` (FK a `equipment_types` y `users`).
+
+15. **`migration_2026-02-25_21-00-00_add_consumables.sql`**
+    - Crea `consumable_types` y `consumables`.
+
+16. **`migration_2026-02-25_21-20-00_add_tools.sql`**
+    - Crea `tool_types` y `tools` (FK opcional a `users`).
+
+17. **`migration_2026-02-24_21-10-00_add_ticket_equipment.sql`**
+    - Crea la tabla `ticket_equipment` (FK a `tickets` y `equipment`).
+
+18. **`migration_2026-02-25_22-10-00_seed_initial_data.sql`**
+    - Inserta datos iniciales en `roles`, `ticket_states`, `ticket_categories`,
+      `ticket_priorities` e `incident_areas` usando `INSERT IGNORE`.
 
 ---
 
-## 📝 Notas Importantes
+## 🧪 Cómo ejecutar todo en otra PC
 
-- ⚠️ **NO ejecutes** `migration_fix_equipment_type_id.sql` si ya ejecutaste la versión `simple`
-- ✅ Las migraciones son **idempotentes** (puedes ejecutarlas varias veces sin problemas)
-- 🔄 Si una migración falla, revisa el error y corrige antes de continuar
+Desde una terminal MySQL, por ejemplo:
+
+```sql
+SOURCE server/database/migration_2026-02-25_22-00-00_create_roles.sql;
+SOURCE server/database/migration_2026-02-25_22-01-00_create_incident_areas.sql;
+SOURCE server/database/migration_2026-02-25_22-02-00_create_users.sql;
+SOURCE server/database/migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql;
+SOURCE server/database/migration_2026-02-25_17-19-57_add_security_questions_columns.sql;
+SOURCE server/database/migration_2026-02-25_22-03-00_create_verification_tokens.sql;
+SOURCE server/database/migration_2026-02-25_22-04-00_create_ticket_states.sql;
+SOURCE server/database/migration_2026-02-25_22-05-00_create_ticket_categories.sql;
+SOURCE server/database/migration_2026-02-25_22-06-00_create_ticket_priorities.sql;
+SOURCE server/database/migration_2026-02-25_22-07-00_create_tickets.sql;
+SOURCE server/database/migration_2026-02-25_22-08-00_create_ticket_comments.sql;
+SOURCE server/database/migration_2026-02-25_22-09-00_create_ticket_history.sql;
+SOURCE server/database/migration_2026-02-24_20-38-56_add_equipment_types.sql;
+SOURCE server/database/migration_2026-02-24_20-38-56_add_equipment.sql;
+SOURCE server/database/migration_2026-02-25_21-00-00_add_consumables.sql;
+SOURCE server/database/migration_2026-02-25_21-20-00_add_tools.sql;
+SOURCE server/database/migration_2026-02-24_21-10-00_add_ticket_equipment.sql;
+SOURCE server/database/migration_2026-02-25_22-10-00_seed_initial_data.sql;
+```
+
+Puedes adaptar las rutas según dónde ejecutes MySQL (por ejemplo, usando rutas absolutas).
 
 ---
 
-## 🔍 Verificación
+## ℹ️ Notas
 
-Para verificar qué migraciones ya están aplicadas, revisa:
-- Si la tabla `equipment` tiene la columna `type_id` → migración #1 aplicada
-- Si existe la tabla `ticket_equipment` → migración #3 aplicada
+- **`schema.sql`** y **`schema_tickets.sql`** son scripts antiguos de esquema completo y **no son necesarios** para una instalación nueva si ejecutas todas las migraciones anteriores.
+- Todas las migraciones están escritas para ser **seguras de re-ejecutar** (`CREATE TABLE IF NOT EXISTS`, chequear columnas, `INSERT IGNORE`, etc.).
+- Si alguna migración falla en otra PC, revisa el mensaje de error y ejecuta de nuevo a partir de esa migración una vez corregido el problema.

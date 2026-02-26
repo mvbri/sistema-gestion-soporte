@@ -15,7 +15,7 @@ export const MenuToggleButton: React.FC<MenuToggleButtonProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none transition-colors"
+      className="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-blue-100 hover:bg-blue-400/20 focus:outline-none transition-colors"
       aria-label={ariaLabel}
       aria-expanded={isOpen}
     >

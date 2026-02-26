@@ -24,9 +24,14 @@ export const NavbarHeader: React.FC<NavbarHeaderProps> = ({
       />
       <Link
         to="/dashboard"
-        className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
+        className="flex items-center space-x-3 text-xl font-bold text-white hover:text-blue-100 transition-colors"
       >
-        Gestión de Soporte Técnico
+        <img
+          src="/alcado.webp"
+          alt="Logo Alcaldía"
+          className="h-10 w-auto object-contain"
+        />
+        <span>Gestión de Soporte Técnico</span>
       </Link>
     </div>
   );

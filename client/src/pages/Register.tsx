@@ -72,18 +72,31 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className={`${formStyles.formContainer} card`}>
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat relative"
+      style={{
+        backgroundImage: 'url(/alcaldiaheres.jpg.jpeg)',
+      }}
+    >
+      <div className="absolute inset-0 bg-blue-900/40"></div>
+      <div className={`${formStyles.formContainer} card relative z-10`} style={{ backgroundColor: '#5B7FA8' }}>
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Registro</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <div className="flex justify-center mb-4">
+            <img
+              src="/alcado.webp"
+              alt="Logo Alcaldía"
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+          <h2 className="text-3xl font-bold text-white">Registro</h2>
+          <p className="mt-2 text-sm text-blue-100">
             Crea tu cuenta en el Sistema de Gestión de Soporte Técnico
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className={formStyles.formGroup}>
-            <label htmlFor="full_name" className="label-field">
+            <label htmlFor="full_name" className="label-field text-blue-50">
               Nombre Completo
             </label>
             <input
@@ -94,12 +107,12 @@ export const Register: React.FC = () => {
               placeholder="Juan Pérez"
             />
             {errors.full_name && (
-              <p className="error-message">{errors.full_name.message}</p>
+              <p className="error-message text-red-200">{errors.full_name.message}</p>
             )}
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="email" className="label-field">
+            <label htmlFor="email" className="label-field text-blue-50">
               Email
             </label>
             <input
@@ -110,12 +123,12 @@ export const Register: React.FC = () => {
               placeholder="tu@email.com"
             />
             {errors.email && (
-              <p className="error-message">{errors.email.message}</p>
+              <p className="error-message text-red-200">{errors.email.message}</p>
             )}
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="password" className="label-field">
+            <label htmlFor="password" className="label-field text-blue-50">
               Contraseña
             </label>
             <div className="relative">
@@ -129,21 +142,21 @@ export const Register: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
               >
                 {showPassword ? 'Ocultar' : 'Mostrar'}
               </button>
             </div>
             {errors.password && (
-              <p className="error-message">{errors.password.message}</p>
+              <p className="error-message text-red-200">{errors.password.message}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-blue-200">
               Mínimo 8 caracteres, una mayúscula, una minúscula y un número
             </p>
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="phone" className="label-field">
+            <label htmlFor="phone" className="label-field text-blue-50">
               Teléfono (Opcional)
             </label>
             <input
@@ -154,12 +167,12 @@ export const Register: React.FC = () => {
               placeholder="+1234567890"
             />
             {errors.phone && (
-              <p className="error-message">{errors.phone.message}</p>
+              <p className="error-message text-red-200">{errors.phone.message}</p>
             )}
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="incident_area_id" className="label-field">
+            <label htmlFor="incident_area_id" className="label-field text-blue-50">
               Dirección
             </label>
             <select
@@ -178,7 +191,7 @@ export const Register: React.FC = () => {
               ))}
             </select>
             {errors.incident_area_id && (
-              <p className="error-message">{errors.incident_area_id.message}</p>
+              <p className="error-message text-red-200">{errors.incident_area_id.message}</p>
             )}
           </div>
 
@@ -195,9 +208,9 @@ export const Register: React.FC = () => {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-blue-100">
           ¿Ya tienes una cuenta?{' '}
-          <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link to="/login" className="text-blue-200 hover:text-white font-medium">
             Inicia sesión
           </Link>
         </p>
