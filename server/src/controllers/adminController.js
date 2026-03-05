@@ -245,6 +245,135 @@ export const deletePrioridad = async (req, res) => {
 };
 
 /**
+ * Obtiene todos los estados de ticket.
+ */
+export const getEstados = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM ticket_states ORDER BY `order`';
+        try {
+            const estados = await query(sql);
+            sendSuccess(res, 'Estados obtenidos exitosamente', estados);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM ticket_states ORDER BY orden';
+                const estados = await query(sql);
+                sendSuccess(res, 'Estados obtenidos exitosamente', estados);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener estados:', error);
+        sendError(res, 'Error al obtener estados', null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo estado de ticket.
+ */
+export const createEstado = async (req, res) => {
+    try {
+        const { name, color, description, order } = req.body;
+
+        const sql = 'INSERT INTO ticket_states (name, color, description, `order`) VALUES (?, ?, ?, ?)';
+        const result = await query(sql, [name, color || 'bg-gray-100', description || null, order || 0]);
+
+        const nuevoEstado = await query('SELECT * FROM ticket_states WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Estado creado exitosamente', nuevoEstado[0], 201);
+    } catch (error) {
+        console.error('Error al crear estado:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un estado con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al crear estado', null, 500);
+    }
+};
+
+/**
+ * Actualiza un estado de ticket existente.
+ */
+export const updateEstado = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, color, description, order, active } = req.body;
+
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (color !== undefined) {
+            updates.push('color = ?');
+            params.push(color);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (order !== undefined) {
+            updates.push('`order` = ?');
+            params.push(order);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        params.push(id);
+        const sql = `UPDATE ticket_states SET ${updates.join(', ')} WHERE id = ?`;
+        await query(sql, params);
+
+        const estadoActualizado = await query('SELECT * FROM ticket_states WHERE id = ?', [id]);
+        sendSuccess(res, 'Estado actualizado exitosamente', estadoActualizado[0]);
+    } catch (error) {
+        console.error('Error al actualizar estado:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un estado con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar estado', null, 500);
+    }
+};
+
+/**
+ * Elimina un estado de ticket.
+ */
+export const deleteEstado = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const estado = await query('SELECT * FROM ticket_states WHERE id = ?', [id]);
+        if (estado.length === 0) {
+            return sendError(res, 'El estado no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM ticket_states WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar el estado porque tiene tickets asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Estado eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar estado:', error);
+        sendError(res, 'Error al eliminar estado', null, 500);
+    }
+};
+
+/**
  * Obtiene todas las direcciones/áreas de incidentes con paginación, búsqueda y ordenamiento.
  */
 export const getDirecciones = async (req, res) => {
@@ -666,6 +795,137 @@ export const deleteDireccion = async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar dirección:', error);
         sendError(res, 'Error al eliminar dirección', null, 500);
+    }
+};
+
+/**
+ * Obtiene todos los tipos de herramientas.
+ */
+export const getToolTypesAdmin = async (req, res) => {
+    try {
+        let sql = 'SELECT * FROM tool_types ORDER BY name';
+        try {
+            const tipos = await query(sql);
+            sendSuccess(res, 'Tipos de herramientas obtenidos exitosamente', tipos);
+        } catch (error) {
+            if (error.code === 'ER_BAD_FIELD_ERROR') {
+                sql = 'SELECT * FROM tool_types ORDER BY nombre';
+                const tipos = await query(sql);
+                sendSuccess(res, 'Tipos de herramientas obtenidos exitosamente', tipos);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener tipos de herramientas:', error);
+        sendError(res, 'Error al obtener tipos de herramientas', null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo tipo de herramienta.
+ */
+export const createToolType = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        if (!name || name.trim() === '') {
+            return sendError(res, 'El nombre es requerido', null, 400);
+        }
+
+        const sql = 'INSERT INTO tool_types (name, description) VALUES (?, ?)';
+        const result = await query(sql, [name.trim(), description ? description.trim() : null]);
+
+        const nuevoTipo = await query('SELECT * FROM tool_types WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Tipo de herramienta creado exitosamente', nuevoTipo[0], 201);
+    } catch (error) {
+        console.error('Error al crear tipo de herramienta:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de herramienta con ese nombre', null, 400);
+        }
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            return sendError(res, 'La tabla tool_types no existe. Ejecuta la migración correspondiente', null, 500);
+        }
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            return sendError(res, `Error en la estructura de la base de datos: ${error.message}`, null, 500);
+        }
+        sendError(res, `Error al crear tipo de herramienta: ${error.message || 'Error desconocido'}`, null, 500);
+    }
+};
+
+/**
+ * Actualiza un tipo de herramienta existente.
+ */
+export const updateToolType = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, active } = req.body;
+
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        params.push(id);
+        const sql = `UPDATE tool_types SET ${updates.join(', ')} WHERE id = ?`;
+        await query(sql, params);
+
+        const tipo = await query('SELECT * FROM tool_types WHERE id = ?', [id]);
+        sendSuccess(res, 'Tipo de herramienta actualizado exitosamente', tipo[0]);
+    } catch (error) {
+        console.error('Error al actualizar tipo de herramienta:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un tipo de herramienta con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar tipo de herramienta', null, 500);
+    }
+};
+
+/**
+ * Elimina un tipo de herramienta por id.
+ */
+export const deleteToolType = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const tipo = await query('SELECT * FROM tool_types WHERE id = ?', [id]);
+        if (tipo.length === 0) {
+            return sendError(res, 'El tipo de herramienta no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM tool_types WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar el tipo de herramienta porque tiene herramientas asociadas',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Tipo de herramienta eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar tipo de herramienta:', error);
+        sendError(res, 'Error al eliminar tipo de herramienta', null, 500);
     }
 };
 

@@ -85,6 +85,17 @@ export const authService = {
     return response.data;
   },
 
+  async setSecurityQuestionsPublic(email: string, question1: string, answer1: string, question2: string, answer2: string): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>('/auth/set-security-questions-public', {
+      email,
+      question1,
+      answer1,
+      question2,
+      answer2,
+    });
+    return response.data;
+  },
+
   async getCurrentUser(): Promise<ApiResponse<User>> {
     const response = await api.get<ApiResponse<User>>('/auth/current-user');
     return response.data;

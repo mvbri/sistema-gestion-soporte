@@ -8,6 +8,10 @@ import {
     createPrioridad,
     updatePrioridad,
     deletePrioridad,
+    getEstados,
+    createEstado,
+    updateEstado,
+    deleteEstado,
     getDirecciones,
     createDireccion,
     updateDireccion,
@@ -20,6 +24,10 @@ import {
     createConsumableType,
     updateConsumableType,
     deleteConsumableType,
+    getToolTypesAdmin,
+    createToolType,
+    updateToolType,
+    deleteToolType,
     getUsers,
     createUser,
     updateUserStatus,
@@ -79,6 +87,24 @@ router.put('/prioridades/:id', [
 ], updatePrioridad);
 router.delete('/prioridades/:id', deletePrioridad);
 
+router.get('/estados', getEstados);
+router.post('/estados', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('color').optional().trim(),
+    body('description').optional().trim(),
+    body('order').optional().isInt({ min: 0 }).withMessage('El orden debe ser un número entero mayor o igual a 0'),
+    handleValidationErrors
+], createEstado);
+router.put('/estados/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('color').optional().trim().notEmpty().withMessage('El color no puede estar vacío'),
+    body('description').optional().trim(),
+    body('order').optional().isInt({ min: 0 }).withMessage('El orden debe ser un número entero mayor o igual a 0'),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateEstado);
+router.delete('/estados/:id', deleteEstado);
+
 router.get('/direcciones', getDirecciones);
 router.post('/direcciones', [
     body('name').trim().notEmpty().withMessage('El nombre es requerido'),
@@ -121,6 +147,20 @@ router.put('/consumable-types/:id', [
 ], updateConsumableType);
 router.delete('/consumable-types/:id', deleteConsumableType);
 
+router.get('/tool-types', getToolTypesAdmin);
+router.post('/tool-types', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
+    handleValidationErrors
+], createToolType);
+router.put('/tool-types/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateToolType);
+router.delete('/tool-types/:id', deleteToolType);
+
 router.get('/users', getUsers);
 router.post('/users', [
     body('full_name').trim().notEmpty().withMessage('El nombre completo es requerido'),
@@ -128,7 +168,7 @@ router.post('/users', [
     body('password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('La contraseña debe contener al menos una mayúscula, una minúscula y un número'),
     body('phone').optional().trim(),
-    body('incident_area_id').optional().isInt().withMessage('El ID de dirección debe ser un número entero'),
+    body('incident_area_id').notEmpty().withMessage('La dirección es requerida').isInt({ min: 1 }).withMessage('La dirección seleccionada no es válida'),
     body('role_id').optional().isInt({ min: 1, max: 3 }).withMessage('El ID de rol debe ser entre 1 y 3'),
     body('active').optional().isBoolean().withMessage('El campo active debe ser un booleano'),
     handleValidationErrors
@@ -144,7 +184,7 @@ router.put('/users/:id', [
     body('password').optional().isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('La contraseña debe contener al menos una mayúscula, una minúscula y un número'),
     body('phone').optional().trim(),
-    body('incident_area_id').optional().isInt().withMessage('El ID de dirección debe ser un número entero'),
+    body('incident_area_id').notEmpty().withMessage('La dirección es requerida').isInt({ min: 1 }).withMessage('La dirección seleccionada no es válida'),
     body('role_id').optional().isInt({ min: 1, max: 3 }).withMessage('El ID de rol debe ser entre 1 y 3'),
     body('active').optional().isBoolean().withMessage('El campo active debe ser un booleano'),
     handleValidationErrors

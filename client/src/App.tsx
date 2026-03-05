@@ -11,6 +11,7 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { RequestPasswordRecovery } from './pages/RequestPasswordRecovery';
 import { ResetPassword } from './pages/ResetPassword';
 import { VerifySecurityQuestions } from './pages/VerifySecurityQuestions';
+import { SetSecurityQuestions } from './pages/SetSecurityQuestions';
 import { EmailAlreadyVerified } from './pages/EmailAlreadyVerified';
 import { RequestVerification } from './pages/RequestVerification';
 import { Dashboard } from './pages/Dashboard';
@@ -34,6 +35,7 @@ import { ConsumablesDashboard } from './pages/ConsumablesDashboard';
 import { ToolsList } from './pages/ToolsList';
 import { CreateTool } from './pages/CreateTool';
 import { ToolDetail } from './pages/ToolDetail';
+import { ToolsDashboard } from './pages/ToolsDashboard';
 
 function App() {
   return (
@@ -53,6 +55,7 @@ function App() {
           <Route path="/solicitar-verificacion" element={<RequestVerification />} />
           <Route path="/recuperar-password" element={<RequestPasswordRecovery />} />
           <Route path="/verificar-preguntas-seguridad" element={<VerifySecurityQuestions />} />
+          <Route path="/configurar-preguntas-seguridad" element={<SetSecurityQuestions />} />
           <Route path="/restablecer-password" element={<ResetPassword />} />
           <Route
             path="/dashboard"
@@ -97,7 +100,7 @@ function App() {
           <Route
             path="/analytics"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <TicketsDashboard />
               </ProtectedRoute>
             }
@@ -145,7 +148,7 @@ function App() {
           <Route
             path="/equipment"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <EquipmentList />
               </ProtectedRoute>
             }
@@ -153,7 +156,7 @@ function App() {
           <Route
             path="/equipment/crear"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <CreateEquipment />
               </ProtectedRoute>
             }
@@ -161,7 +164,7 @@ function App() {
           <Route
             path="/equipment/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <EquipmentDetail />
               </ProtectedRoute>
             }
@@ -169,7 +172,7 @@ function App() {
           <Route
             path="/equipment/:id/editar"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <EquipmentDetail />
               </ProtectedRoute>
             }
@@ -177,7 +180,7 @@ function App() {
           <Route
             path="/equipment/analytics"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <EquipmentDashboard />
               </ProtectedRoute>
             }
@@ -185,7 +188,7 @@ function App() {
           <Route
             path="/consumables"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ConsumablesList />
               </ProtectedRoute>
             }
@@ -193,7 +196,7 @@ function App() {
           <Route
             path="/consumables/crear"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <CreateConsumable />
               </ProtectedRoute>
             }
@@ -201,7 +204,7 @@ function App() {
           <Route
             path="/consumables/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ConsumableDetail />
               </ProtectedRoute>
             }
@@ -209,7 +212,7 @@ function App() {
           <Route
             path="/consumables/:id/editar"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ConsumableDetail />
               </ProtectedRoute>
             }
@@ -217,7 +220,7 @@ function App() {
           <Route
             path="/consumables/analytics"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ConsumablesDashboard />
               </ProtectedRoute>
             }
@@ -225,7 +228,7 @@ function App() {
           <Route
             path="/tools"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ToolsList />
               </ProtectedRoute>
             }
@@ -233,7 +236,7 @@ function App() {
           <Route
             path="/tools/crear"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <CreateTool />
               </ProtectedRoute>
             }
@@ -241,7 +244,7 @@ function App() {
           <Route
             path="/tools/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ToolDetail />
               </ProtectedRoute>
             }
@@ -249,8 +252,16 @@ function App() {
           <Route
             path="/tools/:id/editar"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <ToolDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tools/analytics"
+            element={
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+                <ToolsDashboard />
               </ProtectedRoute>
             }
           />

@@ -29,7 +29,6 @@ export const ToolsList: React.FC = () => {
     toolId: null,
     toolName: '',
   });
-  const [showMyAssigned, setShowMyAssigned] = useState(false);
 
   const { data: toolsData, isLoading: loadingTools } = useTools(filters);
   const { data: types = [] } = useToolTypes();
@@ -56,36 +55,6 @@ export const ToolsList: React.FC = () => {
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilters(initialFilters);
-    setShowMyAssigned(false);
-  };
-
-  const handleToggleMyAssigned = () => {
-    if (!user?.id) {
-      return;
-    }
-
-    setShowMyAssigned((prev) => {
-      const next = !prev;
-
-      setFilters((prevFilters: ToolFilters) => {
-        if (next) {
-          return {
-            ...prevFilters,
-            status: 'assigned',
-            assigned_to_user_id: user.id,
-            page: 1,
-          };
-        }
-
-        const { assigned_to_user_id, status, ...rest } = prevFilters;
-        return {
-          ...rest,
-          page: 1,
-        };
-      });
-
-      return next;
-    });
   };
 
   const handleDelete = (id: number, name: string) => {
@@ -122,19 +91,6 @@ export const ToolsList: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-3">
-                {(isAdministrator || isTechnician) && (
-                  <button
-                    type="button"
-                    onClick={handleToggleMyAssigned}
-                    className={`px-4 py-2 rounded-md text-sm font-medium border ${
-                      showMyAssigned
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {showMyAssigned ? 'Ver todas las herramientas' : 'Mis herramientas asignadas'}
-                  </button>
-                )}
                 {canCreate && (
                   <button
                     onClick={() => navigate('/tools/crear')}

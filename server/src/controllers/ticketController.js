@@ -398,7 +398,8 @@ export const updateTicket = async (req, res) => {
             cambios.push({
                 campo: 'state',
                 anterior: estadoAnterior[0]?.name || '',
-                nuevo: estadoNuevo[0]?.name || ''
+                nuevo: estadoNuevo[0]?.name || '',
+                esAutoAsignado: estadoAutoAsignado || false
             });
         }
 
@@ -456,13 +457,34 @@ export const updateTicket = async (req, res) => {
         }
 
         for (const cambio of cambios) {
+            let description = '';
+            if (cambio.campo === 'state') {
+                if (cambio.esAutoAsignado) {
+                    description = `Estado cambiado automáticamente de "${cambio.anterior}" a "${cambio.nuevo}" al asignar técnico`;
+                } else {
+                    description = `Estado cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
+                }
+            } else if (cambio.campo === 'assigned_technician') {
+                if (cambio.nuevo === 'Sin asignar' || cambio.nuevo === '') {
+                    description = `Asignación removida`;
+                } else {
+                    description = `Cambio de asignación a ${cambio.nuevo}`;
+                }
+            } else if (cambio.campo === 'category') {
+                description = `Categoría cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
+            } else if (cambio.campo === 'priority') {
+                description = `Prioridad cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
+            } else {
+                description = `${cambio.campo} cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
+            }
+
             await TicketHistorial.create({
                 ticket_id: id,
                 user_id: userId,
                 change_type: 'UPDATE',
                 previous_field: cambio.anterior,
                 new_field: cambio.nuevo,
-                description: `${cambio.campo} cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`
+                description: description
             });
         }
 

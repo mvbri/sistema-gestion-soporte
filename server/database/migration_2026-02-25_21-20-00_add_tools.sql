@@ -68,7 +68,7 @@ SET @sql := IF(
         code VARCHAR(100) UNIQUE,
         type_id INT NOT NULL,
         status ENUM(''available'', ''assigned'', ''maintenance'', ''lost'', ''retired'') NOT NULL DEFAULT ''available'',
-        condition ENUM(''new'', ''good'', ''worn'', ''broken'') NOT NULL DEFAULT ''good'',
+        tool_condition ENUM(''new'', ''good'', ''worn'', ''broken'') NOT NULL DEFAULT ''good'',
         location VARCHAR(255),
         assigned_to_user_id INT NULL,
         description TEXT,

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -84,6 +84,7 @@ export const useCreatePrioridad = () => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminPrioridades'] });
         queryClient.invalidateQueries({ queryKey: ['prioridades'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
         toast.success('Prioridad creada exitosamente');
       }
     },
@@ -103,6 +104,8 @@ export const useUpdatePrioridad = () => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminPrioridades'] });
         queryClient.invalidateQueries({ queryKey: ['prioridades'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.refetchQueries({ queryKey: ['tickets'] });
         toast.success('Prioridad actualizada exitosamente');
       }
     },
@@ -121,11 +124,82 @@ export const useDeletePrioridad = () => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminPrioridades'] });
         queryClient.invalidateQueries({ queryKey: ['prioridades'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
         toast.success('Prioridad eliminada exitosamente');
       }
     },
     onError: (error: any) => {
         toast.error(error.response?.data?.message || 'Error al eliminar prioridad');
+    },
+  });
+};
+
+export const useAdminEstados = () => {
+  return useQuery({
+    queryKey: ['adminEstados'],
+    queryFn: () => adminService.getEstados(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateEstado = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateEstadoData) => adminService.createEstado(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEstados'] });
+        queryClient.invalidateQueries({ queryKey: ['estados'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.refetchQueries({ queryKey: ['tickets'] });
+        toast.success('Estado creado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear estado');
+    },
+  });
+};
+
+export const useUpdateEstado = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateEstadoData }) =>
+      adminService.updateEstado(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEstados'] });
+        queryClient.invalidateQueries({ queryKey: ['estados'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.refetchQueries({ queryKey: ['tickets'] });
+        toast.success('Estado actualizado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar estado');
+    },
+  });
+};
+
+export const useDeleteEstado = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteEstado(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEstados'] });
+        queryClient.invalidateQueries({ queryKey: ['estados'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.refetchQueries({ queryKey: ['tickets'] });
+        toast.success('Estado eliminado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar estado');
     },
   });
 };
@@ -323,6 +397,70 @@ export const useDeleteConsumableType = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de consumible');
+    },
+  });
+};
+
+export const useAdminToolTypes = () => {
+  return useQuery({
+    queryKey: ['adminToolTypes'],
+    queryFn: () => adminService.getToolTypes(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateToolType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateToolTypeData) => adminService.createToolType(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminToolTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['toolTypes'] });
+        toast.success('Tipo de herramienta creado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear tipo de herramienta');
+    },
+  });
+};
+
+export const useUpdateToolType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateToolTypeData }) =>
+      adminService.updateToolType(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminToolTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['toolTypes'] });
+        toast.success('Tipo de herramienta actualizado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar tipo de herramienta');
+    },
+  });
+};
+
+export const useDeleteToolType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteToolType(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminToolTypes'] });
+        queryClient.invalidateQueries({ queryKey: ['toolTypes'] });
+        toast.success('Tipo de herramienta eliminado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar tipo de herramienta');
     },
   });
 };

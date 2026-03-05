@@ -141,9 +141,8 @@ export const SidebarMenu: React.FC = () => {
       className={`fixed top-0 left-0 h-full w-80 shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
         menuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
-      style={{ backgroundColor: '#5B7FA8' }}
     >
-      <div className="pb-4">
+      <div className="pb-4 h-full flex flex-col">
         <div className="px-5 py-5 border-b border-blue-400/30" style={{ backgroundColor: '#4A6FA5' }}>
           <div className="flex items-center space-x-3">
             <MenuToggleButton
@@ -161,11 +160,10 @@ export const SidebarMenu: React.FC = () => {
                 alt="Logo Alcaldía"
                 className="h-8 w-auto object-contain"
               />
-              <span>Gestión de Soporte Técnico</span>
             </Link>
           </div>
         </div>
-        <nav className="px-3 py-4 space-y-1">
+        <nav className="px-3 py-4 space-y-1 bg-gray-50 flex-1">
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
@@ -177,119 +175,130 @@ export const SidebarMenu: React.FC = () => {
             />
           ))}
 
-          {/* Grupo Inventario */}
-          <div className="mt-2">
-            <button
-              type="button"
-              onClick={() => setInventoryOpen(!inventoryOpen)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                inventoryOpen
-                  ? 'bg-blue-400/30 text-white shadow-sm border-l-4 border-blue-200'
-                  : 'text-blue-50 hover:bg-blue-400/20 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <EquipmentIcon
-                  className={`flex-shrink-0 h-5 w-5 ${
-                    inventoryOpen ? 'text-white' : 'text-blue-200'
-                  }`}
-                />
-                <span>Inventario</span>
-              </span>
-              <svg
-                className={`h-4 w-4 transform transition-transform ${
-                  inventoryOpen ? 'rotate-90' : ''
+          {/* Grupo Inventario - Solo para técnicos y administradores */}
+          {(user?.role === 'technician' || user?.role === 'administrator') && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setInventoryOpen(!inventoryOpen)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  inventoryOpen
+                    ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
+                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            {inventoryOpen && (
-              <div className="mt-1 space-y-1 ml-6">
-                <NavLink
-                  path="/equipment"
-                  label="Equipos"
-                  icon={EquipmentIcon}
-                  isActive={isActive('/equipment')}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <NavLink
-                  path="/consumables"
-                  label="Consumibles"
-                  icon={ConsumablesIcon}
-                  isActive={isActive('/consumables')}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <NavLink
-                  path="/tools"
-                  label="Herramientas"
-                  icon={ToolsIcon}
-                  isActive={isActive('/tools')}
-                  onClick={() => setMenuOpen(false)}
-                />
-              </div>
-            )}
-          </div>
+                <span className="flex items-center gap-3">
+                  <EquipmentIcon
+                    className={`flex-shrink-0 h-5 w-5 ${
+                      inventoryOpen ? 'text-white' : 'text-gray-600'
+                    }`}
+                  />
+                  <span>Inventario</span>
+                </span>
+                <svg
+                  className={`h-4 w-4 transform transition-transform ${
+                    inventoryOpen ? 'rotate-90' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {inventoryOpen && (
+                <div className="mt-1 space-y-1 ml-6">
+                  <NavLink
+                    path="/equipment"
+                    label="Equipos"
+                    icon={EquipmentIcon}
+                    isActive={isActive('/equipment')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <NavLink
+                    path="/consumables"
+                    label="Consumibles"
+                    icon={ConsumablesIcon}
+                    isActive={isActive('/consumables')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <NavLink
+                    path="/tools"
+                    label="Herramientas"
+                    icon={ToolsIcon}
+                    isActive={isActive('/tools')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Grupo Analíticas */}
-          <div className="mt-2">
-            <button
-              type="button"
-              onClick={() => setAnalyticsOpen(!analyticsOpen)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                analyticsOpen
-                  ? 'bg-blue-400/30 text-white shadow-sm border-l-4 border-blue-200'
-                  : 'text-blue-50 hover:bg-blue-400/20 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <AnalyticsIcon
-                  className={`flex-shrink-0 h-5 w-5 ${
-                    analyticsOpen ? 'text-white' : 'text-blue-200'
-                  }`}
-                />
-                <span>Analíticas</span>
-              </span>
-              <svg
-                className={`h-4 w-4 transform transition-transform ${
-                  analyticsOpen ? 'rotate-90' : ''
+          {/* Grupo Estadísticas - Solo para técnicos y administradores */}
+          {(user?.role === 'technician' || user?.role === 'administrator') && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setAnalyticsOpen(!analyticsOpen)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  analyticsOpen
+                    ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
+                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            {analyticsOpen && (
-              <div className="mt-1 space-y-1 ml-6">
-                <NavLink
-                  path="/analytics"
-                  label="Analíticas de Tickets"
-                  icon={TicketAnalyticsIcon}
-                  isActive={isActive('/analytics')}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <NavLink
-                  path="/equipment/analytics"
-                  label="Analíticas de Equipos"
-                  icon={EquipmentAnalyticsIcon}
-                  isActive={isActive('/equipment/analytics')}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <NavLink
-                  path="/consumables/analytics"
-                  label="Analíticas de Consumibles"
-                  icon={ConsumablesAnalyticsIcon}
-                  isActive={isActive('/consumables/analytics')}
-                  onClick={() => setMenuOpen(false)}
-                />
-              </div>
-            )}
-          </div>
+                <span className="flex items-center gap-3">
+                  <AnalyticsIcon
+                    className={`flex-shrink-0 h-5 w-5 ${
+                      analyticsOpen ? 'text-white' : 'text-gray-600'
+                    }`}
+                  />
+                  <span>Estadísticas</span>
+                </span>
+                <svg
+                  className={`h-4 w-4 transform transition-transform ${
+                    analyticsOpen ? 'rotate-90' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {analyticsOpen && (
+                <div className="mt-1 space-y-1 ml-6">
+                  <NavLink
+                    path="/analytics"
+                    label="Estadísticas de Tickets"
+                    icon={TicketAnalyticsIcon}
+                    isActive={isActive('/analytics')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <NavLink
+                    path="/equipment/analytics"
+                    label="Estadísticas de Equipos"
+                    icon={EquipmentAnalyticsIcon}
+                    isActive={isActive('/equipment/analytics')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <NavLink
+                    path="/consumables/analytics"
+                    label="Estadísticas de Consumibles"
+                    icon={ConsumablesAnalyticsIcon}
+                    isActive={isActive('/consumables/analytics')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <NavLink
+                    path="/tools/analytics"
+                    label="Estadísticas de Herramientas"
+                    icon={ToolsIcon}
+                    isActive={isActive('/tools/analytics')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Respaldo y Restauración */}
           {user?.role === 'administrator' && (

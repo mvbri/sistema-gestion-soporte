@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, DireccionTicket, EquipmentType, ConsumableType, User } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType, User } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -24,6 +24,21 @@ export interface UpdatePrioridadData {
   level?: number;
   color?: string;
   description?: string;
+  active?: boolean;
+}
+
+export interface CreateEstadoData {
+  name: string;
+  color?: string;
+  description?: string;
+  order?: number;
+}
+
+export interface UpdateEstadoData {
+  name?: string;
+  color?: string;
+  description?: string;
+  order?: number;
   active?: boolean;
 }
 
@@ -55,6 +70,17 @@ export interface CreateConsumableTypeData {
 }
 
 export interface UpdateConsumableTypeData {
+  name?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface CreateToolTypeData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateToolTypeData {
   name?: string;
   description?: string;
   active?: boolean;
@@ -153,6 +179,26 @@ export const adminService = {
     return response.data;
   },
 
+  async getEstados(): Promise<ApiResponse<EstadoTicket[]>> {
+    const response = await api.get<ApiResponse<EstadoTicket[]>>('/admin/estados');
+    return response.data;
+  },
+
+  async createEstado(data: CreateEstadoData): Promise<ApiResponse<EstadoTicket>> {
+    const response = await api.post<ApiResponse<EstadoTicket>>('/admin/estados', data);
+    return response.data;
+  },
+
+  async updateEstado(id: number, data: UpdateEstadoData): Promise<ApiResponse<EstadoTicket>> {
+    const response = await api.put<ApiResponse<EstadoTicket>>(`/admin/estados/${id}`, data);
+    return response.data;
+  },
+
+  async deleteEstado(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/estados/${id}`);
+    return response.data;
+  },
+
   async getDirecciones(filters?: DireccionesFilters): Promise<ApiResponse<{ direcciones: DireccionTicket[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>> {
     const params = new URLSearchParams();
     if (filters) {
@@ -220,6 +266,26 @@ export const adminService = {
 
   async deleteConsumableType(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/consumable-types/${id}`);
+    return response.data;
+  },
+
+  async getToolTypes(): Promise<ApiResponse<ToolType[]>> {
+    const response = await api.get<ApiResponse<ToolType[]>>('/admin/tool-types');
+    return response.data;
+  },
+
+  async createToolType(data: CreateToolTypeData): Promise<ApiResponse<ToolType>> {
+    const response = await api.post<ApiResponse<ToolType>>('/admin/tool-types', data);
+    return response.data;
+  },
+
+  async updateToolType(id: number, data: UpdateToolTypeData): Promise<ApiResponse<ToolType>> {
+    const response = await api.put<ApiResponse<ToolType>>(`/admin/tool-types/${id}`, data);
+    return response.data;
+  },
+
+  async deleteToolType(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/tool-types/${id}`);
     return response.data;
   },
 

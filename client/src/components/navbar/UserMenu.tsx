@@ -41,7 +41,7 @@ export const UserMenu: React.FC = () => {
       <button
         type="button"
         onClick={() => setUserMenuOpen((prev) => !prev)}
-        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg hover:bg-blue-400/20 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
+        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
       >
         <div className="h-9 w-9 rounded-full bg-blue-300/30 flex items-center justify-center">
           <UserProfileIcon className="h-5 w-5 text-white" />

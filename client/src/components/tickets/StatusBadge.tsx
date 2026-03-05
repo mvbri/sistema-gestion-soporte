@@ -22,7 +22,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       ? 'bg-gray-100'
       : estado.color || 'bg-gray-100';
 
-  const estadoColor = colorOverride || baseColor;
+  const estadoColor = (colorOverride && colorOverride.trim()) || baseColor;
 
   return (
     <span

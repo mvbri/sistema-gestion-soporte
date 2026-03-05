@@ -22,7 +22,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
       ? 'bg-gray-100'
       : prioridad.color || 'bg-gray-100';
 
-  const prioridadColor = colorOverride || baseColor;
+  const prioridadColor = (colorOverride && colorOverride.trim()) || baseColor;
 
   return (
     <span

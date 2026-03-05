@@ -1,0 +1,329 @@
+flowchart TB
+    %% ============================================
+    %% DIAGRAMA ENTIDAD-RELACIÓN TRADICIONAL
+    %% Sistema de Gestión de Soporte Técnico
+    %% ============================================
+    
+    %% ENTIDADES (Rectángulos)
+    ROL[ROL]
+    AREA[AREA_INCIDENTE]
+    USUARIO[USUARIO]
+    TOKEN[TOKEN_VERIFICACION]
+    ESTADO[ESTADO_TICKET]
+    CATEGORIA[CATEGORIA_TICKET]
+    PRIORIDAD[PRIORIDAD_TICKET]
+    TICKET[TICKET]
+    COMENTARIO[COMENTARIO]
+    HISTORIAL[HISTORIAL]
+    TIPO_EQUIPO[TIPO_EQUIPO]
+    EQUIPO[EQUIPO]
+    TIPO_CONS[TIPO_CONSUMIBLE]
+    CONSUMIBLE[CONSUMIBLE]
+    TIPO_HERR[TIPO_HERRAMIENTA]
+    HERRAMIENTA[HERRAMIENTA]
+    
+    %% ATRIBUTOS DE ROL (Óvalos)
+    ROL_ID((id PK))
+    ROL_NOM((nombre))
+    ROL_DESC((descripcion))
+    
+    %% ATRIBUTOS DE AREA_INCIDENTE
+    AREA_ID((id PK))
+    AREA_NOM((nombre))
+    AREA_DESC((descripcion))
+    
+    %% ATRIBUTOS DE USUARIO
+    USU_ID((id PK))
+    USU_NOM((nombre_completo))
+    USU_EMAIL((email UK))
+    USU_TEL((telefono))
+    USU_DEPT((departamento))
+    
+    %% ATRIBUTOS DE TOKEN_VERIFICACION
+    TOK_ID((id PK))
+    TOK_TOKEN((token UK))
+    TOK_TIPO((tipo))
+    TOK_EXP((expira_en))
+    
+    %% ATRIBUTOS DE ESTADO_TICKET
+    EST_ID((id PK))
+    EST_NOM((nombre UK))
+    EST_DESC((descripcion))
+    EST_ORD((orden))
+    
+    %% ATRIBUTOS DE CATEGORIA_TICKET
+    CAT_ID((id PK))
+    CAT_NOM((nombre UK))
+    CAT_DESC((descripcion))
+    
+    %% ATRIBUTOS DE PRIORIDAD_TICKET
+    PRI_ID((id PK))
+    PRI_NOM((nombre UK))
+    PRI_NIV((nivel))
+    
+    %% ATRIBUTOS DE TICKET
+    TIC_ID((id PK))
+    TIC_TIT((titulo))
+    TIC_DESC((descripcion))
+    TIC_FECHA_C((fecha_creacion))
+    TIC_FECHA_CI((fecha_cierre))
+    
+    %% ATRIBUTOS DE COMENTARIO
+    COM_ID((id PK))
+    COM_CONT((contenido))
+    COM_FECHA((fecha_creacion))
+    
+    %% ATRIBUTOS DE HISTORIAL
+    HIS_ID((id PK))
+    HIS_TIPO((tipo_cambio))
+    HIS_ANT((campo_anterior))
+    HIS_NUE((campo_nuevo))
+    HIS_FECHA((fecha_cambio))
+    
+    %% ATRIBUTOS DE TIPO_EQUIPO
+    TIP_EQ_ID((id PK))
+    TIP_EQ_NOM((nombre UK))
+    TIP_EQ_DESC((descripcion))
+    
+    %% ATRIBUTOS DE EQUIPO
+    EQ_ID((id PK))
+    EQ_NOM((nombre))
+    EQ_MARCA((marca))
+    EQ_MOD((modelo))
+    EQ_SERIE((numero_serie UK))
+    EQ_EST((estado))
+    EQ_UBI((ubicacion))
+    
+    %% ATRIBUTOS DE TIPO_CONSUMIBLE
+    TIP_CONS_ID((id PK))
+    TIP_CONS_NOM((nombre UK))
+    TIP_CONS_DESC((descripcion))
+    
+    %% ATRIBUTOS DE CONSUMIBLE
+    CONS_ID((id PK))
+    CONS_NOM((nombre))
+    CONS_UNI((unidad))
+    CONS_CANT((cantidad))
+    CONS_MIN((cantidad_minima))
+    CONS_EST((estado))
+    
+    %% ATRIBUTOS DE TIPO_HERRAMIENTA
+    TIP_HERR_ID((id PK))
+    TIP_HERR_NOM((nombre UK))
+    TIP_HERR_DESC((descripcion))
+    
+    %% ATRIBUTOS DE HERRAMIENTA
+    HERR_ID((id PK))
+    HERR_NOM((nombre))
+    HERR_COD((codigo UK))
+    HERR_EST((estado))
+    HERR_COND((condicion))
+    HERR_UBI((ubicacion))
+    
+    %% CONEXIONES ENTIDAD-ATRIBUTO
+    ROL --- ROL_ID
+    ROL --- ROL_NOM
+    ROL --- ROL_DESC
+    
+    AREA --- AREA_ID
+    AREA --- AREA_NOM
+    AREA --- AREA_DESC
+    
+    USUARIO --- USU_ID
+    USUARIO --- USU_NOM
+    USUARIO --- USU_EMAIL
+    USUARIO --- USU_TEL
+    USUARIO --- USU_DEPT
+    
+    TOKEN --- TOK_ID
+    TOKEN --- TOK_TOKEN
+    TOKEN --- TOK_TIPO
+    TOKEN --- TOK_EXP
+    
+    ESTADO --- EST_ID
+    ESTADO --- EST_NOM
+    ESTADO --- EST_DESC
+    ESTADO --- EST_ORD
+    
+    CATEGORIA --- CAT_ID
+    CATEGORIA --- CAT_NOM
+    CATEGORIA --- CAT_DESC
+    
+    PRIORIDAD --- PRI_ID
+    PRIORIDAD --- PRI_NOM
+    PRIORIDAD --- PRI_NIV
+    
+    TICKET --- TIC_ID
+    TICKET --- TIC_TIT
+    TICKET --- TIC_DESC
+    TICKET --- TIC_FECHA_C
+    TICKET --- TIC_FECHA_CI
+    
+    COMENTARIO --- COM_ID
+    COMENTARIO --- COM_CONT
+    COMENTARIO --- COM_FECHA
+    
+    HISTORIAL --- HIS_ID
+    HISTORIAL --- HIS_TIPO
+    HISTORIAL --- HIS_ANT
+    HISTORIAL --- HIS_NUE
+    HISTORIAL --- HIS_FECHA
+    
+    TIPO_EQUIPO --- TIP_EQ_ID
+    TIPO_EQUIPO --- TIP_EQ_NOM
+    TIPO_EQUIPO --- TIP_EQ_DESC
+    
+    EQUIPO --- EQ_ID
+    EQUIPO --- EQ_NOM
+    EQUIPO --- EQ_MARCA
+    EQUIPO --- EQ_MOD
+    EQUIPO --- EQ_SERIE
+    EQUIPO --- EQ_EST
+    EQUIPO --- EQ_UBI
+    
+    TIPO_CONS --- TIP_CONS_ID
+    TIPO_CONS --- TIP_CONS_NOM
+    TIPO_CONS --- TIP_CONS_DESC
+    
+    CONSUMIBLE --- CONS_ID
+    CONSUMIBLE --- CONS_NOM
+    CONSUMIBLE --- CONS_UNI
+    CONSUMIBLE --- CONS_CANT
+    CONSUMIBLE --- CONS_MIN
+    CONSUMIBLE --- CONS_EST
+    
+    TIPO_HERR --- TIP_HERR_ID
+    TIPO_HERR --- TIP_HERR_NOM
+    TIPO_HERR --- TIP_HERR_DESC
+    
+    HERRAMIENTA --- HERR_ID
+    HERRAMIENTA --- HERR_NOM
+    HERRAMIENTA --- HERR_COD
+    HERRAMIENTA --- HERR_EST
+    HERRAMIENTA --- HERR_COND
+    HERRAMIENTA --- HERR_UBI
+    
+    %% RELACIONES (Rombos)
+    REL1{TIENE}
+    REL2{PERTENECE}
+    REL3{GENERA}
+    REL4{OCURRE_EN}
+    REL5{TIENE_ESTADO}
+    REL6{CLASIFICA}
+    REL7{DEFINE}
+    REL8{CREA_TICKET}
+    REL9{ASIGNADO_COMO_TECNICO}
+    REL10{TIENE_COMENTARIO}
+    REL11{REGISTRA}
+    REL12{ESCRIBE}
+    REL13{CLASIFICA_EQUIPO}
+    REL14{Tiene_ASIGNADO}
+    REL15{USA}
+    REL16{CLASIFICA_CONS}
+    REL17{CLASIFICA_HERR}
+    REL18{Tiene_ASIGNADO_HERR}
+    REL19{REGISTRA_CAMBIO}
+    
+    %% RELACIONES ENTRE ENTIDADES CON CARDINALIDADES
+    %% Nota: 1 = uno, N = muchos, M = muchos (para N:M)
+    
+    %% Módulo: Usuarios y Autenticación
+    ROL ---|1| REL1
+    REL1 ---|N| USUARIO
+    
+    AREA ---|1| REL2
+    REL2 ---|N| USUARIO
+    
+    USUARIO ---|1| REL3
+    REL3 ---|N| TOKEN
+    
+    %% Módulo: Tickets
+    AREA ---|1| REL4
+    REL4 ---|N| TICKET
+    
+    ESTADO ---|1| REL5
+    REL5 ---|N| TICKET
+    
+    CATEGORIA ---|1| REL6
+    REL6 ---|N| TICKET
+    
+    PRIORIDAD ---|1| REL7
+    REL7 ---|N| TICKET
+    
+    USUARIO ---|1| REL8
+    REL8 ---|N| TICKET
+    
+    USUARIO ---|1| REL9
+    REL9 ---|N| TICKET
+    
+    TICKET ---|1| REL10
+    REL10 ---|N| COMENTARIO
+    
+    TICKET ---|1| REL11
+    REL11 ---|N| HISTORIAL
+    
+    USUARIO ---|1| REL12
+    REL12 ---|N| COMENTARIO
+    
+    USUARIO ---|1| REL19
+    REL19 ---|N| HISTORIAL
+    
+    %% Módulo: Inventario - Equipos
+    TIPO_EQUIPO ---|1| REL13
+    REL13 ---|N| EQUIPO
+    
+    USUARIO ---|1| REL14
+    REL14 ---|N| EQUIPO
+    
+    TICKET ---|N| REL15
+    REL15 ---|M| EQUIPO
+    
+    %% Módulo: Inventario - Consumibles
+    TIPO_CONS ---|1| REL16
+    REL16 ---|N| CONSUMIBLE
+    
+    %% Módulo: Inventario - Herramientas
+    TIPO_HERR ---|1| REL17
+    REL17 ---|N| HERRAMIENTA
+    
+    USUARIO ---|1| REL18
+    REL18 ---|N| HERRAMIENTA
+    
+    %% ESTILOS - Entidades verdes
+    style ROL fill:#90EE90
+    style AREA fill:#90EE90
+    style USUARIO fill:#90EE90
+    style TOKEN fill:#90EE90
+    style ESTADO fill:#90EE90
+    style CATEGORIA fill:#90EE90
+    style PRIORIDAD fill:#90EE90
+    style TICKET fill:#90EE90
+    style COMENTARIO fill:#90EE90
+    style HISTORIAL fill:#90EE90
+    style TIPO_EQUIPO fill:#90EE90
+    style EQUIPO fill:#90EE90
+    style TIPO_CONS fill:#90EE90
+    style CONSUMIBLE fill:#90EE90
+    style TIPO_HERR fill:#90EE90
+    style HERRAMIENTA fill:#90EE90
+    
+    %% ESTILOS - Relaciones azules
+    style REL1 fill:#87CEEB
+    style REL2 fill:#87CEEB
+    style REL3 fill:#87CEEB
+    style REL4 fill:#87CEEB
+    style REL5 fill:#87CEEB
+    style REL6 fill:#87CEEB
+    style REL7 fill:#87CEEB
+    style REL8 fill:#87CEEB
+    style REL9 fill:#87CEEB
+    style REL10 fill:#87CEEB
+    style REL11 fill:#87CEEB
+    style REL12 fill:#87CEEB
+    style REL13 fill:#87CEEB
+    style REL14 fill:#87CEEB
+    style REL15 fill:#87CEEB
+    style REL16 fill:#87CEEB
+    style REL17 fill:#87CEEB
+    style REL18 fill:#87CEEB
+    style REL19 fill:#87CEEB

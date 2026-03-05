@@ -75,29 +75,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      const errorMessage = response.message?.toLowerCase() || '';
-      if (errorMessage.includes('dirección') || errorMessage.includes('incident_area_id')) {
-        throw new Error('dirección_obligatoria');
-      }
+      // Si la respuesta no es exitosa, lanzar el mensaje del backend
       throw new Error(response.message || 'Error al actualizar perfil');
     } catch (error: unknown) {
+      // Si es un error de Axios (error de red o respuesta del servidor)
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
-        const backendMessage = axiosError.response?.data?.message?.toLowerCase() || '';
-
-        if (backendMessage.includes('dirección') || backendMessage.includes('incident_area_id')) {
-          throw new Error('dirección_obligatoria');
+        const axiosError = error as { 
+          response?: { 
+            data?: { 
+              message?: string;
+              errors?: Array<{ field?: string; message?: string }>;
+            }; 
+            status?: number;
+          } 
+        };
+        
+        const responseData = axiosError.response?.data;
+        let backendMessage = responseData?.message || '';
+        
+        // Si hay errores de validación específicos, construir un mensaje más detallado
+        if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+          const errorMessages = responseData.errors.map(err => err.message || '').filter(Boolean);
+          if (errorMessages.length > 0) {
+            backendMessage = errorMessages.join('. ');
+          }
         }
-
-        if (axiosError.response?.data?.message) {
-          throw new Error(axiosError.response.data.message);
+        
+        // Si hay un mensaje del backend, usarlo
+        if (backendMessage) {
+          throw new Error(backendMessage);
+        }
+        
+        // Si no hay mensaje pero hay un código de estado, crear un mensaje apropiado
+        if (axiosError.response?.status === 400) {
+          throw new Error('Los datos enviados no son válidos');
+        } else if (axiosError.response?.status === 500) {
+          throw new Error('Error del servidor al actualizar el perfil');
         }
       }
 
+      // Si es un Error estándar, re-lanzarlo
       if (error instanceof Error) {
         throw error;
       }
 
+      // Error desconocido
       throw new Error('Error al actualizar perfil');
     }
   };

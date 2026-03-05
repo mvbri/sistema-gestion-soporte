@@ -5,7 +5,7 @@ export const registroSchema = z.object({
     .string()
     .min(3, 'El nombre debe tener al menos 3 caracteres')
     .max(255, 'El nombre no puede exceder 255 caracteres')
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios'),
+    .regex(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras, números y espacios'),
   
   email: z
     .string()
@@ -28,10 +28,20 @@ export const registroSchema = z.object({
     .optional()
     .or(z.literal('')),
   
-  incident_area_id: z
-    .number()
-    .int()
-    .min(1, 'La dirección es requerida'),
+  incident_area_id: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined || val === 0) return undefined;
+      const num = Number(val);
+      return isNaN(num) || num <= 0 ? undefined : num;
+    },
+    z
+      .number({
+        required_error: 'Este campo es obligatorio',
+        invalid_type_error: 'Este campo es obligatorio',
+      })
+      .int('Este campo es obligatorio')
+      .min(1, 'Este campo es obligatorio')
+  ),
 });
 
 export const perfilSchema = z.object({
@@ -39,7 +49,7 @@ export const perfilSchema = z.object({
     .string()
     .min(3, 'El nombre debe tener al menos 3 caracteres')
     .max(255, 'El nombre no puede exceder 255 caracteres')
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios'),
+    .regex(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras, números y espacios'),
 
   phone: z
     .string()
