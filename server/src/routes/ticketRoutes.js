@@ -15,6 +15,7 @@ import {
     startProgress,
     markAsResolved
 } from '../controllers/ticketController.js';
+import { getFrequentIssues } from '../controllers/frequentIssueController.js';
 import {
     validateCreateTicket,
     validateUpdateTicket,
@@ -33,6 +34,7 @@ router.get('/prioridades', getPrioridades);
 router.get('/direcciones', getDirecciones);
 router.get('/tecnicos', getTecnicos);
 router.get('/stats', getStats);
+router.get('/frequent-issues', getFrequentIssues);
 
 router.post('/', upload.array('imagenes', 5), validateCreateTicket, createTicket);
 router.get('/', getTickets);

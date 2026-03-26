@@ -73,6 +73,15 @@ export const useTicketStats = () => {
   });
 };
 
+export const useFrequentIssues = () => {
+  return useQuery({
+    queryKey: ['frequentIssues'],
+    queryFn: () => ticketService.getFrequentIssues(),
+    select: (response) => response.data,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
 export const useCreateTicket = () => {
   const queryClient = useQueryClient();
 

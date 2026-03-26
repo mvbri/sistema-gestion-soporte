@@ -27,6 +27,12 @@ import {
     verifyUserEmail,
     deleteUser
 } from '../controllers/adminController.js';
+import {
+    getFrequentIssuesAdmin,
+    createFrequentIssue,
+    updateFrequentIssue,
+    deleteFrequentIssue
+} from '../controllers/frequentIssueController.js';
 import { authenticate } from '../utils/jwt.js';
 import { body } from 'express-validator';
 import { handleValidationErrors } from '../utils/validators.js';
@@ -150,6 +156,25 @@ router.put('/users/:id', [
     handleValidationErrors
 ], updateUser);
 router.delete('/users/:id', deleteUser);
+
+router.get('/frequent-issues', getFrequentIssuesAdmin);
+router.post('/frequent-issues', [
+    body('title').trim().notEmpty().withMessage('El título es requerido'),
+    body('possible_solution').trim().notEmpty().withMessage('La posible solución es requerida'),
+    body('symptoms').optional().trim(),
+    body('category_id').optional({ nullable: true }).isInt({ min: 1 }).withMessage('La categoría debe ser un id válido'),
+    body('active').optional().isBoolean().withMessage('El campo active debe ser booleano'),
+    handleValidationErrors
+], createFrequentIssue);
+router.put('/frequent-issues/:id', [
+    body('title').optional().trim().notEmpty().withMessage('El título no puede estar vacío'),
+    body('possible_solution').optional().trim().notEmpty().withMessage('La posible solución no puede estar vacía'),
+    body('symptoms').optional().trim(),
+    body('category_id').optional({ nullable: true }).isInt({ min: 1 }).withMessage('La categoría debe ser un id válido'),
+    body('active').optional().isBoolean().withMessage('El campo active debe ser booleano'),
+    handleValidationErrors
+], updateFrequentIssue);
+router.delete('/frequent-issues/:id', deleteFrequentIssue);
 
 router.use('/backup', backupRoutes);
 

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCategorias, usePrioridades, useCreateTicketWithFormData } from '../hooks/useTickets';
+import { useCategorias, usePrioridades, useCreateTicketWithFormData, useFrequentIssues } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
 import { useAuth } from '../hooks/useAuth';
 import { useEquipment } from '../hooks/useEquipment';
@@ -13,6 +13,7 @@ export const CreateTicket: React.FC = () => {
   const { user } = useAuth();
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
+  const { data: frequentIssues = [] } = useFrequentIssues();
   const { data: equipmentData } = useEquipment({ status: 'available', limit: 1000 });
   const equipos = equipmentData?.equipment || [];
   const createTicketMutation = useCreateTicketWithFormData();
@@ -24,6 +25,7 @@ export const CreateTicket: React.FC = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CreateTicketData>({
     resolver: zodResolver(createTicketSchema),
@@ -108,6 +110,39 @@ export const CreateTicket: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Ticket</h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Falla Frecuente (Opcional)
+              </label>
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  const selectedIssueId = Number(e.target.value);
+                  if (!selectedIssueId) return;
+
+                  const selectedIssue = frequentIssues.find((issue) => issue.id === selectedIssueId);
+                  if (!selectedIssue) return;
+
+                  setValue('titulo', selectedIssue.title, { shouldValidate: true });
+                  const descriptionContent = selectedIssue.symptoms
+                    ? `${selectedIssue.symptoms}\n\nPosible solución sugerida:\n${selectedIssue.possible_solution}`
+                    : `Posible solución sugerida:\n${selectedIssue.possible_solution}`;
+                  setValue('descripcion', descriptionContent, { shouldValidate: true });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecciona una falla para autocompletar</option>
+                {frequentIssues.map((issue) => (
+                  <option key={issue.id} value={issue.id}>
+                    {issue.title}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Al seleccionar una opción se completan automáticamente título y descripción.
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Título <span className="text-red-500">*</span>

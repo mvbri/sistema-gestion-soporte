@@ -61,6 +61,17 @@ export interface DireccionTicket {
   active: boolean;
 }
 
+export interface FrequentIssue {
+  id: number;
+  title: string;
+  symptoms?: string | null;
+  possible_solution: string;
+  category_id?: number | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;

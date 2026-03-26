@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, Ticket, TicketComentario, TicketHistorial, EstadoTicket, CategoriaTicket, PrioridadTicket, DireccionTicket, Tecnico, TicketStats, TicketFilters } from '../types';
+import type { ApiResponse, Ticket, TicketComentario, TicketHistorial, EstadoTicket, CategoriaTicket, PrioridadTicket, DireccionTicket, Tecnico, TicketStats, TicketFilters, FrequentIssue } from '../types';
 
 export interface CreateTicketData {
   titulo: string;
@@ -142,6 +142,11 @@ export const ticketService = {
 
   async getStats(): Promise<ApiResponse<TicketStats>> {
     const response = await api.get<ApiResponse<TicketStats>>('/tickets/stats');
+    return response.data;
+  },
+
+  async getFrequentIssues(): Promise<ApiResponse<FrequentIssue[]>> {
+    const response = await api.get<ApiResponse<FrequentIssue[]>>('/tickets/frequent-issues');
     return response.data;
   },
 

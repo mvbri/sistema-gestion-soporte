@@ -9,6 +9,7 @@ import {
   useTicket, 
   useEstados, 
   useTecnicos, 
+  useFrequentIssues,
   useUpdateTicket, 
   useAddComment, 
   useStartProgress, 
@@ -31,6 +32,7 @@ export const TicketDetail: React.FC = () => {
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
   const { data: tecnicos = [] } = useTecnicos();
+  const { data: frequentIssues = [] } = useFrequentIssues();
   const { data: equipmentData } = useEquipment({ limit: 1000 });
   const equipos = equipmentData?.equipment || [];
   
@@ -61,6 +63,8 @@ export const TicketDetail: React.FC = () => {
     handleSubmit: handleSubmitComment,
     formState: { errors: errorsComment },
     reset: resetComment,
+    setValue: setCommentValue,
+    getValues: getCommentValues,
   } = useForm<CommentData>({
     resolver: zodResolver(commentSchema),
   });
@@ -696,6 +700,32 @@ export const TicketDetail: React.FC = () => {
           <div className="bg-white shadow rounded-lg p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Agregar Comentario</h2>
             <form onSubmit={handleSubmitComment(onComment)}>
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  const selectedIssueId = Number(e.target.value);
+                  if (!selectedIssueId) return;
+
+                  const selectedIssue = frequentIssues.find((issue) => issue.id === selectedIssueId);
+                  if (!selectedIssue) return;
+
+                  const currentComment = getCommentValues('contenido') || '';
+                  const solutionBlock = `Diagnóstico sugerido: ${selectedIssue.title}\nPosible solución: ${selectedIssue.possible_solution}`;
+                  const nextComment = currentComment.trim().length > 0
+                    ? `${currentComment}\n\n${solutionBlock}`
+                    : solutionBlock;
+
+                  setCommentValue('contenido', nextComment, { shouldValidate: true });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+              >
+                <option value="">Insertar plantilla de falla frecuente (opcional)</option>
+                {frequentIssues.map((issue) => (
+                  <option key={issue.id} value={issue.id}>
+                    {issue.title}
+                  </option>
+                ))}
+              </select>
               <textarea
                 {...registerComment('contenido')}
                 rows={4}
