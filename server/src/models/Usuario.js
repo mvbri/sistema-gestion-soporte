@@ -68,29 +68,52 @@ class Usuario {
             let sql = `
                 SELECT u.*, r.name as role_name
                 FROM users u
-                JOIN roles r ON u.role_id = r.id
+                LEFT JOIN roles r ON u.role_id = r.id
                 WHERE LOWER(TRIM(u.email)) = ?
             `;
             
             try {
                 const result = await query(sql, [normalizedEmail]);
-                return result[0] || null;
+                if (result && result.length > 0) {
+                    return result[0];
+                }
+                return null;
             } catch (error) {
+                // Si falla con r.name, intentar con r.nombre
                 if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
-                    sql = `
-                        SELECT u.*, r.nombre as role_name
-                        FROM users u
-                        JOIN roles r ON u.role_id = r.id
-                        WHERE LOWER(TRIM(u.email)) = ?
-                    `;
-                    const result = await query(sql, [normalizedEmail]);
-                    return result[0] || null;
+                    try {
+                        sql = `
+                            SELECT u.*, r.nombre as role_name
+                            FROM users u
+                            LEFT JOIN roles r ON u.role_id = r.id
+                            WHERE LOWER(TRIM(u.email)) = ?
+                        `;
+                        const result = await query(sql, [normalizedEmail]);
+                        if (result && result.length > 0) {
+                            return result[0];
+                        }
+                        return null;
+                    } catch (secondError) {
+                        // Si también falla, intentar sin JOIN (por si la tabla roles no existe)
+                        console.warn('Error al hacer JOIN con roles, intentando sin JOIN:', secondError.message);
+                        sql = `
+                            SELECT u.*, NULL as role_name
+                            FROM users u
+                            WHERE LOWER(TRIM(u.email)) = ?
+                        `;
+                        const result = await query(sql, [normalizedEmail]);
+                        if (result && result.length > 0) {
+                            return result[0];
+                        }
+                        return null;
+                    }
                 }
                 throw error;
             }
         } catch (error) {
             console.error('Error en findByEmail:', error);
             console.error('Email buscado:', email);
+            console.error('Stack trace:', error.stack);
             throw error;
         }
     }
@@ -141,6 +164,7 @@ class Usuario {
         let department = null;
         if (incident_area_id) {
             try {
+                // Verificar que la dirección existe
                 let direccion;
                 try {
                     direccion = await query(
@@ -149,33 +173,95 @@ class Usuario {
                     );
                 } catch (error) {
                     if (error.code === 'ER_BAD_FIELD_ERROR' || error.message?.includes('Unknown column')) {
-                        direccion = await query(
-                            'SELECT nombre as name FROM incident_areas WHERE id = ?',
-                            [incident_area_id]
-                        );
+                        try {
+                            direccion = await query(
+                                'SELECT nombre as name FROM incident_areas WHERE id = ?',
+                                [incident_area_id]
+                            );
+                        } catch (secondError) {
+                            console.error('Error al obtener dirección (segundo intento):', secondError);
+                            throw new Error(`La dirección con ID ${incident_area_id} no existe o no se pudo obtener`);
+                        }
+                    } else if (error.code === 'ER_NO_SUCH_TABLE') {
+                        console.warn('La tabla incident_areas no existe. Continuando sin actualizar department.');
+                        department = null;
                     } else {
                         throw error;
                     }
                 }
-                department = direccion[0]?.name || null;
+                
+                if (direccion && direccion.length > 0) {
+                    department = direccion[0]?.name || null;
+                } else {
+                    throw new Error(`La dirección con ID ${incident_area_id} no existe`);
+                }
             } catch (error) {
                 console.error('Error al obtener nombre de dirección al actualizar perfil:', error);
+                // Si es un error de que la dirección no existe, lanzarlo
+                if (error.message && error.message.includes('no existe')) {
+                    throw error;
+                }
+                // Para otros errores, continuar sin department pero registrar el error
                 department = null;
             }
         }
 
-        const sql = `
-            UPDATE users
-            SET full_name = ?, phone = ?, department = ?, incident_area_id = ?
-            WHERE id = ?
-        `;
+        // Verificar si la columna incident_area_id existe
+        let hasIncidentAreaId = false;
+        try {
+            const columnCheck = await query(`
+                SELECT COUNT(*) as count
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'users'
+                AND COLUMN_NAME = 'incident_area_id'
+            `);
+            hasIncidentAreaId = columnCheck[0]?.count > 0;
+        } catch (checkError) {
+            console.warn('No se pudo verificar si la columna incident_area_id existe:', checkError.message);
+            // Si no se puede verificar, intentar con la columna de todas formas
+            hasIncidentAreaId = true;
+        }
+
+        let sql;
+        let params;
+        
+        if (hasIncidentAreaId) {
+            // Si la columna existe, actualizar con ella
+            sql = `
+                UPDATE users
+                SET full_name = ?, phone = ?, department = ?, incident_area_id = ?
+                WHERE id = ?
+            `;
+            params = [full_name, phone || null, department, incident_area_id || null, id];
+        } else {
+            // Si la columna no existe, actualizar solo las columnas disponibles
+            console.warn('La columna incident_area_id no existe. Actualizando solo full_name, phone y department.');
+            sql = `
+                UPDATE users
+                SET full_name = ?, phone = ?, department = ?
+                WHERE id = ?
+            `;
+            params = [full_name, phone || null, department, id];
+        }
 
         try {
-            await query(sql, [full_name, phone || null, department, incident_area_id || null, id]);
+            await query(sql, params);
         } catch (error) {
             console.error('Error al actualizar usuario en updateProfile:', error);
             console.error('SQL:', sql);
-            console.error('Parámetros:', [full_name, phone || null, department, incident_area_id || null, id]);
+            console.error('Parámetros:', params);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+            
+            // Mejorar mensajes de error específicos
+            if (error.code === 'ER_NO_SUCH_TABLE') {
+                throw new Error('Error en la estructura de la base de datos. La tabla users no existe.');
+            } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+                // Si es un error de columna, sugerir ejecutar la migración
+                throw new Error('La columna incident_area_id no existe en la tabla users. Por favor ejecuta la migración migration_2026-02-25_17-39-53_add_incident_area_id_to_users.sql');
+            }
+            
             throw error;
         }
 
@@ -183,7 +269,8 @@ class Usuario {
             return await this.findById(id);
         } catch (error) {
             console.error('Error al obtener usuario actualizado:', error);
-            throw error;
+            // Si falla al obtener el usuario actualizado, intentar devolver al menos los datos que sabemos
+            throw new Error('El perfil se actualizó pero no se pudo obtener la información actualizada. Por favor, recarga la página.');
         }
     }
 

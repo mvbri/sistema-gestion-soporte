@@ -11,6 +11,7 @@ import {
     getSecurityQuestions,
     verifySecurityAnswers,
     setSecurityQuestions,
+    setSecurityQuestionsPublic,
     getDireccionesPublic
 } from '../controllers/authController.js';
 import {
@@ -21,7 +22,8 @@ import {
     validateUpdateProfile,
     validateGetSecurityQuestions,
     validateVerifySecurityAnswers,
-    validateSetSecurityQuestions
+    validateSetSecurityQuestions,
+    validateSetSecurityQuestionsPublic
 } from '../utils/validators.js';
 import { authenticate } from '../utils/jwt.js';
 
@@ -36,6 +38,7 @@ router.post('/reset-password', validateRestablecerPassword, resetPassword);
 
 router.post('/get-security-questions', validateGetSecurityQuestions, getSecurityQuestions);
 router.post('/verify-security-answers', validateVerifySecurityAnswers, verifySecurityAnswers);
+router.post('/set-security-questions-public', validateSetSecurityQuestionsPublic, setSecurityQuestionsPublic);
 
 // Direcciones públicas para formularios de registro
 router.get('/direcciones', getDireccionesPublic);

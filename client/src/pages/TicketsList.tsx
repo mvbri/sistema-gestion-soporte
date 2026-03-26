@@ -82,33 +82,33 @@ export const TicketsList: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
+      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Tickets</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Tickets</h1>
               {user?.role === 'end_user' && (
-                <p className="mt-1 text-sm text-gray-600">Solo puedes ver tus propios tickets</p>
+                <p className="mt-1 text-xs sm:text-sm text-gray-600">Solo puedes ver tus propios tickets</p>
               )}
               {user?.role === 'technician' && (
-                <p className="mt-1 text-sm text-gray-600">Puedes ver todos los tickets del sistema</p>
+                <p className="mt-1 text-xs sm:text-sm text-gray-600">Puedes ver todos los tickets del sistema</p>
               )}
             </div>
             {user?.role === 'end_user' && (
               <button
                 onClick={() => navigate('/tickets/crear')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm sm:text-base whitespace-nowrap"
               >
                 Crear Ticket
               </button>
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 mb-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <div className="flex items-center space-x-2">
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -120,12 +120,12 @@ export const TicketsList: React.FC = () => {
                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                   />
                 </svg>
-                <h2 className="text-xl font-semibold text-gray-800">Filtros de Búsqueda</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Filtros de Búsqueda</h2>
               </div>
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
+                className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
                 aria-label="Limpiar todos los filtros"
                 title="Limpiar filtros"
               >
@@ -146,7 +146,7 @@ export const TicketsList: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-4 sm:mb-5">
               <div className="min-w-0">
                 <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                   <svg
@@ -347,7 +347,7 @@ export const TicketsList: React.FC = () => {
             </div>
 
             {(user?.role === 'administrator' || user?.role === 'technician') && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <div className="min-w-0">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                     <svg
@@ -413,51 +413,53 @@ export const TicketsList: React.FC = () => {
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200">
                   {tickets.map((ticket) => (
-                    <li key={ticket.id} className="px-6 py-4 hover:bg-gray-50">
-                      <div className="flex items-center justify-between">
+                    <li key={ticket.id} className="px-3 sm:px-6 py-4 hover:bg-gray-50">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                            <p className="text-sm sm:text-base font-medium text-gray-900 truncate w-full sm:w-auto">
                               {ticket.title}
                             </p>
-                            <StatusBadge
-                              estado={ticket.state_name || ''}
-                              colorOverride={ticket.state_color}
-                            />
-                            <PriorityBadge
-                              prioridad={ticket.priority_name || ''}
-                              colorOverride={ticket.priority_color}
-                            />
-                            <CategoryBadge categoria={ticket.category_name || ''} />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusBadge
+                                estado={ticket.state_name || ''}
+                                colorOverride={ticket.state_color}
+                              />
+                              <PriorityBadge
+                                prioridad={ticket.priority_name || ''}
+                                colorOverride={ticket.priority_color}
+                              />
+                              <CategoryBadge categoria={ticket.category_name || ''} />
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>ID: {ticket.id.substring(0, 8)}...</span>
-                            <span>Creado: {formatDate(ticket.created_at)}</span>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                            <span className="truncate">ID: {ticket.id.substring(0, 8)}...</span>
+                            <span className="truncate">Creado: {formatDate(ticket.created_at)}</span>
                             {ticket.closed_at && (
-                              <span>Cerrado: {formatDate(ticket.closed_at)}</span>
+                              <span className="truncate">Cerrado: {formatDate(ticket.closed_at)}</span>
                             )}
-                            <span>Por: {ticket.created_by_user_name || 'N/A'}</span>
+                            <span className="truncate">Por: {ticket.created_by_user_name || 'N/A'}</span>
                             {ticket.assigned_technician_name && (
-                              <span>Asignado a: {ticket.assigned_technician_name}</span>
+                              <span className="truncate">Asignado a: {ticket.assigned_technician_name}</span>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                           <button
                             onClick={() => navigate(`/tickets/${ticket.id}`)}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out"
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out whitespace-nowrap"
                           >
                             Ver
                           </button>
                           {canEdit && (
                             <button
                               onClick={() => navigate(`/tickets/${ticket.id}/editar`)}
-                              className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                              className="group p-2 sm:p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
                               title="Editar"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                                className="h-4 w-4 sm:h-5 sm:w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -474,12 +476,12 @@ export const TicketsList: React.FC = () => {
                           {canDelete && (
                             <button
                               onClick={() => setDeleteModal({ isOpen: true, ticket })}
-                              className="group p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
+                              className="group p-2 sm:p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
                               title="Eliminar"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
+                                className="h-4 w-4 sm:h-5 sm:w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -500,8 +502,8 @@ export const TicketsList: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+                <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
                   Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
                   {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} tickets
                 </div>
@@ -509,14 +511,14 @@ export const TicketsList: React.FC = () => {
                   <button
                     onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1 }))}
                     disabled={pagination.page === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50 transition-colors"
                   >
                     Anterior
                   </button>
                   <button
                     onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1 }))}
                     disabled={pagination.page >= pagination.totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50 transition-colors"
                   >
                     Siguiente
                   </button>

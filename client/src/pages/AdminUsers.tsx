@@ -26,6 +26,8 @@ export const AdminUsers: React.FC = () => {
   const [userToToggle, setUserToToggle] = useState<User | null>(null);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const { data: direcciones = [] } = useDireccionesOptions();
 
@@ -101,6 +103,7 @@ export const AdminUsers: React.FC = () => {
       {
         onSuccess: () => {
           setShowCreateForm(false);
+          setShowCreatePassword(false);
           (e.target as HTMLFormElement).reset();
         },
       }
@@ -159,6 +162,7 @@ export const AdminUsers: React.FC = () => {
       {
         onSuccess: () => {
           setShowEditForm(false);
+          setShowEditPassword(false);
           setUserToEdit(null);
         },
       }
@@ -227,70 +231,70 @@ export const AdminUsers: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
-                <p className="text-gray-600">Administra y gestiona todos los usuarios del sistema</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
+                <p className="text-sm sm:text-base text-gray-600">Administra y gestiona todos los usuarios del sistema</p>
               </div>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="btn-primary flex items-center gap-2 px-6 py-3 shadow-lg hover:shadow-xl transition-shadow"
+                className="btn-primary flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto"
               >
-                <PlusIcon className="h-5 w-5" />
+                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span>Crear Usuario</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium mb-1">Total Usuarios</p>
-                    <p className="text-3xl font-bold">{pagination.total}</p>
+                    <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Usuarios</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{pagination.total}</p>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-3">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100 text-sm font-medium mb-1">Usuarios Activos</p>
-                    <p className="text-3xl font-bold">{activeUsersCount}</p>
+                    <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Usuarios Activos</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{activeUsersCount}</p>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-3">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-red-100 text-sm font-medium mb-1">Usuarios Inactivos</p>
-                    <p className="text-3xl font-bold">{inactiveUsersCount}</p>
+                    <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Usuarios Inactivos</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{inactiveUsersCount}</p>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-3">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium mb-1">Emails Verificados</p>
-                    <p className="text-3xl font-bold">{verifiedUsersCount}</p>
+                    <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Emails Verificados</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{verifiedUsersCount}</p>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-3">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -299,9 +303,9 @@ export const AdminUsers: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-6 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Filtros de Búsqueda</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-4 sm:mb-6 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Filtros de Búsqueda</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Buscar
@@ -360,14 +364,15 @@ export const AdminUsers: React.FC = () => {
           </div>
 
           {showCreateForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-900">Crear Usuario</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Crear Usuario</h2>
                     <button
                       onClick={() => {
                         setShowCreateForm(false);
+                        setShowCreatePassword(false);
                       }}
                       className="text-gray-500 hover:text-gray-700"
                     >
@@ -403,14 +408,58 @@ export const AdminUsers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Contraseña *
                       </label>
-                      <input
-                        type="password"
-                        name="password"
-                        required
-                        minLength={8}
-                        className="input-field w-full"
-                        placeholder="Mínimo 8 caracteres"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showCreatePassword ? 'text' : 'password'}
+                          name="password"
+                          required
+                          minLength={8}
+                          className="input-field w-full pr-10"
+                          placeholder="Mínimo 8 caracteres"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCreatePassword(!showCreatePassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-150"
+                          aria-label={showCreatePassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        >
+                          {showCreatePassword ? (
+                            <svg
+                              className="h-5 w-5 transition-all duration-150 ease-out"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="h-5 w-5 transition-all duration-150 ease-out"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         Mínimo 8 caracteres, una mayúscula, una minúscula y un número
                       </p>
@@ -428,9 +477,9 @@ export const AdminUsers: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dirección
+                        Dirección *
                       </label>
-                      <select name="incident_area_id" className="input-field w-full">
+                      <select name="incident_area_id" required className="input-field w-full">
                         <option value="">Selecciona una dirección</option>
                         {direcciones.map((dir) => (
                           <option key={dir.id} value={dir.id}>
@@ -463,7 +512,10 @@ export const AdminUsers: React.FC = () => {
                     <div className="flex justify-end gap-3 pt-4">
                       <button
                         type="button"
-                        onClick={() => setShowCreateForm(false)}
+                        onClick={() => {
+                          setShowCreateForm(false);
+                          setShowCreatePassword(false);
+                        }}
                         className="btn-secondary"
                       >
                         Cancelar
@@ -512,14 +564,15 @@ export const AdminUsers: React.FC = () => {
           )}
 
           {showEditForm && userToEdit && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-900">Editar Usuario</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Editar Usuario</h2>
                     <button
                       onClick={() => {
                         setShowEditForm(false);
+                        setShowEditPassword(false);
                         setUserToEdit(null);
                       }}
                       className="text-gray-500 hover:text-gray-700"
@@ -558,12 +611,56 @@ export const AdminUsers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Contraseña (dejar vacío para no cambiar)
                       </label>
-                      <input
-                        type="password"
-                        name="password"
-                        className="input-field w-full"
-                        placeholder="Nueva contraseña (opcional)"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showEditPassword ? 'text' : 'password'}
+                          name="password"
+                          className="input-field w-full pr-10"
+                          placeholder="Nueva contraseña (opcional)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowEditPassword(!showEditPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-150"
+                          aria-label={showEditPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        >
+                          {showEditPassword ? (
+                            <svg
+                              className="h-5 w-5 transition-all duration-150 ease-out"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="h-5 w-5 transition-all duration-150 ease-out"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">
                         Mínimo 8 caracteres, una mayúscula, una minúscula y un número
                       </p>
@@ -582,9 +679,9 @@ export const AdminUsers: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dirección
+                        Dirección *
                       </label>
-                      <select name="incident_area_id" className="input-field w-full" defaultValue={userToEdit.incident_area_id || ''}>
+                      <select name="incident_area_id" required className="input-field w-full" defaultValue={userToEdit.incident_area_id || ''}>
                         <option value="">Selecciona una dirección</option>
                         {direcciones.map((dir) => (
                           <option key={dir.id} value={dir.id}>
@@ -620,6 +717,7 @@ export const AdminUsers: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setShowEditForm(false);
+                          setShowEditPassword(false);
                           setUserToEdit(null);
                         }}
                         className="btn-secondary"
@@ -637,8 +735,8 @@ export const AdminUsers: React.FC = () => {
           )}
 
           {userToDelete && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Eliminar Usuario</h3>
                 <p className="text-gray-700 mb-6">
                   ¿Estás seguro de que deseas eliminar a <strong>{userToDelete.full_name}</strong> ({userToDelete.email})?
@@ -707,28 +805,28 @@ export const AdminUsers: React.FC = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Nombre
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                           Email
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                           Dirección
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Rol
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Estado
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Email Verificado
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                           Fecha Creación
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
@@ -736,43 +834,44 @@ export const AdminUsers: React.FC = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {users.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-sm mr-3">
                                 {user.full_name.charAt(0).toUpperCase()}
                               </div>
-                              <div>
-                                <div className="text-sm font-semibold text-gray-900">{user.full_name}</div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold text-gray-900 truncate">{user.full_name}</div>
+                                <div className="text-xs text-gray-500 md:hidden mt-0.5 truncate">{user.email}</div>
                                 {user.phone && (
-                                  <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
-                                    {user.phone}
+                                    <span className="hidden sm:inline">{user.phone}</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                             <div className="text-sm text-gray-900 flex items-center gap-2">
-                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                               </svg>
-                              {user.email}
+                              <span className="truncate">{user.email}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
                             <div className="text-sm text-gray-900">
                               {getDireccionName(user.incident_area_id)}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
                               {getRoleName(user.role)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${
                                 user.active
@@ -783,7 +882,7 @@ export const AdminUsers: React.FC = () => {
                               {user.active ? 'Activo' : 'Inactivo'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${
                                 user.email_verified
@@ -794,7 +893,7 @@ export const AdminUsers: React.FC = () => {
                               {user.email_verified ? 'Verificado' : 'No Verificado'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell text-sm text-gray-500">
                             {user.created_at
                               ? new Date(user.created_at).toLocaleDateString('es-ES', {
                                   year: 'numeric',
@@ -803,15 +902,14 @@ export const AdminUsers: React.FC = () => {
                                 })
                               : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleEditUser(user)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors"
+                                className="flex items-center justify-center p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors"
                                 title="Editar usuario"
                               >
-                                <EditIcon className="h-4 w-4" />
-                                <span className="hidden lg:inline">Editar</span>
+                                <EditIcon className="h-5 w-5" />
                               </button>
                               {!user.email_verified && (
                                 <button
@@ -821,7 +919,7 @@ export const AdminUsers: React.FC = () => {
                                   disabled={verifyUserEmailMutation.isPending}
                                 >
                                   <span className="text-sm">✓</span>
-                                  <span className="hidden lg:inline">Verificar</span>
+                                  <span className="hidden lg:inline text-sm">Verificar</span>
                                 </button>
                               )}
                               <button
@@ -834,15 +932,14 @@ export const AdminUsers: React.FC = () => {
                                 title={user.active ? 'Desactivar usuario' : 'Activar usuario'}
                               >
                                 <ToggleIcon className="h-4 w-4" active={!user.active} />
-                                <span className="hidden lg:inline">{user.active ? 'Desactivar' : 'Activar'}</span>
+                                <span className="hidden lg:inline text-sm">{user.active ? 'Desactivar' : 'Activar'}</span>
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(user)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                                className="flex items-center justify-center p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
                                 title="Eliminar usuario"
                               >
-                                <DeleteIcon className="h-4 w-4" />
-                                <span className="hidden lg:inline">Eliminar</span>
+                                <DeleteIcon className="h-5 w-5" />
                               </button>
                             </div>
                           </td>
@@ -852,26 +949,26 @@ export const AdminUsers: React.FC = () => {
                   </table>
                 </div>
                 {pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-                    <div className="flex-1 flex justify-between sm:hidden">
+                  <div className="bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3 sm:gap-0">
+                    <div className="flex-1 flex justify-between sm:hidden w-full">
                       <button
                         onClick={() => setPage(Math.max(1, page - 1))}
                         disabled={page === 1}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Anterior
                       </button>
                       <button
                         onClick={() => setPage(Math.min(pagination.totalPages, page + 1))}
                         disabled={page === pagination.totalPages}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Siguiente
                       </button>
                     </div>
                     <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-xs sm:text-sm text-gray-700">
                           Mostrando <span className="font-semibold">{(page - 1) * limit + 1}</span> a{' '}
                           <span className="font-semibold">
                             {Math.min(page * limit, pagination.total)}

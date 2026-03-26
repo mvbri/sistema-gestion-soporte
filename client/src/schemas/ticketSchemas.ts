@@ -15,9 +15,24 @@ export const createTicketSchema = z.object({
     .min(1, 'La categoría es requerida'),
   
   prioridad_id: z
-    .number()
-    .int()
-    .min(1, 'La prioridad es requerida'),
+    .any()
+    .refine(
+      (val) => {
+        if (val === '' || val === null || val === undefined) return false;
+        if (typeof val === 'number' && isNaN(val)) return false;
+        const num = typeof val === 'string' ? Number(val) : val;
+        return !isNaN(num) && typeof num === 'number' && num >= 1;
+      },
+      {
+        message: 'La prioridad es obligatoria',
+      }
+    )
+    .transform((val) => {
+      if (typeof val === 'string') {
+        return Number(val);
+      }
+      return val;
+    }),
   
   imagen: z
     .any()

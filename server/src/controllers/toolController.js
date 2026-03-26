@@ -19,6 +19,7 @@ export const createTool = async (req, res) => {
             type,
             status,
             condition,
+            tool_condition,
             location,
             assigned_to_user_id,
             description
@@ -37,7 +38,7 @@ export const createTool = async (req, res) => {
             type_id: type_id ? parseInt(type_id, 10) : undefined,
             type: type || undefined,
             status: assigned_to_user_id ? 'assigned' : (status || 'available'),
-            condition: condition || 'good',
+            tool_condition: tool_condition || condition || 'good',
             location,
             assigned_to_user_id: assigned_to_user_id || null,
             description
@@ -154,6 +155,7 @@ export const updateTool = async (req, res) => {
             type,
             status,
             condition,
+            tool_condition,
             location,
             assigned_to_user_id,
             description
@@ -176,7 +178,11 @@ export const updateTool = async (req, res) => {
             updateData.type = type;
         }
         if (status !== undefined) updateData.status = status;
-        if (condition !== undefined) updateData.condition = condition;
+        if (tool_condition !== undefined) {
+            updateData.tool_condition = tool_condition;
+        } else if (condition !== undefined) {
+            updateData.tool_condition = condition;
+        }
         if (location !== undefined) updateData.location = location;
         if (assigned_to_user_id !== undefined) {
             updateData.assigned_to_user_id = assigned_to_user_id;

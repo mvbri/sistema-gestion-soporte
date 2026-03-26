@@ -146,7 +146,24 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error('Error en login:', error);
         console.error('Stack trace:', error.stack);
-        sendError(res, 'Error al iniciar sesión', null, 500);
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            sqlState: error.sqlState,
+            sqlMessage: error.sqlMessage
+        });
+        
+        // Mensaje de error más específico
+        let errorMessage = 'Error al iniciar sesión';
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            errorMessage = 'Error en la base de datos. La tabla requerida no existe.';
+        } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+            errorMessage = 'Error en la base de datos. Columna no encontrada.';
+        } else if (error.message && error.message.includes('ECONNREFUSED')) {
+            errorMessage = 'Error de conexión con la base de datos.';
+        }
+        
+        sendError(res, errorMessage, null, 500);
     }
 };
 
@@ -450,6 +467,58 @@ export const setSecurityQuestions = async (req, res) => {
     }
 };
 
+/**
+ * Configurar preguntas de seguridad durante el registro (público, usando email)
+ * Solo permite configurar si el usuario no tiene preguntas configuradas aún
+ */
+export const setSecurityQuestionsPublic = async (req, res) => {
+    try {
+        const { email, question1, answer1, question2, answer2 } = req.body;
+
+        if (!email || !question1 || !answer1 || !question2 || !answer2) {
+            return sendError(res, 'Email y todas las preguntas y respuestas son requeridas');
+        }
+
+        if (question1.trim().length < 10 || question2.trim().length < 10) {
+            return sendError(res, 'Las preguntas deben tener al menos 10 caracteres');
+        }
+
+        if (answer1.trim().length < 3 || answer2.trim().length < 3) {
+            return sendError(res, 'Las respuestas deben tener al menos 3 caracteres');
+        }
+
+        const user = await Usuario.findByEmail(email);
+        if (!user) {
+            return sendError(res, 'Usuario no encontrado');
+        }
+
+        // Solo permitir si el usuario no tiene preguntas configuradas aún
+        if (user.security_question_1 || user.security_question_2) {
+            return sendError(res, 'Las preguntas de seguridad ya están configuradas. Usa el perfil para actualizarlas.');
+        }
+
+        await Usuario.updateSecurityQuestions(user.id, {
+            question1: question1.trim(),
+            answer1: answer1.trim(),
+            question2: question2.trim(),
+            answer2: answer2.trim()
+        });
+
+        sendSuccess(res, 'Preguntas de seguridad configuradas exitosamente');
+    } catch (error) {
+        console.error('Error al configurar preguntas de seguridad (público):', error);
+        console.error('Detalles del error:', error.message);
+        console.error('Código del error:', error.code);
+        
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            return sendError(res, 'Las columnas de preguntas de seguridad no existen en la base de datos. Por favor ejecuta la migración migration_security_questions.sql', null, 500);
+        }
+        
+        const errorMessage = error.message || 'Error al configurar preguntas de seguridad';
+        sendError(res, errorMessage, null, 500);
+    }
+};
+
 // Obtener usuario actual
 export const getCurrentUser = async (req, res) => {
     try {
@@ -482,9 +551,12 @@ export const updateCurrentUser = async (req, res) => {
     try {
         const { full_name, phone, incident_area_id } = req.body;
 
-        console.log('Actualizando perfil para usuario ID:', req.user.id);
-        console.log('Datos recibidos:', { full_name, phone, incident_area_id });
-        console.log('Tipo de incident_area_id:', typeof incident_area_id);
+        console.log('=== INICIO ACTUALIZACIÓN PERFIL ===');
+        console.log('Usuario ID:', req.user.id);
+        console.log('Datos recibidos completos:', JSON.stringify(req.body, null, 2));
+        console.log('full_name:', full_name, 'tipo:', typeof full_name);
+        console.log('phone:', phone, 'tipo:', typeof phone);
+        console.log('incident_area_id:', incident_area_id, 'tipo:', typeof incident_area_id);
 
         if (!full_name || typeof full_name !== 'string' || full_name.trim().length === 0) {
             return sendError(res, 'El nombre completo es requerido', null, 400);
@@ -505,6 +577,29 @@ export const updateCurrentUser = async (req, res) => {
         }
 
         console.log('incident_area_id parseado:', parsedIncidentAreaId);
+
+        // Verificar que la dirección existe antes de actualizar
+        try {
+            let direccionCheck;
+            try {
+                direccionCheck = await query(
+                    'SELECT id FROM incident_areas WHERE id = ?',
+                    [parsedIncidentAreaId]
+                );
+            } catch (error) {
+                if (error.code === 'ER_NO_SUCH_TABLE') {
+                    return sendError(res, 'Error en la estructura de la base de datos. La tabla de direcciones no existe.', null, 500);
+                }
+                throw error;
+            }
+            
+            if (!direccionCheck || direccionCheck.length === 0) {
+                return sendError(res, 'La dirección seleccionada no existe', null, 400);
+            }
+        } catch (error) {
+            console.error('Error al verificar dirección:', error);
+            return sendError(res, 'Error al verificar la dirección seleccionada', null, 500);
+        }
 
         const updatedUser = await Usuario.updateProfile(req.user.id, {
             full_name: full_name.trim(),
@@ -527,20 +622,24 @@ export const updateCurrentUser = async (req, res) => {
             email_verified: updatedUser.email_verified
         });
     } catch (error) {
-        console.error('Error al actualizar perfil de usuario:', error);
+        console.error('=== ERROR AL ACTUALIZAR PERFIL ===');
+        console.error('Error completo:', error);
         console.error('Stack trace:', error.stack);
         console.error('Error code:', error.code);
         console.error('Error message:', error.message);
+        console.error('Error SQL State:', error.sqlState);
+        console.error('Error SQL Message:', error.sqlMessage);
         
         let errorMessage = 'Error al actualizar perfil de usuario';
         if (error.code === 'ER_NO_SUCH_TABLE') {
-            errorMessage = 'Error en la estructura de la base de datos. Contacta al administrador.';
+            errorMessage = 'Error en la estructura de la base de datos. La tabla requerida no existe.';
         } else if (error.code === 'ER_BAD_FIELD_ERROR') {
             errorMessage = 'Error en la estructura de la base de datos. Verifica las migraciones.';
         } else if (error.message) {
             errorMessage = error.message;
         }
         
+        console.error('Mensaje de error que se enviará al cliente:', errorMessage);
         sendError(res, errorMessage, null, 500);
     }
 };

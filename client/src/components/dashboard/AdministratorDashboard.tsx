@@ -10,9 +10,9 @@ export const AdministratorDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <button
           onClick={() => navigate('/tickets')}
-          className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center"
+          className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
         >
-          <div className="relative z-10 w-full">
+          <div className="relative z-10 w-full flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="h-12 w-12 rounded-lg bg-white bg-opacity-20 flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -23,17 +23,19 @@ export const AdministratorDashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <h3 className="font-bold text-xl mb-2">Ver Tickets</h3>
-            <p className="text-sm text-blue-100">Gestiona y visualiza todos los tickets</p>
+            <div className="flex-1 flex flex-col justify-center">
+              <h3 className="font-bold text-xl mb-2">Ver Tickets</h3>
+              <p className="text-sm text-blue-100">Gestiona y visualiza todos los tickets</p>
+            </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
 
         <button
           onClick={() => navigate('/analytics')}
-          className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center"
+          className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
         >
-          <div className="relative z-10 w-full">
+          <div className="relative z-10 w-full flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="h-12 w-12 rounded-lg bg-white bg-opacity-20 flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,17 +46,19 @@ export const AdministratorDashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <h3 className="font-bold text-xl mb-2">Analíticas</h3>
-            <p className="text-sm text-purple-100">Estadísticas y métricas del sistema</p>
+            <div className="flex-1 flex flex-col justify-center">
+              <h3 className="font-bold text-xl mb-2">Estadísticas</h3>
+              <p className="text-sm text-purple-100">Estadísticas y métricas del sistema</p>
+            </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
 
         <button
           onClick={() => navigate('/admin/config')}
-          className="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center"
+          className="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
         >
-          <div className="relative z-10 w-full">
+          <div className="relative z-10 w-full flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="h-12 w-12 rounded-lg bg-white bg-opacity-20 flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,17 +70,19 @@ export const AdministratorDashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <h3 className="font-bold text-xl mb-2">Configuración</h3>
-            <p className="text-sm text-indigo-100">Gestiona categorías, prioridades, direcciones...</p>
+            <div className="flex-1 flex flex-col justify-center">
+              <h3 className="font-bold text-xl mb-2">Configuración</h3>
+              <p className="text-sm text-indigo-100">Gestiona categorías, prioridades, direcciones...</p>
+            </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
 
         <button
           onClick={() => navigate('/admin/users')}
-          className="group relative overflow-hidden bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center"
+          className="group relative overflow-hidden bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
         >
-          <div className="relative z-10 w-full">
+          <div className="relative z-10 w-full flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="h-12 w-12 rounded-lg bg-white bg-opacity-20 flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,8 +93,10 @@ export const AdministratorDashboard: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <h3 className="font-bold text-xl mb-2">Gestión de Usuarios</h3>
-            <p className="text-sm text-green-100">Crea, activa y gestiona usuarios del sistema</p>
+            <div className="flex-1 flex flex-col justify-center">
+              <h3 className="font-bold text-xl mb-2">Gestión de Usuarios</h3>
+              <p className="text-sm text-green-100">Crea, activa y gestiona usuarios del sistema</p>
+            </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>

@@ -84,11 +84,17 @@ export const VerifySecurityQuestions: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className={`${formStyles.formContainer} card`}>
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Preguntas de Seguridad</h2>
-          <p className="mt-2 text-sm text-gray-600">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-slate-100 py-10 px-4 sm:px-6 lg:px-8"
+    >
+      <div
+        className={`${formStyles.formContainer} relative z-10 px-8 py-9 sm:px-10 sm:py-11 rounded-3xl bg-gradient-to-b from-slate-950/90 via-sky-950/80 to-slate-950/90 backdrop-blur-xl shadow-2xl shadow-sky-950/70 border border-sky-400/35`}
+      >
+        <div className="text-center mb-7">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
+            Preguntas de Seguridad
+          </h2>
+          <p className="mt-2 text-sm sm:text-base text-blue-100/90">
             Responde las siguientes preguntas para recuperar tu contraseña
           </p>
         </div>
@@ -97,60 +103,62 @@ export const VerifySecurityQuestions: React.FC = () => {
           <input type="hidden" {...register('email')} value={email} />
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="question1" className="label-field">
+            <label htmlFor="question1" className="label-field text-blue-50 text-sm font-medium mb-1 block">
               Pregunta 1
             </label>
-            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
+            <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-600 text-slate-100 text-sm">
               {questions.question1}
             </div>
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="answer1" className="label-field">
+            <label htmlFor="answer1" className="label-field text-blue-50 text-sm font-medium mb-1 block">
               Respuesta 1
             </label>
             <input
               id="answer1"
               type="text"
               {...register('answer1')}
-              className={`input-field ${errors.answer1 ? formStyles.inputError : ''}`}
+              className={`input-dark ${errors.answer1 ? formStyles.inputError : ''}`}
               placeholder="Tu respuesta"
               autoComplete="off"
             />
             {errors.answer1 && (
-              <p className="error-message">{errors.answer1.message}</p>
+              <p className="error-message mt-1 text-xs text-red-200">{errors.answer1.message}</p>
             )}
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="question2" className="label-field">
+            <label htmlFor="question2" className="label-field text-blue-50 text-sm font-medium mb-1 block">
               Pregunta 2
             </label>
-            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
+            <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-600 text-slate-100 text-sm">
               {questions.question2}
             </div>
           </div>
 
           <div className={formStyles.formGroup}>
-            <label htmlFor="answer2" className="label-field">
+            <label htmlFor="answer2" className="label-field text-blue-50 text-sm font-medium mb-1 block">
               Respuesta 2
             </label>
             <input
               id="answer2"
               type="text"
               {...register('answer2')}
-              className={`input-field ${errors.answer2 ? formStyles.inputError : ''}`}
+              className={`input-dark ${errors.answer2 ? formStyles.inputError : ''}`}
               placeholder="Tu respuesta"
               autoComplete="off"
             />
             {errors.answer2 && (
-              <p className="error-message">{errors.answer2.message}</p>
+              <p className="error-message mt-1 text-xs text-red-200">{errors.answer2.message}</p>
             )}
           </div>
 
           <button
             type="submit"
-            className="btn-primary w-full"
+            className="btn-primary w-full mt-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/40 py-2.5
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-400 focus:ring-offset-slate-900
+                       disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
             disabled={loading}
           >
             {loading ? (
@@ -161,8 +169,13 @@ export const VerifySecurityQuestions: React.FC = () => {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          <Link to="/recuperar-password" className="text-primary-600 hover:text-primary-700 font-medium">
+        <p className="mt-6 text-center text-sm text-white">
+          <Link
+            to="/recuperar-password"
+            className="text-sky-100 hover:text-white font-semibold inline-block
+                       hover:underline underline-offset-4 decoration-sky-200/80 hover:decoration-white
+                       px-2 rounded-md transition-colors duration-150"
+          >
             Volver a recuperación
           </Link>
         </p>

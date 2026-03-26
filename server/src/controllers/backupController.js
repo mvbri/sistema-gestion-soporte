@@ -4,22 +4,18 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { backupsDirPath } from '../config/backup.js';
+import { query, getConnection } from '../config/database.js';
 
 dotenv.config();
 
 /**
- * Genera un respaldo completo de la base de datos usando mysqldump
+ * Genera un respaldo completo de la base de datos usando la conexión de MariaDB
  */
 export const generateBackup = async (req, res) => {
     let backupFilePath = null;
+    let writeStream = null;
 
     try {
-        const dbHost = process.env.DB_HOST || 'localhost';
-        const dbPort = process.env.DB_PORT || 3306;
-        const dbUser = process.env.DB_USER || 'root';
-        const dbPassword = process.env.DB_PASSWORD || '';
-        const dbName = process.env.DB_NAME || 'sistema_soporte';
-
         const timestamp = new Date()
             .toISOString()
             .replace(/[:.]/g, '-')
@@ -29,57 +25,100 @@ export const generateBackup = async (req, res) => {
         const backupFileName = `backup_${timestamp}.sql`;
         backupFilePath = path.join(backupsDirPath, backupFileName);
 
-        const mysqldumpArgs = [
-            `-h${dbHost}`,
-            `-P${dbPort}`,
-            `-u${dbUser}`,
-            `--single-transaction`,
-            `--routines`,
-            `--triggers`,
-            `--events`,
-            `--add-drop-table`,
-            `--lock-tables=false`,
-            `--complete-insert`,
-            `--extended-insert=false`,
-            `--no-tablespaces`,
-            dbName
-        ];
-
-        if (dbPassword) {
-            mysqldumpArgs.push(`-p${dbPassword}`);
+        // Asegurar que el directorio existe
+        if (!fs.existsSync(backupsDirPath)) {
+            fs.mkdirSync(backupsDirPath, { recursive: true });
         }
 
-        await new Promise((resolve, reject) => {
-            const mysqldump = spawn('mysqldump', mysqldumpArgs);
-            const writeStream = fs.createWriteStream(backupFilePath);
+        writeStream = fs.createWriteStream(backupFilePath);
+        
+        // Escribir encabezado del backup
+        writeStream.write(`-- Backup generado el ${new Date().toISOString()}\n`);
+        writeStream.write(`-- Sistema de Gestión de Soporte Técnico\n\n`);
+        writeStream.write(`SET FOREIGN_KEY_CHECKS = 0;\n`);
+        writeStream.write(`SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";\n\n`);
 
-            mysqldump.stdout.pipe(writeStream);
+        const conn = await getConnection();
+        
+        try {
+            // Obtener todas las tablas
+            const tables = await conn.query('SHOW TABLES');
+            const tableNames = tables.map(row => Object.values(row)[0]);
             
-            let errorOutput = '';
-            mysqldump.stderr.on('data', (data) => {
-                errorOutput += data.toString();
-            });
+            console.log(`📊 Generando backup de ${tableNames.length} tablas...`);
 
-            mysqldump.on('close', (code) => {
-                writeStream.end();
-                if (code !== 0) {
-                    if (fs.existsSync(backupFilePath)) {
-                        fs.unlinkSync(backupFilePath);
+            // Para cada tabla, generar CREATE TABLE y datos
+            for (const tableName of tableNames) {
+                console.log(`  📝 Procesando tabla: ${tableName}`);
+                
+                // Obtener CREATE TABLE statement
+                const createTableResult = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
+                const createTableSQL = createTableResult[0]['Create Table'];
+                
+                // Escribir DROP TABLE y CREATE TABLE
+                writeStream.write(`\n-- --------------------------------------------------------\n`);
+                writeStream.write(`-- Estructura de tabla para \`${tableName}\`\n`);
+                writeStream.write(`-- --------------------------------------------------------\n\n`);
+                writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
+                writeStream.write(`${createTableSQL};\n\n`);
+                
+                // Obtener datos de la tabla
+                const rows = await conn.query(`SELECT * FROM \`${tableName}\``);
+                
+                if (rows.length > 0) {
+                    // Obtener nombres de columnas
+                    const columns = Object.keys(rows[0]);
+                    const columnsList = columns.map(col => `\`${col}\``).join(', ');
+                    
+                    writeStream.write(`-- --------------------------------------------------------\n`);
+                    writeStream.write(`-- Datos de la tabla \`${tableName}\`\n`);
+                    writeStream.write(`-- --------------------------------------------------------\n\n`);
+                    
+                    // Escribir INSERT statements
+                    for (const row of rows) {
+                        const values = columns.map(col => {
+                            const value = row[col];
+                            if (value === null || value === undefined) {
+                                return 'NULL';
+                            } else if (typeof value === 'string') {
+                                // Escapar comillas y caracteres especiales
+                                const escaped = value
+                                    .replace(/\\/g, '\\\\')
+                                    .replace(/'/g, "\\'")
+                                    .replace(/"/g, '\\"')
+                                    .replace(/\n/g, '\\n')
+                                    .replace(/\r/g, '\\r')
+                                    .replace(/\t/g, '\\t');
+                                return `'${escaped}'`;
+                            } else if (value instanceof Date) {
+                                return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+                            } else {
+                                return value;
+                            }
+                        }).join(', ');
+                        
+                        writeStream.write(`INSERT INTO \`${tableName}\` (${columnsList}) VALUES (${values});\n`);
                     }
-                    reject(new Error(`mysqldump falló con código ${code}: ${errorOutput}`));
-                } else {
-                    resolve();
+                    writeStream.write(`\n`);
                 }
+            }
+            
+            // Rehabilitar verificaciones de clave foránea
+            writeStream.write(`SET FOREIGN_KEY_CHECKS = 1;\n`);
+            
+            writeStream.end();
+            
+            // Esperar a que el stream termine de escribir
+            await new Promise((resolve, reject) => {
+                writeStream.on('finish', resolve);
+                writeStream.on('error', reject);
             });
-
-            mysqldump.on('error', (error) => {
-                writeStream.end();
-                if (fs.existsSync(backupFilePath)) {
-                    fs.unlinkSync(backupFilePath);
-                }
-                reject(error);
-            });
-        });
+            
+            console.log(`✅ Backup generado exitosamente: ${backupFileName}`);
+            
+        } finally {
+            conn.release();
+        }
 
         if (!fs.existsSync(backupFilePath)) {
             throw new Error('El archivo de respaldo no se generó correctamente');
@@ -90,6 +129,9 @@ export const generateBackup = async (req, res) => {
             fs.unlinkSync(backupFilePath);
             throw new Error('El respaldo generado está vacío');
         }
+
+        // Guardar también en el directorio de backups para listado
+        // (el archivo ya está guardado)
 
         res.setHeader('Content-Type', 'application/sql');
         res.setHeader('Content-Disposition', `attachment; filename="${backupFileName}"`);
@@ -106,6 +148,11 @@ export const generateBackup = async (req, res) => {
 
     } catch (error) {
         console.error('Error al generar respaldo:', error);
+        console.error('Stack trace:', error.stack);
+        
+        if (writeStream && !writeStream.destroyed) {
+            writeStream.destroy();
+        }
         
         if (backupFilePath && fs.existsSync(backupFilePath)) {
             try {
@@ -115,15 +162,202 @@ export const generateBackup = async (req, res) => {
             }
         }
 
-        if (error.message.includes('mysqldump')) {
-            return sendError(res, 'mysqldump no está disponible en el sistema. Verifica que MariaDB esté instalado correctamente.', null, 500);
-        }
-
         if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
             return sendError(res, 'La operación de respaldo excedió el tiempo límite', null, 500);
         }
 
-        sendError(res, 'Error al generar el respaldo de la base de datos', null, 500);
+        sendError(res, error.message || 'Error al generar el respaldo de la base de datos', null, 500);
+    }
+};
+
+/**
+ * Ejecuta un archivo SQL usando la conexión de MariaDB
+ */
+const executeSqlFile = async (filePath) => {
+    const sqlContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Procesar el contenido SQL
+    let processedContent = sqlContent;
+    
+    // Remover comandos USE DATABASE
+    processedContent = processedContent.replace(/USE\s+[`'"]?[\w]+[`'"]?\s*;/gi, '');
+    
+    // Remover comentarios de línea (--) pero mantener los que están dentro de strings
+    processedContent = processedContent.replace(/^--.*$/gm, '');
+    
+    // Remover comentarios de bloque (/* ... */) pero mantener los que están dentro de strings
+    processedContent = processedContent.replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Dividir en statements por punto y coma, respetando strings
+    const statements = [];
+    let currentStatement = '';
+    let inString = false;
+    let stringChar = '';
+    let inComment = false;
+    
+    for (let i = 0; i < processedContent.length; i++) {
+        const char = processedContent[i];
+        const nextChar = processedContent[i + 1];
+        const prevChar = processedContent[i - 1];
+        
+        // Detectar comentarios de línea
+        if (char === '-' && nextChar === '-' && !inString) {
+            // Saltar hasta el final de la línea
+            while (i < processedContent.length && processedContent[i] !== '\n') {
+                i++;
+            }
+            continue;
+        }
+        
+        // Detectar comentarios de bloque
+        if (char === '/' && nextChar === '*' && !inString) {
+            inComment = true;
+            i++; // Saltar el *
+            continue;
+        }
+        if (inComment && char === '*' && nextChar === '/') {
+            inComment = false;
+            i++; // Saltar el /
+            continue;
+        }
+        
+        if (inComment) continue;
+        
+        // Detectar inicio/fin de strings
+        if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+            if (!inString) {
+                inString = true;
+                stringChar = char;
+            } else if (char === stringChar) {
+                inString = false;
+                stringChar = '';
+            }
+        }
+        
+        currentStatement += char;
+        
+        // Si encontramos un punto y coma fuera de un string, es el fin de un statement
+        if (char === ';' && !inString && !inComment) {
+            const trimmed = currentStatement.trim();
+            if (trimmed.length > 0 && trimmed !== ';') {
+                statements.push(trimmed);
+            }
+            currentStatement = '';
+        }
+    }
+    
+    // Agregar el último statement si no termina con punto y coma
+    if (currentStatement.trim().length > 0) {
+        statements.push(currentStatement.trim());
+    }
+
+    const conn = await getConnection();
+    
+    try {
+        // Deshabilitar verificaciones de clave foránea para permitir DROP TABLE
+        await conn.query('SET FOREIGN_KEY_CHECKS = 0');
+        await conn.query('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO"');
+        
+        console.log(`📝 Ejecutando ${statements.length} statements del archivo SQL...`);
+        
+        // Ejecutar cada statement
+        let executedCount = 0;
+        let errorCount = 0;
+        
+        for (let i = 0; i < statements.length; i++) {
+            const statement = statements[i].trim();
+            
+            // Saltar statements vacíos o comentarios
+            if (statement.length === 0 || 
+                statement === ';' || 
+                statement.match(/^\/\*/) || 
+                statement.match(/^--/)) {
+                continue;
+            }
+            
+            try {
+                await conn.query(statement);
+                executedCount++;
+                
+                // Log cada 10 statements para seguimiento
+                if (executedCount % 10 === 0) {
+                    console.log(`  ✓ Ejecutados ${executedCount}/${statements.length} statements...`);
+                }
+            } catch (stmtError) {
+                // Ignorar errores comunes que no son críticos
+                const errorMsg = stmtError.message.toLowerCase();
+                const errorCode = stmtError.code;
+                
+                // Errores que podemos ignorar
+                const ignorableErrors = [
+                    'already exists',
+                    'unknown table',
+                    'doesn\'t exist',
+                    'duplicate entry',
+                    'table doesn\'t exist',
+                    'foreign key constraint',
+                    'duplicate key',
+                    'cannot drop',
+                    'unknown database'
+                ];
+                
+                const isIgnorable = ignorableErrors.some(err => errorMsg.includes(err));
+                
+                if (isIgnorable) {
+                    errorCount++;
+                    console.warn(`  ⚠ Statement ${i + 1} (ignorado): ${stmtError.message.substring(0, 100)}`);
+                } else {
+                    // Error crítico - log completo y lanzar
+                    console.error(`  ❌ Error crítico en statement ${i + 1}:`);
+                    console.error(`     SQL: ${statement.substring(0, 200)}...`);
+                    console.error(`     Error: ${stmtError.message}`);
+                    throw stmtError;
+                }
+            }
+        }
+        
+        console.log(`✅ Restauración completada: ${executedCount} statements ejecutados, ${errorCount} advertencias ignoradas`);
+        
+        // Verificar que las tablas principales existen
+        const tables = await conn.query('SHOW TABLES');
+        const tableNames = tables.map(row => Object.values(row)[0]);
+        console.log(`📊 Tablas encontradas después de la restauración: ${tableNames.length}`);
+        console.log(`   Tablas: ${tableNames.join(', ')}`);
+        
+        // Verificar tablas críticas
+        const criticalTables = [
+            'users', 
+            'roles', 
+            'tickets', 
+            'ticket_states', 
+            'ticket_priorities', 
+            'ticket_categories',
+            'tools',
+            'tool_types',
+            'equipment',
+            'equipment_types',
+            'consumables',
+            'consumable_types'
+        ];
+        const missingTables = criticalTables.filter(table => !tableNames.includes(table));
+        
+        if (missingTables.length > 0) {
+            console.warn(`⚠️  Advertencia: Las siguientes tablas críticas no se encontraron: ${missingTables.join(', ')}`);
+        }
+        
+        // Rehabilitar verificaciones de clave foránea
+        await conn.query('SET FOREIGN_KEY_CHECKS = 1');
+    } catch (error) {
+        console.error('❌ Error durante la restauración:', error);
+        // Asegurar que las verificaciones de clave foránea se rehabilen incluso si hay error
+        try {
+            await conn.query('SET FOREIGN_KEY_CHECKS = 1');
+        } catch (resetError) {
+            console.error('Error al rehabilitar FOREIGN_KEY_CHECKS:', resetError);
+        }
+        throw error;
+    } finally {
+        conn.release();
     }
 };
 
@@ -139,11 +373,6 @@ export const restoreBackup = async (req, res) => {
         }
 
         tempFilePath = req.file.path;
-        const dbHost = process.env.DB_HOST || 'localhost';
-        const dbPort = process.env.DB_PORT || 3306;
-        const dbUser = process.env.DB_USER || 'root';
-        const dbPassword = process.env.DB_PASSWORD || '';
-        const dbName = process.env.DB_NAME || 'sistema_soporte';
 
         if (!fs.existsSync(tempFilePath)) {
             return sendError(res, 'El archivo de respaldo no se encontró', null, 400);
@@ -155,42 +384,7 @@ export const restoreBackup = async (req, res) => {
             return sendError(res, 'El archivo de respaldo está vacío', null, 400);
         }
 
-        const mysqlArgs = [
-            `-h${dbHost}`,
-            `-P${dbPort}`,
-            `-u${dbUser}`,
-            dbName
-        ];
-
-        if (dbPassword) {
-            mysqlArgs.push(`-p${dbPassword}`);
-        }
-
-        await new Promise((resolve, reject) => {
-            const mysql = spawn('mysql', mysqlArgs, {
-                stdio: ['pipe', 'pipe', 'pipe']
-            });
-            const readStream = fs.createReadStream(tempFilePath);
-
-            readStream.pipe(mysql.stdin);
-
-            let errorOutput = '';
-            mysql.stderr.on('data', (data) => {
-                errorOutput += data.toString();
-            });
-
-            mysql.on('close', (code) => {
-                if (code !== 0) {
-                    reject(new Error(`mysql falló con código ${code}: ${errorOutput}`));
-                } else {
-                    resolve();
-                }
-            });
-
-            mysql.on('error', (error) => {
-                reject(error);
-            });
-        });
+        await executeSqlFile(tempFilePath);
 
         fs.unlinkSync(tempFilePath);
 
@@ -210,19 +404,11 @@ export const restoreBackup = async (req, res) => {
             }
         }
 
-        if (error.message.includes('mysql')) {
-            return sendError(res, 'mysql no está disponible en el sistema. Verifica que MariaDB esté instalado correctamente.', null, 500);
-        }
-
-        if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
-            return sendError(res, 'La operación de restauración excedió el tiempo límite', null, 500);
-        }
-
         if (error.message.includes('syntax error') || error.message.includes('SQL syntax')) {
             return sendError(res, 'El archivo SQL contiene errores de sintaxis o no es válido', null, 400);
         }
 
-        sendError(res, 'Error al restaurar la base de datos', null, 500);
+        sendError(res, error.message || 'Error al restaurar la base de datos', null, 500);
     }
 };
 
@@ -338,48 +524,7 @@ export const restoreBackupFromFile = async (req, res) => {
             return sendError(res, 'El archivo de respaldo está vacío', null, 400);
         }
 
-        const dbHost = process.env.DB_HOST || 'localhost';
-        const dbPort = process.env.DB_PORT || 3306;
-        const dbUser = process.env.DB_USER || 'root';
-        const dbPassword = process.env.DB_PASSWORD || '';
-        const dbName = process.env.DB_NAME || 'sistema_soporte';
-
-        const mysqlArgs = [
-            `-h${dbHost}`,
-            `-P${dbPort}`,
-            `-u${dbUser}`,
-            dbName
-        ];
-
-        if (dbPassword) {
-            mysqlArgs.push(`-p${dbPassword}`);
-        }
-
-        await new Promise((resolve, reject) => {
-            const mysql = spawn('mysql', mysqlArgs, {
-                stdio: ['pipe', 'pipe', 'pipe']
-            });
-            const readStream = fs.createReadStream(backupFilePath);
-
-            readStream.pipe(mysql.stdin);
-
-            let errorOutput = '';
-            mysql.stderr.on('data', (data) => {
-                errorOutput += data.toString();
-            });
-
-            mysql.on('close', (code) => {
-                if (code !== 0) {
-                    reject(new Error(`mysql falló con código ${code}: ${errorOutput}`));
-                } else {
-                    resolve();
-                }
-            });
-
-            mysql.on('error', (error) => {
-                reject(error);
-            });
-        });
+        await executeSqlFile(backupFilePath);
 
         sendSuccess(res, 'Base de datos restaurada exitosamente', {
             filename: filename,
@@ -389,19 +534,11 @@ export const restoreBackupFromFile = async (req, res) => {
     } catch (error) {
         console.error('Error al restaurar respaldo:', error);
 
-        if (error.message.includes('mysql')) {
-            return sendError(res, 'mysql no está disponible en el sistema. Verifica que MariaDB esté instalado correctamente.', null, 500);
-        }
-
-        if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
-            return sendError(res, 'La operación de restauración excedió el tiempo límite', null, 500);
-        }
-
         if (error.message.includes('syntax error') || error.message.includes('SQL syntax')) {
             return sendError(res, 'El archivo SQL contiene errores de sintaxis o no es válido', null, 400);
         }
 
-        sendError(res, 'Error al restaurar la base de datos', null, 500);
+        sendError(res, error.message || 'Error al restaurar la base de datos', null, 500);
     }
 };
 

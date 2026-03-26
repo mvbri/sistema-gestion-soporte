@@ -7,6 +7,9 @@ import { useCategorias, usePrioridades, useCreateTicketWithFormData, useFrequent
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
 import { useAuth } from '../hooks/useAuth';
 import { useEquipment } from '../hooks/useEquipment';
+import { MainNavbar } from '../components/MainNavbar';
+import { PageWrapper } from '../components/PageWrapper';
+import type { EquipmentFilters } from '../types';
 
 export const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +17,10 @@ export const CreateTicket: React.FC = () => {
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
   const { data: frequentIssues = [] } = useFrequentIssues();
-  const { data: equipmentData } = useEquipment({ status: 'available', limit: 1000 });
+  const equipmentFilters: EquipmentFilters = user?.role === 'end_user'
+    ? { status: 'available', limit: 1000 }
+    : { limit: 1000 };
+  const { data: equipmentData } = useEquipment(equipmentFilters);
   const equipos = equipmentData?.equipment || [];
   const createTicketMutation = useCreateTicketWithFormData();
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
@@ -104,10 +110,12 @@ export const CreateTicket: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Ticket</h2>
+    <>
+      <MainNavbar />
+      <PageWrapper>
+        <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Ticket</h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
@@ -224,8 +232,8 @@ export const CreateTicket: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                {errors.prioridad_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.prioridad_id.message}</p>
+                {errors.prioridad_id?.message && (
+                  <p className="mt-1 text-sm text-red-600">{String(errors.prioridad_id.message)}</p>
                 )}
               </div>
             </div>
@@ -340,8 +348,9 @@ export const CreateTicket: React.FC = () => {
               </button>
             </div>
           </form>
+          </div>
         </div>
-      </div>
-    </div>
+      </PageWrapper>
+    </>
   );
 };

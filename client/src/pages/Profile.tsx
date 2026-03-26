@@ -21,7 +21,16 @@ const formatProfileData = (data: UpdateProfileData): UpdateProfileData => {
     return trimmed === '' ? null : trimmed;
   };
 
-  let incidentAreaId = data.incident_area_id;
+  // Asegurar que incident_area_id sea un número
+  let incidentAreaId: number;
+  if (typeof data.incident_area_id === 'string') {
+    incidentAreaId = parseInt(data.incident_area_id, 10);
+  } else if (typeof data.incident_area_id === 'number') {
+    incidentAreaId = data.incident_area_id;
+  } else {
+    throw new Error('dirección_obligatoria');
+  }
+
   if (!incidentAreaId || incidentAreaId === 0 || isNaN(incidentAreaId)) {
     throw new Error('dirección_obligatoria');
   }
@@ -84,11 +93,21 @@ export const Profile: React.FC = () => {
       await updateProfile(cleanData);
       toast.success('Perfil actualizado correctamente');
     } catch (err) {
-      if (err instanceof Error && err.message === 'dirección_obligatoria') {
-        toast.error('La dirección es obligatoria');
-        return;
+      let errorMessage = 'Error al actualizar perfil';
+      
+      if (err instanceof Error) {
+        if (err.message === 'dirección_obligatoria') {
+          errorMessage = 'La dirección es obligatoria';
+        } else {
+          errorMessage = err.message;
+        }
+      } else if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
       }
-      toast.error('Error al actualizar perfil');
+      
+      toast.error(errorMessage);
+      console.error('Error al actualizar perfil:', err);
     }
   };
 

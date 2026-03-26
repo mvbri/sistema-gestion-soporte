@@ -141,33 +141,35 @@ export const CreateEquipment: React.FC = () => {
                       {...register('purchase_date')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
-                        id="hasWarranty"
-                        checked={hasWarranty}
-                        onChange={(e) => {
-                          setHasWarranty(e.target.checked);
-                          if (!e.target.checked) {
-                            setValue('warranty_expires_at', '');
-                          }
-                        }}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasWarranty" className="ml-2 block text-sm font-medium text-gray-700">
-                        Si aplica garantía
-                      </label>
+                    <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="hasWarranty"
+                          checked={hasWarranty}
+                          onChange={(e) => {
+                            setHasWarranty(e.target.checked);
+                            if (!e.target.checked) {
+                              setValue('warranty_expires_at', '');
+                            }
+                          }}
+                          className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer transition-all duration-200"
+                        />
+                        <label 
+                          htmlFor="hasWarranty" 
+                          className="ml-3 text-sm font-medium text-gray-700 cursor-pointer select-none hover:text-gray-900 transition-colors duration-200"
+                        >
+                          Si aplica garantía
+                        </label>
+                      </div>
                     </div>
                     {hasWarranty && (
-                      <div>
+                      <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Garantía Expira</label>
                         <input
                           type="date"
                           {...register('warranty_expires_at')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                         />
                       </div>
                     )}

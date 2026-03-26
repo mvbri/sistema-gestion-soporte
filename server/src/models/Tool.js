@@ -8,7 +8,7 @@ class Tool {
             type_id,
             type,
             status,
-            condition,
+            tool_condition,
             location,
             assigned_to_user_id,
             description
@@ -37,7 +37,7 @@ class Tool {
                 code,
                 type_id,
                 status,
-                condition,
+                tool_condition,
                 location,
                 assigned_to_user_id,
                 description
@@ -50,7 +50,7 @@ class Tool {
             code || null,
             finalTypeId,
             status || (assigned_to_user_id ? 'assigned' : 'available'),
-            condition || 'good',
+            tool_condition || 'good',
             location || null,
             assigned_to_user_id || null,
             description || null
@@ -77,7 +77,8 @@ class Tool {
         if (result[0]) {
             return {
                 ...result[0],
-                type: result[0].type_name || null
+                type: result[0].type_name || null,
+                condition: result[0].tool_condition || null
             };
         }
         return null;
@@ -139,7 +140,8 @@ class Tool {
         const results = await query(sql, params);
         return results.map(item => ({
             ...item,
-            type: item.type_name || null
+            type: item.type_name || null,
+            condition: item.tool_condition || null
         }));
     }
 
@@ -150,7 +152,7 @@ class Tool {
             type_id,
             type,
             status,
-            condition,
+            tool_condition,
             location,
             assigned_to_user_id,
             description
@@ -185,9 +187,9 @@ class Tool {
             params.push(status);
         }
 
-        if (condition !== undefined) {
-            updates.push('condition = ?');
-            params.push(condition);
+        if (tool_condition !== undefined) {
+            updates.push('tool_condition = ?');
+            params.push(tool_condition);
         }
 
         if (location !== undefined) {

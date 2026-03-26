@@ -10,36 +10,61 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium 
-           hover:bg-primary-700 focus:outline-none focus:ring-2 
-           focus:ring-primary-500 focus:ring-offset-2 transition-colors
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold tracking-wide
+           bg-gradient-to-r from-primary-500 to-primary-600 text-white
+           shadow-md hover:shadow-xl
+           hover:from-primary-600 hover:to-primary-700
+           focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+           transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium 
-           hover:bg-gray-300 focus:outline-none focus:ring-2 
-           focus:ring-gray-500 focus:ring-offset-2 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium 
+           bg-gray-200 text-gray-800 shadow-sm
+           hover:bg-gray-300 hover:shadow-md
+           focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+           transition-all duration-300 ease-out;
   }
 
   .btn-warning {
-    @apply bg-orange-600 text-white px-4 py-2 rounded-lg font-medium 
-           hover:bg-orange-700 focus:outline-none focus:ring-2 
-           focus:ring-orange-500 focus:ring-offset-2 transition-colors
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold 
+           bg-orange-600 text-white shadow-md
+           hover:bg-orange-700 hover:shadow-lg
+           focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2
+           transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg font-medium 
-           hover:bg-red-700 focus:outline-none focus:ring-2 
-           focus:ring-red-500 focus:ring-offset-2 transition-colors
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold 
+           bg-red-600 text-white shadow-md
+           hover:bg-red-700 hover:shadow-lg
+           focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2
+           transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Easing suave estándar para todos los botones */
+  .btn-primary,
+  .btn-secondary,
+  .btn-warning,
+  .btn-danger {
+    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
   }
 
   .input-field {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
            focus:outline-none focus:ring-2 focus:ring-primary-500 
            focus:border-transparent transition-all;
+  }
+
+  /* Variante de input oscuro para pantallas de auth */
+  .input-dark {
+    @apply w-full px-4 py-2 rounded-xl bg-slate-900/65 border border-sky-300/45 
+           text-slate-50 placeholder-slate-100/80 shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400
+           transition-colors duration-150;
   }
 
   .label-field {
@@ -52,6 +77,21 @@
 
   .card {
     @apply bg-white rounded-lg shadow-md p-6;
+  }
+}
+
+@layer base {
+  /* Unificar estilo de inputs autocompletados (Chrome/Edge) con los inputs oscuros */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    /* mismo tono que bg-slate-900/65 ≈ rgba(15,23,42,0.65) */
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15,23,42,0.65) inset !important;
+    box-shadow: 0 0 0px 1000px rgba(15,23,42,0.65) inset !important;
+    -webkit-text-fill-color: #e5e7eb !important;                  /* gray-200 */
+    caret-color: #e5e7eb !important;
   }
 }
 

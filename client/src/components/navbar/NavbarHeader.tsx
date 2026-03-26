@@ -31,7 +31,6 @@ export const NavbarHeader: React.FC<NavbarHeaderProps> = ({
           alt="Logo Alcaldía"
           className="h-10 w-auto object-contain"
         />
-        <span>Gestión de Soporte Técnico</span>
       </Link>
     </div>
   );
