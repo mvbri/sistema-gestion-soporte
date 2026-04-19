@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type CreateFrequentIssueData, type UpdateFrequentIssueData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -562,6 +562,70 @@ export const useVerifyUserEmail = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al verificar email');
+    },
+  });
+};
+
+export const useAdminFrequentIssues = () => {
+  return useQuery({
+    queryKey: ['adminFrequentIssues'],
+    queryFn: () => adminService.getFrequentIssuesAdmin(),
+    select: (response) => response.data,
+    staleTime: 60 * 1000,
+  });
+};
+
+export const useCreateFrequentIssue = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateFrequentIssueData) => adminService.createFrequentIssue(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminFrequentIssues'] });
+        queryClient.invalidateQueries({ queryKey: ['frequentIssues'] });
+        toast.success('Falla frecuente creada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear falla frecuente');
+    },
+  });
+};
+
+export const useUpdateFrequentIssue = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateFrequentIssueData }) =>
+      adminService.updateFrequentIssue(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminFrequentIssues'] });
+        queryClient.invalidateQueries({ queryKey: ['frequentIssues'] });
+        toast.success('Falla frecuente actualizada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar falla frecuente');
+    },
+  });
+};
+
+export const useDeleteFrequentIssue = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteFrequentIssue(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminFrequentIssues'] });
+        queryClient.invalidateQueries({ queryKey: ['frequentIssues'] });
+        toast.success('Falla frecuente eliminada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar falla frecuente');
     },
   });
 };

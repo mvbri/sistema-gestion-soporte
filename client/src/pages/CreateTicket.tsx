@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useEquipment } from '../hooks/useEquipment';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
+import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
 import type { EquipmentFilters } from '../types';
 
 export const CreateTicket: React.FC = () => {
@@ -26,6 +27,8 @@ export const CreateTicket: React.FC = () => {
   const [imagenFiles, setImagenFiles] = useState<File[]>([]);
   const [imagenPreviews, setImagenPreviews] = useState<string[]>([]);
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<number[]>([]);
+  /** Texto de `possible_solution` de la falla frecuente elegida; se muestra aparte de la descripción. */
+  const [frequentIssueSolution, setFrequentIssueSolution] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -119,23 +122,37 @@ export const CreateTicket: React.FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Falla Frecuente (Opcional)
+              <label className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FrequentIssueIcon className="h-5 w-5 shrink-0 text-blue-600" />
+                Falla frecuente (opcional)
               </label>
               <select
                 defaultValue=""
                 onChange={(e) => {
-                  const selectedIssueId = Number(e.target.value);
-                  if (!selectedIssueId) return;
-
+                  const raw = e.target.value;
+                  if (!raw) {
+                    setFrequentIssueSolution(null);
+                    return;
+                  }
+                  const selectedIssueId = Number(raw);
                   const selectedIssue = frequentIssues.find((issue) => issue.id === selectedIssueId);
                   if (!selectedIssue) return;
 
                   setValue('titulo', selectedIssue.title, { shouldValidate: true });
-                  const descriptionContent = selectedIssue.symptoms
-                    ? `${selectedIssue.symptoms}\n\nPosible solución sugerida:\n${selectedIssue.possible_solution}`
-                    : `Posible solución sugerida:\n${selectedIssue.possible_solution}`;
-                  setValue('descripcion', descriptionContent, { shouldValidate: true });
+
+                  const symptoms = selectedIssue.symptoms?.trim() ?? '';
+                  const hint =
+                    'Amplía con más detalle: mensajes de error, cuándo ocurrió, qué ya probaste, etc.';
+                  const descripcionFromSymptoms =
+                    symptoms.length >= 20
+                      ? symptoms
+                      : symptoms
+                        ? `${symptoms}\n\n${hint}`
+                        : `Problema según la plantilla «${selectedIssue.title}».\n\n${hint}`;
+
+                  setValue('descripcion', descripcionFromSymptoms, { shouldValidate: true });
+                  const solution = selectedIssue.possible_solution?.trim();
+                  setFrequentIssueSolution(solution && solution.length > 0 ? solution : null);
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -147,7 +164,8 @@ export const CreateTicket: React.FC = () => {
                 ))}
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                Al seleccionar una opción se completan automáticamente título y descripción.
+                Al elegir una plantilla se completan el título y la descripción del problema; la posible solución se
+                muestra aparte para que sea más fácil de ver.
               </p>
             </div>
 
@@ -178,6 +196,40 @@ export const CreateTicket: React.FC = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.descripcion.message}</p>
               )}
             </div>
+
+            {frequentIssueSolution && (
+              <aside
+                className="rounded-lg border-2 border-emerald-600 bg-emerald-50 px-4 py-4 sm:px-5"
+                role="note"
+                aria-labelledby="create-ticket-suggested-solution-heading"
+              >
+                <h3
+                  id="create-ticket-suggested-solution-heading"
+                  className="mb-3 flex items-center gap-2 text-sm font-semibold text-emerald-800"
+                >
+                  <svg
+                    className="h-5 w-5 shrink-0 text-emerald-800"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.75}
+                    stroke="currentColor"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                    />
+                  </svg>
+                  Posible solución sugerida
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{frequentIssueSolution}</p>
+                <p className="mt-3 text-xs font-medium text-emerald-800">
+                  Sugerencia según la plantilla. Si la pruebas, indica en la descripción qué hiciste y qué necesitas del
+                  soporte.
+                </p>
+              </aside>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

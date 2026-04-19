@@ -22,6 +22,7 @@ import { TicketsDashboard } from './pages/TicketsDashboard';
 import { TechnicianDashboard } from './pages/TechnicianDashboard';
 import { AdminConfig } from './pages/AdminConfig';
 import { AdminUsers } from './pages/AdminUsers';
+import { AdminFrequentIssues } from './pages/AdminFrequentIssues';
 import { BackupRestore } from './pages/BackupRestore';
 import { Profile } from './pages/Profile';
 import { EquipmentList } from './pages/EquipmentList';
@@ -126,6 +127,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/frequent-issues"
+            element={
+              <ProtectedRoute allowedRoles={['administrator']}>
+                <AdminFrequentIssues />
               </ProtectedRoute>
             }
           />

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FrequentIssueIcon } from '../icons/FrequentIssueIcon';
 
 export const AdministratorDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -7,7 +8,7 @@ export const AdministratorDashboard: React.FC = () => {
   return (
     <div className="mt-6">
       <h3 className="text-xl font-bold text-gray-900 mb-4">Acciones Rápidas</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <button
           onClick={() => navigate('/tickets')}
           className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
@@ -99,6 +100,27 @@ export const AdministratorDashboard: React.FC = () => {
             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </button>
+
+        <button
+          onClick={() => navigate('/admin/frequent-issues')}
+          className="group relative overflow-hidden bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
+        >
+          <div className="relative z-10 w-full flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-12 w-12 rounded-lg bg-white bg-opacity-20 flex items-center justify-center">
+                <FrequentIssueIcon className="h-6 w-6 text-white" />
+              </div>
+              <svg className="w-5 h-5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+              <h3 className="font-bold text-xl mb-2">Fallas frecuentes</h3>
+              <p className="text-sm text-teal-100">Plantillas de problemas y soluciones para tickets</p>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-teal-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
       </div>
     </div>

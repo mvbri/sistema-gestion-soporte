@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType, User } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType, User, FrequentIssue } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -136,6 +136,22 @@ export interface UsersResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export interface CreateFrequentIssueData {
+  title: string;
+  possible_solution: string;
+  symptoms?: string;
+  category_id?: number | null;
+  active?: boolean;
+}
+
+export interface UpdateFrequentIssueData {
+  title?: string;
+  possible_solution?: string;
+  symptoms?: string;
+  category_id?: number | null;
+  active?: boolean;
 }
 
 export const adminService = {
@@ -328,6 +344,26 @@ export const adminService = {
 
   async verifyUserEmail(id: number): Promise<ApiResponse<User>> {
     const response = await api.patch<ApiResponse<User>>(`/admin/users/${id}/verify-email`);
+    return response.data;
+  },
+
+  async getFrequentIssuesAdmin(): Promise<ApiResponse<FrequentIssue[]>> {
+    const response = await api.get<ApiResponse<FrequentIssue[]>>('/admin/frequent-issues');
+    return response.data;
+  },
+
+  async createFrequentIssue(data: CreateFrequentIssueData): Promise<ApiResponse<FrequentIssue>> {
+    const response = await api.post<ApiResponse<FrequentIssue>>('/admin/frequent-issues', data);
+    return response.data;
+  },
+
+  async updateFrequentIssue(id: number, data: UpdateFrequentIssueData): Promise<ApiResponse<FrequentIssue>> {
+    const response = await api.put<ApiResponse<FrequentIssue>>(`/admin/frequent-issues/${id}`, data);
+    return response.data;
+  },
+
+  async deleteFrequentIssue(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/frequent-issues/${id}`);
     return response.data;
   },
 };

@@ -9,6 +9,7 @@ import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
 import { CategoryBadge } from '../components/tickets/CategoryBadge';
 import { ConfirmDeleteModal } from '../components/tickets/ConfirmDeleteModal';
+import { ClearFiltersIcon } from '../components/icons/ClearFiltersIcon';
 
 export const TicketsList: React.FC = () => {
   const { user } = useAuth();
@@ -129,19 +130,7 @@ export const TicketsList: React.FC = () => {
                 aria-label="Limpiar todos los filtros"
                 title="Limpiar filtros"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <ClearFiltersIcon className="w-4 h-4" />
                 <span>Limpiar</span>
               </button>
             </div>

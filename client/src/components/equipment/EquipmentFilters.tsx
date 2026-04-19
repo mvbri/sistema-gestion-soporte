@@ -1,5 +1,6 @@
 import React from 'react';
 import type { EquipmentFilters as EquipmentFiltersType, EquipmentStatus } from '../../types';
+import { ClearFiltersIcon } from '../icons/ClearFiltersIcon';
 
 interface EquipmentFiltersProps {
   filters: EquipmentFiltersType;
@@ -48,9 +49,7 @@ export const EquipmentFilters: React.FC<EquipmentFiltersProps> = ({
           onClick={onClearFilters}
           className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <ClearFiltersIcon className="w-4 h-4" />
           <span>Limpiar</span>
         </button>
       </div>

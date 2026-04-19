@@ -21,6 +21,19 @@ import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
 import { CategoryBadge } from '../components/tickets/CategoryBadge';
 import { translateRole } from '../utils/roleTranslations';
+import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
+
+const FREQUENT_ISSUE_COMMENT_BLOCK_START = 'Diagnóstico sugerido:';
+
+/** Quita del comentario los bloques insertados desde el desplegable de fallas frecuentes (evita duplicar al cambiar de opción). */
+function stripFrequentIssueCommentTemplates(text: string): string {
+  return text
+    .split(/\n\s*\n+/)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0 && !block.startsWith(FREQUENT_ISSUE_COMMENT_BLOCK_START))
+    .join('\n\n')
+    .trim();
+}
 
 export const TicketDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,8 +58,8 @@ export const TicketDetail: React.FC = () => {
   const ticket = ticketData?.ticket;
   const comentarios = ticketData?.comentarios || [];
   const historial = (ticketData?.historial || []).sort((a, b) => {
-    const dateA = new Date(a.changed_at || a.created_at || 0).getTime();
-    const dateB = new Date(b.changed_at || b.created_at || 0).getTime();
+    const dateA = new Date(a.changed_at || 0).getTime();
+    const dateB = new Date(b.changed_at || 0).getTime();
     return dateB - dateA;
   });
 
@@ -821,8 +834,13 @@ export const TicketDetail: React.FC = () => {
               Agregar Comentario
             </h2>
             <form onSubmit={handleSubmitComment(onComment)}>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FrequentIssueIcon className="h-5 w-5 shrink-0 text-blue-600" />
+                Plantilla de falla frecuente (opcional)
+              </label>
               <select
                 defaultValue=""
+                aria-label="Insertar plantilla de falla frecuente"
                 onChange={(e) => {
                   const selectedIssueId = Number(e.target.value);
                   if (!selectedIssueId) return;
@@ -832,9 +850,9 @@ export const TicketDetail: React.FC = () => {
 
                   const currentComment = getCommentValues('contenido') || '';
                   const solutionBlock = `Diagnóstico sugerido: ${selectedIssue.title}\nPosible solución: ${selectedIssue.possible_solution}`;
-                  const nextComment = currentComment.trim().length > 0
-                    ? `${currentComment}\n\n${solutionBlock}`
-                    : solutionBlock;
+                  const userText = stripFrequentIssueCommentTemplates(currentComment);
+                  const nextComment =
+                    userText.length > 0 ? `${userText}\n\n${solutionBlock}` : solutionBlock;
 
                   setCommentValue('contenido', nextComment, { shouldValidate: true });
                 }}
@@ -931,7 +949,7 @@ export const TicketDetail: React.FC = () => {
             ) : (
               <div className="relative pl-8">
                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-blue-300 to-blue-200"></div>
-                {historial.map((item, index) => {
+                {historial.map((item) => {
                   const getChangeTypeConfig = (changeType: string) => {
                     const type = changeType.toUpperCase();
                     switch (type) {
