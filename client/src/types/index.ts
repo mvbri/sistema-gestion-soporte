@@ -232,6 +232,18 @@ export interface EquipmentType {
   updated_at?: string;
 }
 
+export interface EquipmentPool {
+  id: number;
+  name: string;
+  description?: string | null;
+  total_stock: number;
+  available_stock: number;
+  minimum_stock: number;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ConsumableType {
   id: number;
   name: string;
@@ -446,4 +458,146 @@ export interface ToolResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export type LoanStatus =
+  | 'pending'
+  | 'approved'
+  | 'delivered'
+  | 'returned'
+  | 'rejected'
+  | 'overdue'
+  | 'cancelled';
+
+export interface EquipmentLoanItem {
+  id: number;
+  loan_id: number;
+  equipment_id?: number | null;
+  equipment_name?: string | null;
+  equipment_serial_number?: string | null;
+  pool_id?: number | null;
+  pool_name?: string | null;
+  quantity: number;
+}
+
+export interface EquipmentLoanChecklist {
+  id: number;
+  loan_item_id: number;
+  checklist_type: 'delivery' | 'return';
+  battery_level?: number | null;
+  physical_condition: 'new' | 'good' | 'worn' | 'damaged';
+  accessories?: string | null;
+  observations?: string | null;
+  created_by_user_id: number;
+  created_by_user_name?: string;
+  created_at: string;
+}
+
+export interface EquipmentLoanIncident {
+  id: number;
+  loan_item_id: number;
+  incident_type: 'damage' | 'loss' | 'missing_accessory' | 'other';
+  description: string;
+  estimated_cost?: number | null;
+  reported_by_user_id: number;
+  reported_by_user_name?: string;
+  created_at: string;
+}
+
+export interface EquipmentLoanHistory {
+  id: number;
+  loan_id: number;
+  changed_by_user_id: number;
+  changed_by_user_name?: string;
+  previous_status?: LoanStatus | null;
+  new_status: LoanStatus;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface EquipmentLoan {
+  id: number;
+  request_code?: string;
+  requester_user_id: number;
+  requester_name: string;
+  requester_email?: string;
+  target_incident_area_id?: number | null;
+  target_incident_area_name?: string | null;
+  approved_by_user_id?: number | null;
+  approved_by_user_name?: string | null;
+  status: LoanStatus;
+  request_notes?: string | null;
+  pending_physical_condition?: 'new' | 'good' | 'worn' | 'damaged' | null;
+  pending_battery_level?: number | null;
+  pending_observations?: string | null;
+  approval_notes?: string | null;
+  rejection_reason?: string | null;
+  start_date: string;
+  expected_return_date: string;
+  delivered_at?: string | null;
+  returned_at?: string | null;
+  items: EquipmentLoanItem[];
+  checklists: EquipmentLoanChecklist[];
+  incidents: EquipmentLoanIncident[];
+  history: EquipmentLoanHistory[];
+  created_at: string;
+}
+
+export interface EquipmentLoanListItem {
+  id: number;
+  request_code?: string;
+  requester_user_id: number;
+  requester_name: string;
+  target_incident_area_name?: string | null;
+  status: LoanStatus;
+  start_date: string;
+  expected_return_date: string;
+  created_at: string;
+  items_count: number;
+}
+
+export interface EquipmentLoanFilters {
+  status?: LoanStatus;
+  search?: string;
+  date_from?: string;
+  date_to?: string;
+  requester_user_id?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface EquipmentLoanResponse {
+  loans: EquipmentLoanListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface EquipmentLoanSummaryReport {
+  period: {
+    date_from: string;
+    date_to: string;
+  };
+  totals: {
+    total_requests: number;
+    approved_count: number;
+    returned_count: number;
+    overdue_count: number;
+  };
+  byStatus: Array<{
+    status: LoanStatus;
+    count: number;
+  }>;
+  topRequesters: Array<{
+    user_id: number;
+    user_name: string;
+    count: number;
+  }>;
+  incidents: Array<{
+    incident_type: string;
+    count: number;
+  }>;
 }

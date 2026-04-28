@@ -20,6 +20,13 @@ export const TechnicianDashboard: React.FC = () => {
         <h3 className="font-bold text-lg mb-2">Panel del Técnico</h3>
         <p className="text-sm">Gestiona tus tickets asignados</p>
       </button>
+      <button
+        onClick={() => navigate('/loans/create')}
+        className="p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+      >
+        <h3 className="font-bold text-lg mb-2">Solicitar Equipo</h3>
+        <p className="text-sm">Registra una nueva solicitud de préstamo</p>
+      </button>
     </div>
   );
 };

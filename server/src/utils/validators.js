@@ -699,3 +699,170 @@ export const validateFrequentIssue = [
 
   handleValidationErrors,
 ];
+
+export const validateCreateEquipmentLoan = [
+  body('target_incident_area_id')
+    .notEmpty()
+    .withMessage('El área destino es requerida')
+    .isInt({ min: 1 })
+    .withMessage('El área destino seleccionada no es válida'),
+  body('start_date')
+    .notEmpty()
+    .withMessage('La fecha de inicio es requerida')
+    .isISO8601()
+    .withMessage('La fecha de inicio no es válida'),
+  body('expected_return_date')
+    .notEmpty()
+    .withMessage('La fecha de devolución estimada es requerida')
+    .isISO8601()
+    .withMessage('La fecha de devolución estimada no es válida'),
+  body('request_notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  body('items')
+    .isArray({ min: 1 })
+    .withMessage('Debes enviar al menos un item para el préstamo'),
+  body('items.*.equipment_id')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('El ID del equipo debe ser válido'),
+  body('items.*.pool_id')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('El ID del pool debe ser válido'),
+  body('items.*.quantity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('La cantidad debe ser mayor a 0'),
+  body('items').custom((items) => {
+    for (const item of items) {
+      const hasEquipment = item.equipment_id !== undefined && item.equipment_id !== null;
+      const hasPool = item.pool_id !== undefined && item.pool_id !== null;
+      if ((hasEquipment && hasPool) || (!hasEquipment && !hasPool)) {
+        throw new Error(
+          'Cada item debe tener equipo serial o pool, pero no ambos al mismo tiempo'
+        );
+      }
+      if (hasEquipment && item.quantity && Number(item.quantity) !== 1) {
+        throw new Error('Los items por equipo serial deben tener cantidad 1');
+      }
+    }
+    return true;
+  }),
+  handleValidationErrors,
+];
+
+export const validateApproveEquipmentLoan = [
+  body('notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateRejectEquipmentLoan = [
+  body('reason')
+    .notEmpty()
+    .withMessage('La razón de rechazo es requerida')
+    .trim()
+    .isLength({ min: 5, max: 1000 })
+    .withMessage('La razón de rechazo debe tener entre 5 y 1000 caracteres'),
+  handleValidationErrors,
+];
+
+const checklistPhysicalConditions = ['new', 'good', 'worn', 'damaged'];
+
+export const validateDeliverEquipmentLoan = [
+  body('physical_condition')
+    .optional()
+    .isIn(checklistPhysicalConditions)
+    .withMessage('La condición física no es válida'),
+  body('battery_level')
+    .optional({ nullable: true })
+    .isInt({ min: 0, max: 100 })
+    .withMessage('La batería debe estar entre 0 y 100'),
+  body('accessories')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Los accesorios no pueden exceder 1000 caracteres'),
+  body('observations')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las observaciones no pueden exceder 1000 caracteres'),
+  body('notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateReturnEquipmentLoan = [
+  body('physical_condition')
+    .optional()
+    .isIn(checklistPhysicalConditions)
+    .withMessage('La condición física no es válida'),
+  body('battery_level')
+    .optional({ nullable: true })
+    .isInt({ min: 0, max: 100 })
+    .withMessage('La batería debe estar entre 0 y 100'),
+  body('accessories')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Los accesorios no pueden exceder 1000 caracteres'),
+  body('observations')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las observaciones no pueden exceder 1000 caracteres'),
+  body('notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  body('incidents')
+    .optional()
+    .isArray()
+    .withMessage('Los incidentes deben enviarse como un arreglo'),
+  body('incidents.*.loan_item_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('El loan_item_id del incidente no es válido'),
+  body('incidents.*.incident_type')
+    .optional()
+    .isIn(['damage', 'loss', 'missing_accessory', 'other'])
+    .withMessage('El tipo de incidente no es válido'),
+  body('incidents.*.description')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 1000 })
+    .withMessage('La descripción del incidente debe tener entre 3 y 1000 caracteres'),
+  body('incidents.*.estimated_cost')
+    .optional({ nullable: true })
+    .isFloat({ min: 0 })
+    .withMessage('El costo estimado debe ser positivo'),
+  handleValidationErrors,
+];
+
+export const validateUpdatePendingLoanChecklist = [
+  body('physical_condition')
+    .optional({ nullable: true })
+    .isIn(checklistPhysicalConditions)
+    .withMessage('La condición física no es válida'),
+  body('battery_level')
+    .optional({ nullable: true })
+    .isInt({ min: 0, max: 100 })
+    .withMessage('La batería debe estar entre 0 y 100'),
+  body('observations')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las observaciones no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];

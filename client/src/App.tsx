@@ -38,6 +38,12 @@ import { CreateTool } from './pages/CreateTool';
 import { ToolDetail } from './pages/ToolDetail';
 import { ToolsDashboard } from './pages/ToolsDashboard';
 import { ReportsPage } from './pages/ReportsPage';
+import { LoansList } from './pages/LoansList';
+import { CreateLoanRequest } from './pages/CreateLoanRequest';
+import { LoanApproval } from './pages/LoanApproval';
+import { LoanHandoverReturn } from './pages/LoanHandoverReturn';
+import { LoanHistory } from './pages/LoanHistory';
+import { LoanReportsPage } from './pages/LoanReportsPage';
 
 function App() {
   return (
@@ -144,6 +150,54 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['administrator']}>
                 <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans"
+            element={
+              <ProtectedRoute>
+                <LoansList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans/create"
+            element={
+              <ProtectedRoute>
+                <CreateLoanRequest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans/approval"
+            element={
+              <ProtectedRoute allowedRoles={['administrator']}>
+                <LoanApproval />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans/:id"
+            element={
+              <ProtectedRoute>
+                <LoanHandoverReturn />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans/history"
+            element={
+              <ProtectedRoute>
+                <LoanHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loans/reports"
+            element={
+              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+                <LoanReportsPage />
               </ProtectedRoute>
             }
           />

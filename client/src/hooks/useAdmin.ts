@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type CreateFrequentIssueData, type UpdateFrequentIssueData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type CreateFrequentIssueData, type UpdateFrequentIssueData, type CreateEquipmentPoolData, type UpdateEquipmentPoolData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -333,6 +333,67 @@ export const useDeleteEquipmentType = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar tipo de equipo');
+    },
+  });
+};
+
+export const useAdminEquipmentPools = () => {
+  return useQuery({
+    queryKey: ['adminEquipmentPools'],
+    queryFn: () => adminService.getEquipmentPools(),
+    select: (response) => response.data,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateEquipmentPool = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateEquipmentPoolData) => adminService.createEquipmentPool(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentPools'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentLoanPools'] });
+        toast.success('Categoría de pool creada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al crear categoría de pool');
+    },
+  });
+};
+
+export const useUpdateEquipmentPool = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateEquipmentPoolData }) =>
+      adminService.updateEquipmentPool(id, data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentPools'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentLoanPools'] });
+        toast.success('Categoría de pool actualizada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar categoría de pool');
+    },
+  });
+};
+
+export const useDeleteEquipmentPool = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteEquipmentPool(id),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminEquipmentPools'] });
+        queryClient.invalidateQueries({ queryKey: ['equipmentLoanPools'] });
+        toast.success('Categoría de pool eliminada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar categoría de pool');
     },
   });
 };

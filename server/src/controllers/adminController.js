@@ -648,6 +648,142 @@ export const deleteEquipmentType = async (req, res) => {
 };
 
 /**
+ * Obtiene los pools de equipos para préstamos.
+ */
+export const getEquipmentPools = async (req, res) => {
+    try {
+        const pools = await query('SELECT * FROM equipment_pools ORDER BY name');
+        sendSuccess(res, 'Pools de equipos obtenidos exitosamente', pools);
+    } catch (error) {
+        console.error('Error al obtener pools de equipos:', error);
+        sendError(res, 'Error al obtener pools de equipos', null, 500);
+    }
+};
+
+/**
+ * Crea un nuevo pool de equipos.
+ */
+export const createEquipmentPool = async (req, res) => {
+    try {
+        const { name, description, total_stock, available_stock, minimum_stock } = req.body;
+        const totalStock = Number(total_stock ?? 0);
+        const availableStock = Number(available_stock ?? 0);
+        const minimumStock = Number(minimum_stock ?? 0);
+
+        if (availableStock > totalStock) {
+            return sendError(res, 'El stock disponible no puede ser mayor al stock total', null, 400);
+        }
+
+        const sql = `INSERT INTO equipment_pools (name, description, total_stock, available_stock, minimum_stock)
+                     VALUES (?, ?, ?, ?, ?)`;
+        const result = await query(sql, [name, description || null, totalStock, availableStock, minimumStock]);
+        const pool = await query('SELECT * FROM equipment_pools WHERE id = ?', [result.insertId]);
+        sendSuccess(res, 'Pool de equipos creado exitosamente', pool[0], 201);
+    } catch (error) {
+        console.error('Error al crear pool de equipos:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un pool con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al crear pool de equipos', null, 500);
+    }
+};
+
+/**
+ * Actualiza un pool de equipos existente.
+ */
+export const updateEquipmentPool = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const existing = await query('SELECT * FROM equipment_pools WHERE id = ?', [id]);
+        if (!existing[0]) {
+            return sendError(res, 'El pool de equipos no existe', null, 404);
+        }
+
+        const { name, description, total_stock, available_stock, minimum_stock, active } = req.body;
+        const updates = [];
+        const params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (description !== undefined) {
+            updates.push('description = ?');
+            params.push(description);
+        }
+        if (total_stock !== undefined) {
+            updates.push('total_stock = ?');
+            params.push(Number(total_stock));
+        }
+        if (available_stock !== undefined) {
+            updates.push('available_stock = ?');
+            params.push(Number(available_stock));
+        }
+        if (minimum_stock !== undefined) {
+            updates.push('minimum_stock = ?');
+            params.push(Number(minimum_stock));
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active);
+        }
+
+        if (updates.length === 0) {
+            return sendError(res, 'No hay campos para actualizar', null, 400);
+        }
+
+        const nextTotal = total_stock !== undefined ? Number(total_stock) : Number(existing[0].total_stock);
+        const nextAvailable = available_stock !== undefined ? Number(available_stock) : Number(existing[0].available_stock);
+        if (nextAvailable > nextTotal) {
+            return sendError(res, 'El stock disponible no puede ser mayor al stock total', null, 400);
+        }
+
+        params.push(id);
+        await query(`UPDATE equipment_pools SET ${updates.join(', ')} WHERE id = ?`, params);
+        const updated = await query('SELECT * FROM equipment_pools WHERE id = ?', [id]);
+        sendSuccess(res, 'Pool de equipos actualizado exitosamente', updated[0]);
+    } catch (error) {
+        console.error('Error al actualizar pool de equipos:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return sendError(res, 'Ya existe un pool con ese nombre', null, 400);
+        }
+        sendError(res, 'Error al actualizar pool de equipos', null, 500);
+    }
+};
+
+/**
+ * Elimina un pool de equipos por id.
+ */
+export const deleteEquipmentPool = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await query('SELECT * FROM equipment_pools WHERE id = ?', [id]);
+        if (!pool[0]) {
+            return sendError(res, 'El pool de equipos no existe', null, 404);
+        }
+
+        try {
+            await query('DELETE FROM equipment_pools WHERE id = ?', [id]);
+        } catch (error) {
+            if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_ROW_IS_REFERENCED') {
+                return sendError(
+                    res,
+                    'No se puede eliminar el pool porque tiene préstamos asociados',
+                    null,
+                    400
+                );
+            }
+            throw error;
+        }
+
+        sendSuccess(res, 'Pool de equipos eliminado exitosamente', null);
+    } catch (error) {
+        console.error('Error al eliminar pool de equipos:', error);
+        sendError(res, 'Error al eliminar pool de equipos', null, 500);
+    }
+};
+
+/**
  * Obtiene todos los tipos de consumibles.
  */
 export const getConsumableTypesAdmin = async (req, res) => {

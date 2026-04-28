@@ -20,6 +20,10 @@ import {
     createEquipmentType,
     updateEquipmentType,
     deleteEquipmentType,
+    getEquipmentPools,
+    createEquipmentPool,
+    updateEquipmentPool,
+    deleteEquipmentPool,
     getConsumableTypesAdmin,
     createConsumableType,
     updateConsumableType,
@@ -138,6 +142,26 @@ router.put('/equipment-types/:id', [
     handleValidationErrors
 ], updateEquipmentType);
 router.delete('/equipment-types/:id', deleteEquipmentType);
+
+router.get('/equipment-pools', getEquipmentPools);
+router.post('/equipment-pools', [
+    body('name').trim().notEmpty().withMessage('El nombre es requerido'),
+    body('description').optional().trim(),
+    body('total_stock').isInt({ min: 0 }).withMessage('El stock total debe ser 0 o mayor'),
+    body('available_stock').isInt({ min: 0 }).withMessage('El stock disponible debe ser 0 o mayor'),
+    body('minimum_stock').optional().isInt({ min: 0 }).withMessage('El stock mínimo debe ser 0 o mayor'),
+    handleValidationErrors
+], createEquipmentPool);
+router.put('/equipment-pools/:id', [
+    body('name').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío'),
+    body('description').optional().trim(),
+    body('total_stock').optional().isInt({ min: 0 }).withMessage('El stock total debe ser 0 o mayor'),
+    body('available_stock').optional().isInt({ min: 0 }).withMessage('El stock disponible debe ser 0 o mayor'),
+    body('minimum_stock').optional().isInt({ min: 0 }).withMessage('El stock mínimo debe ser 0 o mayor'),
+    body('active').optional().isBoolean(),
+    handleValidationErrors
+], updateEquipmentPool);
+router.delete('/equipment-pools/:id', deleteEquipmentPool);
 
 router.get('/consumable-types', getConsumableTypesAdmin);
 router.post('/consumable-types', [

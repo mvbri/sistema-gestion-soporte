@@ -10,6 +10,7 @@ import equipmentRoutes from './routes/equipmentRoutes.js';
 import consumableRoutes from './routes/consumableRoutes.js';
 import toolRoutes from './routes/toolRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import equipmentLoanRoutes from './routes/equipmentLoanRoutes.js';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/consumables', consumableRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/equipment-loans', equipmentLoanRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

@@ -9,6 +9,7 @@ import {
   useAdminEstados,
   useAdminDirecciones,
   useAdminEquipmentTypes,
+  useAdminEquipmentPools,
   useAdminConsumableTypes,
   useCreateCategoria,
   useUpdateCategoria,
@@ -25,6 +26,9 @@ import {
   useCreateEquipmentType,
   useUpdateEquipmentType,
   useDeleteEquipmentType,
+  useCreateEquipmentPool,
+  useUpdateEquipmentPool,
+  useDeleteEquipmentPool,
   useCreateConsumableType,
   useUpdateConsumableType,
   useDeleteConsumableType,
@@ -33,17 +37,18 @@ import {
   useUpdateToolType,
   useDeleteToolType,
 } from '../hooks/useAdmin';
-import type { CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType } from '../types';
+import type { CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, EquipmentPool, ConsumableType, ToolType } from '../types';
 
 export const AdminConfig: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'estados' | 'direcciones' | 'equipment-types' | 'consumable-types' | 'tool-types'>('categorias');
+  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'estados' | 'direcciones' | 'equipment-types' | 'equipment-pools' | 'consumable-types' | 'tool-types'>('categorias');
   const [editingCategoria, setEditingCategoria] = useState<CategoriaTicket | null>(null);
   const [editingPrioridad, setEditingPrioridad] = useState<PrioridadTicket | null>(null);
   const [editingEstado, setEditingEstado] = useState<EstadoTicket | null>(null);
   const [editingDireccion, setEditingDireccion] = useState<DireccionTicket | null>(null);
   const [editingEquipmentType, setEditingEquipmentType] = useState<EquipmentType | null>(null);
+  const [editingEquipmentPool, setEditingEquipmentPool] = useState<EquipmentPool | null>(null);
   const [editingConsumableType, setEditingConsumableType] = useState<ConsumableType | null>(null);
   const [editingToolType, setEditingToolType] = useState<ToolType | null>(null);
   const [showCategoriaForm, setShowCategoriaForm] = useState(false);
@@ -51,6 +56,7 @@ export const AdminConfig: React.FC = () => {
   const [showEstadoForm, setShowEstadoForm] = useState(false);
   const [showDireccionForm, setShowDireccionForm] = useState(false);
   const [showEquipmentTypeForm, setShowEquipmentTypeForm] = useState(false);
+  const [showEquipmentPoolForm, setShowEquipmentPoolForm] = useState(false);
   const [showConsumableTypeForm, setShowConsumableTypeForm] = useState(false);
   const [showToolTypeForm, setShowToolTypeForm] = useState(false);
   const [prioridadNivel, setPrioridadNivel] = useState<string>('');
@@ -61,6 +67,7 @@ export const AdminConfig: React.FC = () => {
   const [estadoToDelete, setEstadoToDelete] = useState<EstadoTicket | null>(null);
   const [direccionToDelete, setDireccionToDelete] = useState<DireccionTicket | null>(null);
   const [equipmentTypeToDelete, setEquipmentTypeToDelete] = useState<EquipmentType | null>(null);
+  const [equipmentPoolToDelete, setEquipmentPoolToDelete] = useState<EquipmentPool | null>(null);
   const [consumableTypeToDelete, setConsumableTypeToDelete] = useState<ConsumableType | null>(null);
   const [toolTypeToDelete, setToolTypeToDelete] = useState<ToolType | null>(null);
   const [direccionesSearchTerm, setDireccionesSearchTerm] = useState('');
@@ -74,6 +81,7 @@ export const AdminConfig: React.FC = () => {
   const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
   const { data: estados = [], isLoading: loadingEstados } = useAdminEstados();
   const { data: equipmentTypes = [], isLoading: loadingEquipmentTypes } = useAdminEquipmentTypes();
+  const { data: equipmentPools = [], isLoading: loadingEquipmentPools } = useAdminEquipmentPools();
   const { data: consumableTypes = [], isLoading: loadingConsumableTypes } = useAdminConsumableTypes();
   const { data: toolTypes = [], isLoading: loadingToolTypes } = useAdminToolTypes();
   const { 
@@ -109,6 +117,9 @@ export const AdminConfig: React.FC = () => {
   const createEquipmentTypeMutation = useCreateEquipmentType();
   const updateEquipmentTypeMutation = useUpdateEquipmentType();
   const deleteEquipmentTypeMutation = useDeleteEquipmentType();
+  const createEquipmentPoolMutation = useCreateEquipmentPool();
+  const updateEquipmentPoolMutation = useUpdateEquipmentPool();
+  const deleteEquipmentPoolMutation = useDeleteEquipmentPool();
   const createConsumableTypeMutation = useCreateConsumableType();
   const updateConsumableTypeMutation = useUpdateConsumableType();
   const deleteConsumableTypeMutation = useDeleteConsumableType();
@@ -116,7 +127,7 @@ export const AdminConfig: React.FC = () => {
   const updateToolTypeMutation = useUpdateToolType();
   const deleteToolTypeMutation = useDeleteToolType();
 
-  const loading = loadingCategorias || loadingPrioridades || loadingEstados || loadingDirecciones || loadingEquipmentTypes || loadingConsumableTypes || loadingToolTypes;
+  const loading = loadingCategorias || loadingPrioridades || loadingEstados || loadingDirecciones || loadingEquipmentTypes || loadingEquipmentPools || loadingConsumableTypes || loadingToolTypes;
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -407,6 +418,58 @@ export const AdminConfig: React.FC = () => {
     });
   };
 
+  const handleCreateEquipmentPool = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const total_stock = Number(formData.get('total_stock') || 0);
+    const available_stock = Number(formData.get('available_stock') || 0);
+    const minimum_stock = Number(formData.get('minimum_stock') || 0);
+
+    createEquipmentPoolMutation.mutate(
+      { name, description, total_stock, available_stock, minimum_stock },
+      {
+        onSuccess: () => {
+          setShowEquipmentPoolForm(false);
+        },
+      }
+    );
+  };
+
+  const handleUpdateEquipmentPool = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingEquipmentPool) return;
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const total_stock = Number(formData.get('total_stock') || 0);
+    const available_stock = Number(formData.get('available_stock') || 0);
+    const minimum_stock = Number(formData.get('minimum_stock') || 0);
+    const active = formData.get('active') === 'on';
+
+    updateEquipmentPoolMutation.mutate(
+      {
+        id: editingEquipmentPool.id,
+        data: { name, description, total_stock, available_stock, minimum_stock, active },
+      },
+      {
+        onSuccess: () => {
+          setEditingEquipmentPool(null);
+        },
+      }
+    );
+  };
+
+  const handleDeleteEquipmentPool = () => {
+    if (!equipmentPoolToDelete) return;
+    deleteEquipmentPoolMutation.mutate(equipmentPoolToDelete.id, {
+      onSuccess: () => {
+        setEquipmentPoolToDelete(null);
+      },
+    });
+  };
+
   const handleCreateToolType = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -537,6 +600,16 @@ export const AdminConfig: React.FC = () => {
                 }`}
               >
                 Tipos de Equipos
+              </button>
+              <button
+                onClick={() => setActiveTab('equipment-pools')}
+                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'equipment-pools'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                }`}
+              >
+                Pools de Préstamo
               </button>
               <button
                 onClick={() => setActiveTab('consumable-types')}
@@ -1982,6 +2055,89 @@ export const AdminConfig: React.FC = () => {
               </div>
             )}
 
+            {activeTab === 'equipment-pools' && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Pools de Préstamo</h2>
+                  <button
+                    onClick={() => {
+                      setShowEquipmentPoolForm(true);
+                      setEditingEquipmentPool(null);
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out"
+                  >
+                    Nuevo Pool
+                  </button>
+                </div>
+
+                {showEquipmentPoolForm && !editingEquipmentPool && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Crear Pool de Préstamo</h3>
+                    <form onSubmit={handleCreateEquipmentPool} className="space-y-4">
+                      <input type="text" name="name" required placeholder="Nombre (ej: Computadoras Lenovo T14)" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <textarea name="description" rows={2} placeholder="Descripción" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="number" name="total_stock" min="0" required placeholder="Stock total" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                        <input type="number" name="available_stock" min="0" required placeholder="Stock disponible" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                        <input type="number" name="minimum_stock" min="0" defaultValue="0" placeholder="Stock mínimo" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      </div>
+                      <div className="flex space-x-2">
+                        <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium">Crear</button>
+                        <button type="button" onClick={() => setShowEquipmentPoolForm(false)} className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white">Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {editingEquipmentPool && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium mb-4">Editar Pool de Préstamo</h3>
+                    <form onSubmit={handleUpdateEquipmentPool} className="space-y-4">
+                      <input type="text" name="name" defaultValue={editingEquipmentPool.name} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <textarea name="description" rows={2} defaultValue={editingEquipmentPool.description || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="number" name="total_stock" min="0" defaultValue={editingEquipmentPool.total_stock} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                        <input type="number" name="available_stock" min="0" defaultValue={editingEquipmentPool.available_stock} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                        <input type="number" name="minimum_stock" min="0" defaultValue={editingEquipmentPool.minimum_stock} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      </div>
+                      <label className="flex items-center">
+                        <input type="checkbox" name="active" defaultChecked={editingEquipmentPool.active} className="mr-2" />
+                        <span className="text-sm text-gray-700">Activo</span>
+                      </label>
+                      <div className="flex space-x-2">
+                        <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium">Guardar</button>
+                        <button type="button" onClick={() => setEditingEquipmentPool(null)} className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white">Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {equipmentPools.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {loadingEquipmentPools ? 'Cargando...' : 'No se encontraron pools de préstamo'}
+                    </div>
+                  ) : (
+                    equipmentPools.map((pool) => (
+                      <div key={pool.id} className={`p-4 border rounded-lg flex justify-between items-center ${!pool.active ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
+                        <div>
+                          <h3 className="font-medium">{pool.name}</h3>
+                          {pool.description && <p className="text-sm text-gray-500">{pool.description}</p>}
+                          <p className="text-xs text-gray-600 mt-1">
+                            Total: {pool.total_stock} | Disponible: {pool.available_stock} | Mínimo: {pool.minimum_stock}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button onClick={() => { setEditingEquipmentPool(pool); setShowEquipmentPoolForm(false); }} className="p-2.5 bg-orange-500 text-white rounded-lg" title="Editar">Editar</button>
+                          <button onClick={() => setEquipmentPoolToDelete(pool)} className="p-2.5 bg-red-500 text-white rounded-lg" title="Eliminar">Eliminar</button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'consumable-types' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -2543,6 +2699,33 @@ export const AdminConfig: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDeleteEquipmentType}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {equipmentPoolToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+              <p className="text-gray-700 mb-6">
+                ¿Estás seguro de que deseas eliminar el pool {equipmentPoolToDelete.name}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEquipmentPoolToDelete(null)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg font-medium bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 transition-all duration-200 ease-in-out"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteEquipmentPool}
                   className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
                 >
                   Eliminar

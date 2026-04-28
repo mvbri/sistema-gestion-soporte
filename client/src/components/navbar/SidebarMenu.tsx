@@ -53,6 +53,7 @@ export const SidebarMenu: React.FC = () => {
   useEffect(() => {
     const pathname = location.pathname;
     setInventoryOpen(
+      pathname.startsWith('/loans') ||
       pathname.startsWith('/equipment') ||
       pathname.startsWith('/consumables') ||
       pathname.startsWith('/tools')
@@ -60,7 +61,8 @@ export const SidebarMenu: React.FC = () => {
     setAnalyticsOpen(
       pathname === '/analytics' ||
       pathname.startsWith('/equipment/analytics') ||
-      pathname.startsWith('/consumables/analytics')
+      pathname.startsWith('/consumables/analytics') ||
+      pathname.startsWith('/loans/reports')
     );
   }, [location.pathname]);
 
@@ -113,6 +115,12 @@ export const SidebarMenu: React.FC = () => {
     if (path === '/admin/config') {
       return location.pathname.startsWith('/admin/config');
     }
+    if (path === '/loans') {
+      return location.pathname.startsWith('/loans') && !location.pathname.startsWith('/loans/reports');
+    }
+    if (path === '/loans/reports') {
+      return location.pathname.startsWith('/loans/reports');
+    }
 
     return location.pathname.startsWith(path + '/');
   };
@@ -153,6 +161,30 @@ export const SidebarMenu: React.FC = () => {
       path: '/admin/reports',
       label: 'Reportes',
       icon: ReportsIcon,
+      show: user?.role === 'administrator',
+    },
+    {
+      path: '/loans',
+      label: 'Préstamos',
+      icon: EquipmentIcon,
+      show: true,
+    },
+    {
+      path: '/loans/create',
+      label: 'Solicitar Préstamo',
+      icon: EquipmentIcon,
+      show: true,
+    },
+    {
+      path: '/loans/history',
+      label: 'Historial Préstamos',
+      icon: EquipmentIcon,
+      show: true,
+    },
+    {
+      path: '/loans/approval',
+      label: 'Aprobar Préstamos',
+      icon: EquipmentIcon,
       show: user?.role === 'administrator',
     },
   ].filter((link) => link.show);
@@ -289,6 +321,13 @@ export const SidebarMenu: React.FC = () => {
               </button>
               {analyticsOpen && (
                 <div className="mt-1 space-y-1 ml-6">
+                  <NavLink
+                    path="/loans/reports"
+                    label="Reporte Préstamos"
+                    icon={ReportsIcon}
+                    isActive={isActive('/loans/reports')}
+                    onClick={() => setMenuOpen(false)}
+                  />
                   <NavLink
                     path="/analytics"
                     label="Estadísticas de Tickets"

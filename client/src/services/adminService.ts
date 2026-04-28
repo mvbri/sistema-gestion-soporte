@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ApiResponse, CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType, User, FrequentIssue } from '../types';
+import type { ApiResponse, CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType, User, FrequentIssue, EquipmentPool } from '../types';
 
 export interface CreateCategoriaData {
   name: string;
@@ -61,6 +61,23 @@ export interface CreateEquipmentTypeData {
 export interface UpdateEquipmentTypeData {
   name?: string;
   description?: string;
+  active?: boolean;
+}
+
+export interface CreateEquipmentPoolData {
+  name: string;
+  description?: string;
+  total_stock: number;
+  available_stock: number;
+  minimum_stock?: number;
+}
+
+export interface UpdateEquipmentPoolData {
+  name?: string;
+  description?: string;
+  total_stock?: number;
+  available_stock?: number;
+  minimum_stock?: number;
   active?: boolean;
 }
 
@@ -262,6 +279,26 @@ export const adminService = {
 
   async deleteEquipmentType(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/equipment-types/${id}`);
+    return response.data;
+  },
+
+  async getEquipmentPools(): Promise<ApiResponse<EquipmentPool[]>> {
+    const response = await api.get<ApiResponse<EquipmentPool[]>>('/admin/equipment-pools');
+    return response.data;
+  },
+
+  async createEquipmentPool(data: CreateEquipmentPoolData): Promise<ApiResponse<EquipmentPool>> {
+    const response = await api.post<ApiResponse<EquipmentPool>>('/admin/equipment-pools', data);
+    return response.data;
+  },
+
+  async updateEquipmentPool(id: number, data: UpdateEquipmentPoolData): Promise<ApiResponse<EquipmentPool>> {
+    const response = await api.put<ApiResponse<EquipmentPool>>(`/admin/equipment-pools/${id}`, data);
+    return response.data;
+  },
+
+  async deleteEquipmentPool(id: number): Promise<ApiResponse<null>> {
+    const response = await api.delete<ApiResponse<null>>(`/admin/equipment-pools/${id}`);
     return response.data;
   },
 
