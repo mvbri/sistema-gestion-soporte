@@ -18,6 +18,7 @@ import { TicketAnalyticsIcon } from '../icons/TicketAnalyticsIcon';
 import { EquipmentAnalyticsIcon } from '../icons/EquipmentAnalyticsIcon';
 import { ConsumablesAnalyticsIcon } from '../icons/ConsumablesAnalyticsIcon';
 import { BackupIcon } from '../icons/BackupIcon';
+import { ReportsIcon } from '../icons/ReportsIcon';
 
 export const SidebarMenu: React.FC = () => {
   const { menuOpen, setMenuOpen } = useMenu();
@@ -101,6 +102,10 @@ export const SidebarMenu: React.FC = () => {
       return location.pathname.startsWith('/admin/frequent-issues');
     }
 
+    if (path === '/admin/reports') {
+      return location.pathname.startsWith('/admin/reports');
+    }
+
     if (path === '/admin/backup') {
       return location.pathname.startsWith('/admin/backup');
     }
@@ -142,6 +147,12 @@ export const SidebarMenu: React.FC = () => {
       path: '/admin/frequent-issues',
       label: 'Fallas frecuentes',
       icon: FrequentIssueIcon,
+      show: user?.role === 'administrator',
+    },
+    {
+      path: '/admin/reports',
+      label: 'Reportes',
+      icon: ReportsIcon,
       show: user?.role === 'administrator',
     },
   ].filter((link) => link.show);

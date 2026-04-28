@@ -37,6 +37,7 @@ import { ToolsList } from './pages/ToolsList';
 import { CreateTool } from './pages/CreateTool';
 import { ToolDetail } from './pages/ToolDetail';
 import { ToolsDashboard } from './pages/ToolsDashboard';
+import { ReportsPage } from './pages/ReportsPage';
 
 function App() {
   return (
@@ -135,6 +136,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['administrator']}>
                 <AdminFrequentIssues />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute allowedRoles={['administrator']}>
+                <ReportsPage />
               </ProtectedRoute>
             }
           />

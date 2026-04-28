@@ -158,6 +158,10 @@ export interface Tecnico {
 }
 
 export interface TicketStats {
+  period?: {
+    date_from: string;
+    date_to: string;
+  };
   porEstado: Array<{
     estado_id: number;
     estado_nombre: string;
@@ -175,7 +179,36 @@ export interface TicketStats {
     color: string;
     cantidad: number;
   }>;
+  porDireccion: Array<{
+    id: number;
+    nombre: string;
+    cantidad: number;
+  }>;
   total: number;
+}
+
+/** Reporte de tickets por rango de fechas (solo administración). */
+export interface TicketsPeriodReport {
+  period: {
+    date_from: string;
+    date_to: string;
+  };
+  tickets_creados: number;
+  tickets_cerrados: number;
+  promedio_horas_resolucion: number | null;
+  porEstado: TicketStats['porEstado'];
+  porCategoria: TicketStats['porCategoria'];
+  porPrioridad: TicketStats['porPrioridad'];
+  porArea: Array<{
+    id: number;
+    nombre: string;
+    cantidad: number;
+  }>;
+  cierresPorTecnico: Array<{
+    tecnico_id: number;
+    tecnico_nombre: string;
+    cantidad: number;
+  }>;
 }
 
 export interface TicketFilters {

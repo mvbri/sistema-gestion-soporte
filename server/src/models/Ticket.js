@@ -326,7 +326,19 @@ class Ticket {
         }
     }
 
-    static async getStats() {
+    static async getStats(filters = {}) {
+        const params = [];
+        const dateFilters = [];
+        if (filters.date_from) {
+            dateFilters.push('DATE(t.created_at) >= ?');
+            params.push(filters.date_from);
+        }
+        if (filters.date_to) {
+            dateFilters.push('DATE(t.created_at) <= ?');
+            params.push(filters.date_to);
+        }
+        const joinDateCondition = dateFilters.length > 0 ? ` AND ${dateFilters.join(' AND ')}` : '';
+
         let sql = `
             SELECT 
                 e.id as state_id,
@@ -334,32 +346,56 @@ class Ticket {
                 e.color as state_color,
                 COUNT(t.id) as count
             FROM ticket_states e
-            LEFT JOIN tickets t ON e.id = t.state_id
+            LEFT JOIN tickets t ON e.id = t.state_id${joinDateCondition}
             WHERE e.active = TRUE
             GROUP BY e.id, e.name, e.color
             ORDER BY e.\`order\`
         `;
 
-        return await query(sql);
+        return await query(sql, params);
     }
 
-    static async getStatsByCategory() {
+    static async getStatsByCategory(filters = {}) {
+        const params = [];
+        const dateFilters = [];
+        if (filters.date_from) {
+            dateFilters.push('DATE(t.created_at) >= ?');
+            params.push(filters.date_from);
+        }
+        if (filters.date_to) {
+            dateFilters.push('DATE(t.created_at) <= ?');
+            params.push(filters.date_to);
+        }
+        const joinDateCondition = dateFilters.length > 0 ? ` AND ${dateFilters.join(' AND ')}` : '';
+
         let sql = `
             SELECT 
                 c.id,
                 c.name,
                 COUNT(t.id) as count
             FROM ticket_categories c
-            LEFT JOIN tickets t ON c.id = t.category_id
+            LEFT JOIN tickets t ON c.id = t.category_id${joinDateCondition}
             WHERE c.active = TRUE
             GROUP BY c.id, c.name
             ORDER BY count DESC
         `;
 
-        return await query(sql);
+        return await query(sql, params);
     }
 
-    static async getStatsByPriority() {
+    static async getStatsByPriority(filters = {}) {
+        const params = [];
+        const dateFilters = [];
+        if (filters.date_from) {
+            dateFilters.push('DATE(t.created_at) >= ?');
+            params.push(filters.date_from);
+        }
+        if (filters.date_to) {
+            dateFilters.push('DATE(t.created_at) <= ?');
+            params.push(filters.date_to);
+        }
+        const joinDateCondition = dateFilters.length > 0 ? ` AND ${dateFilters.join(' AND ')}` : '';
+
         let sql = `
             SELECT 
                 p.id,
@@ -367,13 +403,41 @@ class Ticket {
                 p.color,
                 COUNT(t.id) as count
             FROM ticket_priorities p
-            LEFT JOIN tickets t ON p.id = t.priority_id
+            LEFT JOIN tickets t ON p.id = t.priority_id${joinDateCondition}
             WHERE p.active = TRUE
             GROUP BY p.id, p.name, p.color
             ORDER BY p.level DESC
         `;
 
-        return await query(sql);
+        return await query(sql, params);
+    }
+
+    static async getStatsByIncidentArea(filters = {}) {
+        const params = [];
+        const dateFilters = [];
+        if (filters.date_from) {
+            dateFilters.push('DATE(t.created_at) >= ?');
+            params.push(filters.date_from);
+        }
+        if (filters.date_to) {
+            dateFilters.push('DATE(t.created_at) <= ?');
+            params.push(filters.date_to);
+        }
+        const joinDateCondition = dateFilters.length > 0 ? ` AND ${dateFilters.join(' AND ')}` : '';
+
+        const sql = `
+            SELECT 
+                ia.id,
+                ia.name,
+                COUNT(t.id) as count
+            FROM incident_areas ia
+            LEFT JOIN tickets t ON ia.id = t.incident_area_id${joinDateCondition}
+            WHERE ia.active = TRUE
+            GROUP BY ia.id, ia.name
+            ORDER BY count DESC
+        `;
+
+        return await query(sql, params);
     }
 
     static async getEquipment(ticketId) {
@@ -426,6 +490,125 @@ class Ticket {
             }
             throw error;
         }
+    }
+
+    /**
+     * Aggregates for tickets created in [dateFrom, dateTo] (inclusive, DATE comparison)
+     * plus closures and resolution metrics for the same calendar range on closed_at.
+     */
+    static async getPeriodReport(dateFrom, dateTo) {
+        const rangeParams = [dateFrom, dateTo];
+
+        const createdTotalSql = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            WHERE DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
+        `;
+
+        const closedTotalSql = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+        `;
+
+        const byStateSql = `
+            SELECT
+                e.id as state_id,
+                e.name as state_name,
+                e.color as state_color,
+                COUNT(t.id) as count
+            FROM ticket_states e
+            LEFT JOIN tickets t ON e.id = t.state_id
+                AND DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
+            WHERE e.active = TRUE
+            GROUP BY e.id, e.name, e.color
+            ORDER BY e.\`order\`
+        `;
+
+        const byCategorySql = `
+            SELECT c.id, c.name, COUNT(t.id) as count
+            FROM ticket_categories c
+            LEFT JOIN tickets t ON c.id = t.category_id
+                AND DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
+            WHERE c.active = TRUE
+            GROUP BY c.id, c.name
+            ORDER BY count DESC
+        `;
+
+        const byPrioritySql = `
+            SELECT p.id, p.name, p.color, COUNT(t.id) as count
+            FROM ticket_priorities p
+            LEFT JOIN tickets t ON p.id = t.priority_id
+                AND DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
+            WHERE p.active = TRUE
+            GROUP BY p.id, p.name, p.color
+            ORDER BY p.level DESC
+        `;
+
+        const byIncidentAreaSql = `
+            SELECT ia.id, ia.name, COUNT(t.id) as count
+            FROM incident_areas ia
+            LEFT JOIN tickets t ON ia.id = t.incident_area_id
+                AND DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
+            WHERE ia.active = TRUE
+            GROUP BY ia.id, ia.name
+            ORDER BY count DESC
+        `;
+
+        const closedByTechnicianSql = `
+            SELECT u.id as technician_user_id, u.full_name as technician_name, COUNT(t.id) as count
+            FROM tickets t
+            INNER JOIN users u ON t.assigned_technician_id = u.id
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+            GROUP BY u.id, u.full_name
+            ORDER BY count DESC
+        `;
+
+        const avgResolutionSql = `
+            SELECT AVG(TIMESTAMPDIFF(HOUR, t.created_at, t.closed_at)) as avg_hours
+            FROM tickets t
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+        `;
+
+        const [
+            createdTotalRows,
+            closedTotalRows,
+            byState,
+            byCategory,
+            byPriority,
+            byIncidentArea,
+            closedByTechnician,
+            avgResolutionRows
+        ] = await Promise.all([
+            query(createdTotalSql, rangeParams),
+            query(closedTotalSql, rangeParams),
+            query(byStateSql, rangeParams),
+            query(byCategorySql, rangeParams),
+            query(byPrioritySql, rangeParams),
+            query(byIncidentAreaSql, rangeParams),
+            query(closedByTechnicianSql, rangeParams),
+            query(avgResolutionSql, rangeParams)
+        ]);
+
+        const rawCreated = createdTotalRows[0]?.total ?? 0;
+        const rawClosed = closedTotalRows[0]?.total ?? 0;
+        const rawAvg = avgResolutionRows[0]?.avg_hours;
+
+        return {
+            tickets_created_total: typeof rawCreated === 'bigint' ? Number(rawCreated) : rawCreated,
+            tickets_closed_total: typeof rawClosed === 'bigint' ? Number(rawClosed) : rawClosed,
+            avg_resolution_hours: rawAvg === null || rawAvg === undefined
+                ? null
+                : Number(Number(rawAvg).toFixed(2)),
+            by_state: byState,
+            by_category: byCategory,
+            by_priority: byPriority,
+            by_incident_area: byIncidentArea,
+            closed_by_technician: closedByTechnician
+        };
     }
 }
 

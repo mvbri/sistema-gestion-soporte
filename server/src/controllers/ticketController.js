@@ -48,6 +48,26 @@ const parseTicketImages = (rawValue) => {
     return [];
 };
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+const parseLocalDateOnly = (value) => {
+    if (!value || typeof value !== 'string' || !ISO_DATE.test(value)) {
+        return null;
+    }
+    const [y, m, d] = value.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) {
+        return null;
+    }
+    return { y, m, d, value };
+};
+
+const daysBetweenInclusive = (a, b) => {
+    const start = new Date(a.y, a.m - 1, a.d);
+    const end = new Date(b.y, b.m - 1, b.d);
+    return Math.floor((end - start) / 86400000) + 1;
+};
+
 export const createTicket = async (req, res) => {
     try {
         const {
@@ -675,10 +695,51 @@ export const getStats = async (req, res) => {
             return sendError(res, 'Solo los administradores pueden ver estadísticas', null, 403);
         }
 
-        const statsByEstado = await Ticket.getStats();
-        const statsByCategory = await Ticket.getStatsByCategory();
-        const statsByPriority = await Ticket.getStatsByPriority();
-        const totalTickets = await Ticket.count();
+        const fromRaw = req.query.date_from ?? req.query.from;
+        const toRaw = req.query.date_to ?? req.query.to;
+
+        const today = new Date();
+        const defaultTo = {
+            y: today.getFullYear(),
+            m: today.getMonth() + 1,
+            d: today.getDate(),
+            value: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+        };
+        const defaultFromDate = new Date(today);
+        defaultFromDate.setDate(defaultFromDate.getDate() - 29);
+        const defaultFrom = {
+            y: defaultFromDate.getFullYear(),
+            m: defaultFromDate.getMonth() + 1,
+            d: defaultFromDate.getDate(),
+            value: `${defaultFromDate.getFullYear()}-${String(defaultFromDate.getMonth() + 1).padStart(2, '0')}-${String(defaultFromDate.getDate()).padStart(2, '0')}`
+        };
+
+        const parsedFrom = fromRaw ? parseLocalDateOnly(String(fromRaw)) : defaultFrom;
+        const parsedTo = toRaw ? parseLocalDateOnly(String(toRaw)) : defaultTo;
+
+        if (!parsedFrom || !parsedTo) {
+            return sendError(res, 'Las fechas deben tener formato YYYY-MM-DD', null, 400);
+        }
+
+        if (parsedFrom.value > parsedTo.value) {
+            return sendError(res, 'La fecha inicial no puede ser posterior a la fecha final', null, 400);
+        }
+
+        const span = daysBetweenInclusive(parsedFrom, parsedTo);
+        if (span > 366) {
+            return sendError(res, 'El rango máximo permitido es de 366 días', null, 400);
+        }
+
+        const filters = {
+            date_from: parsedFrom.value,
+            date_to: parsedTo.value
+        };
+
+        const statsByEstado = await Ticket.getStats(filters);
+        const statsByCategory = await Ticket.getStatsByCategory(filters);
+        const statsByPriority = await Ticket.getStatsByPriority(filters);
+        const statsByIncidentArea = await Ticket.getStatsByIncidentArea(filters);
+        const totalTickets = await Ticket.count(filters);
 
         const mappedStatsByEstado = statsByEstado.map(stat => ({
             estado_id: stat.state_id,
@@ -700,11 +761,22 @@ export const getStats = async (req, res) => {
             cantidad: stat.count || 0
         }));
 
+        const mappedStatsByIncidentArea = statsByIncidentArea.map(stat => ({
+            id: stat.id,
+            nombre: stat.name,
+            cantidad: stat.count || 0
+        }));
+
         sendSuccess(res, 'Estadísticas obtenidas exitosamente', {
             porEstado: mappedStatsByEstado,
             porCategoria: mappedStatsByCategory,
             porPrioridad: mappedStatsByPriority,
-            total: totalTickets || 0
+            porDireccion: mappedStatsByIncidentArea,
+            total: totalTickets || 0,
+            period: {
+                date_from: parsedFrom.value,
+                date_to: parsedTo.value
+            }
         });
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);

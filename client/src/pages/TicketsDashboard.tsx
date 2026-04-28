@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTicketStats } from '../hooks/useTickets';
@@ -7,10 +7,42 @@ import { PageWrapper } from '../components/PageWrapper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import type { TicketStats } from '../types';
 
+function formatDateInput(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function defaultDateRange(): { from: string; to: string } {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 29);
+  return { from: formatDateInput(from), to: formatDateInput(to) };
+}
+
 export const TicketsDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: stats, isLoading: loading } = useTicketStats() as { data: TicketStats | undefined; isLoading: boolean };
+  const defaults = useMemo(() => defaultDateRange(), []);
+  const [draftFrom, setDraftFrom] = useState(defaults.from);
+  const [draftTo, setDraftTo] = useState(defaults.to);
+  const [appliedFrom, setAppliedFrom] = useState(defaults.from);
+  const [appliedTo, setAppliedTo] = useState(defaults.to);
+
+  const {
+    data: stats,
+    isLoading: loading,
+    isError,
+    error,
+    refetch,
+  } = useTicketStats(appliedFrom, appliedTo) as {
+    data: TicketStats | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+    refetch: () => void;
+  };
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
@@ -22,6 +54,14 @@ export const TicketsDashboard: React.FC = () => {
     return null;
   }
 
+  const applyRange = () => {
+    if (!draftFrom || !draftTo || draftFrom > draftTo) {
+      return;
+    }
+    setAppliedFrom(draftFrom);
+    setAppliedTo(draftTo);
+  };
+
   if (loading) {
     return (
       <>
@@ -31,6 +71,24 @@ export const TicketsDashboard: React.FC = () => {
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-2 text-gray-600">Cargando estadísticas...</p>
+          </div>
+        </div>
+        </PageWrapper>
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <MainNavbar />
+        <PageWrapper>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error?.message || 'No se pudieron cargar las estadísticas'}
+            <button type="button" className="ml-3 underline" onClick={() => refetch()}>
+              Reintentar
+            </button>
           </div>
         </div>
         </PageWrapper>
@@ -55,6 +113,7 @@ export const TicketsDashboard: React.FC = () => {
   
   const totalPorEstado = stats.porEstado.reduce((sum, estado) => sum + (estado.cantidad || 0), 0);
   const totalPorCategoria = stats.porCategoria.reduce((sum, categoria) => sum + (categoria.cantidad || 0), 0);
+  const totalPorDireccion = stats.porDireccion?.reduce((sum, direccion) => sum + (direccion.cantidad || 0), 0) ?? 0;
 
   return (
     <>
@@ -76,44 +135,168 @@ export const TicketsDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-700">Total de Tickets</h3>
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-              </div>
-              <p className="text-3xl sm:text-4xl font-bold text-blue-700">{stats.total}</p>
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">Tickets en el sistema</p>
+          <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-medium text-gray-700 mb-3">Rango de fechas</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <label className="flex flex-col text-xs text-gray-600 sm:flex-1">
+                Desde
+                <input
+                  type="date"
+                  value={draftFrom}
+                  onChange={(e) => setDraftFrom(e.target.value)}
+                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
+                />
+              </label>
+              <label className="flex flex-col text-xs text-gray-600 sm:flex-1">
+                Hasta
+                <input
+                  type="date"
+                  value={draftTo}
+                  onChange={(e) => setDraftTo(e.target.value)}
+                  className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={applyRange}
+                disabled={!draftFrom || !draftTo || draftFrom > draftTo}
+                className="mt-0 sm:mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Actualizar
+              </button>
             </div>
+            <p className="mt-2 text-xs text-gray-500">Máximo 366 días. Por defecto: últimos 30 días.</p>
+          </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-700">Por Estado</h3>
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-3 text-sm sm:text-base font-semibold text-gray-800">Resumen General</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700">Total de Tickets</h3>
+                  <div className="p-1.5 bg-blue-500 rounded-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
                 </div>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-700">{stats.total}</p>
+                <p className="text-xs text-gray-600 mt-1">Tickets en el sistema</p>
               </div>
-              <p className="text-3xl sm:text-4xl font-bold text-green-700">{totalPorEstado}</p>
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">Distribución por estados</p>
             </div>
+          </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-shadow duration-200 sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-700">Por Categoría</h3>
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-3 text-sm sm:text-base font-semibold text-gray-800">Tickets por Estado</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
+            {stats.porEstado.length === 0 ? (
+              <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4 shadow-md">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700">Estados</h3>
+                  <div className="p-1.5 bg-green-500 rounded-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
                 </div>
+                <p className="text-2xl sm:text-3xl font-bold text-green-700">0</p>
+                <p className="text-xs text-gray-600 mt-1">Sin estados disponibles</p>
               </div>
-              <p className="text-3xl sm:text-4xl font-bold text-purple-700">{totalPorCategoria}</p>
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">Distribución por categorías</p>
+            ) : (
+              stats.porEstado.map((estado, index) => (
+                <div
+                  key={estado.estado_id}
+                  className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700">{estado.estado_nombre}</h3>
+                    <div className="p-1.5 rounded-lg" style={{ backgroundColor: COLORS[(index + 1) % COLORS.length] }}>
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-700">{estado.cantidad}</p>
+                  <p className="text-xs text-gray-600 mt-1">Tickets en este estado</p>
+                </div>
+              ))
+            )}
+            </div>
+          </div>
+
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-3 text-sm sm:text-base font-semibold text-gray-800">Tickets por Categoría</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
+            {stats.porCategoria.length === 0 ? (
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 shadow-md">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700">Categorías</h3>
+                  <div className="p-1.5 bg-purple-500 rounded-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-700">0</p>
+                <p className="text-xs text-gray-600 mt-1">Sin categorías disponibles</p>
+              </div>
+            ) : (
+              stats.porCategoria.map((categoria, index) => (
+                <div
+                  key={categoria.id}
+                  className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700">{categoria.nombre}</h3>
+                    <div className="p-1.5 rounded-lg" style={{ backgroundColor: COLORS[(index + 2) % COLORS.length] }}>
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-700">{categoria.cantidad}</p>
+                  <p className="text-xs text-gray-600 mt-1">Tickets en esta categoría</p>
+                </div>
+              ))
+            )}
+            </div>
+          </div>
+
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-3 text-sm sm:text-base font-semibold text-gray-800">Tickets por Dirección</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
+            {!stats.porDireccion || stats.porDireccion.length === 0 ? (
+              <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-4 shadow-md">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700">Direcciones</h3>
+                  <div className="p-1.5 bg-cyan-500 rounded-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 12.414a2 2 0 010-2.828l4.243-4.243m0 11.314a8 8 0 1111.314-11.314 8 8 0 01-11.314 11.314z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-cyan-700">0</p>
+                <p className="text-xs text-gray-600 mt-1">Sin direcciones disponibles</p>
+              </div>
+            ) : (
+              stats.porDireccion.map((direccion, index) => (
+                <div
+                  key={direccion.id}
+                  className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-700">{direccion.nombre}</h3>
+                    <div className="p-1.5 rounded-lg" style={{ backgroundColor: COLORS[(index + 3) % COLORS.length] }}>
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2m0 18l6-3m-6 3V2m6 15l6 3m-6-3V5m6 15V8m0 12l-6-3" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-cyan-700">{direccion.cantidad}</p>
+                  <p className="text-xs text-gray-600 mt-1">Tickets en esta dirección</p>
+                </div>
+              ))
+            )}
             </div>
           </div>
 

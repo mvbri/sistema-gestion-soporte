@@ -65,11 +65,12 @@ export const useTecnicos = () => {
   });
 };
 
-export const useTicketStats = () => {
+export const useTicketStats = (dateFrom: string, dateTo: string) => {
   return useQuery({
-    queryKey: ['ticketStats'],
-    queryFn: () => ticketService.getStats(),
+    queryKey: ['ticketStats', dateFrom, dateTo],
+    queryFn: () => ticketService.getStats(dateFrom, dateTo),
     select: (response) => response.data,
+    enabled: Boolean(dateFrom && dateTo && dateFrom <= dateTo),
   });
 };
 

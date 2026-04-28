@@ -140,8 +140,13 @@ export const ticketService = {
     return response.data;
   },
 
-  async getStats(): Promise<ApiResponse<TicketStats>> {
-    const response = await api.get<ApiResponse<TicketStats>>('/tickets/stats');
+  async getStats(dateFrom?: string, dateTo?: string): Promise<ApiResponse<TicketStats>> {
+    const response = await api.get<ApiResponse<TicketStats>>('/tickets/stats', {
+      params: {
+        ...(dateFrom ? { date_from: dateFrom } : {}),
+        ...(dateTo ? { date_to: dateTo } : {}),
+      },
+    });
     return response.data;
   },
 
