@@ -55,7 +55,9 @@ export const LoanHandoverReturn: React.FC = () => {
   const updatePendingChecklist = useUpdatePendingLoanChecklist();
   const deliverLoan = useDeliverLoan();
   const returnLoan = useReturnLoan();
-  const [physicalCondition, setPhysicalCondition] = useState<'new' | 'good' | 'worn' | 'damaged'>('good');
+  const [physicalCondition, setPhysicalCondition] = useState<'new' | 'good' | 'worn' | 'damaged'>(
+    'good'
+  );
   const [batteryLevel, setBatteryLevel] = useState<number | ''>('');
   const [observations, setObservations] = useState('');
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -339,7 +341,9 @@ export const LoanHandoverReturn: React.FC = () => {
       <PageWrapper>
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Entrega y Devolución</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+              Entrega y Devolución
+            </h1>
             <p className="mt-1 text-sm text-gray-600">Registro operativo con checklist y acta.</p>
           </div>
 
@@ -350,9 +354,7 @@ export const LoanHandoverReturn: React.FC = () => {
           ) : isError || !loan ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center shadow-sm">
               <p className="text-sm font-semibold text-rose-800">No se pudo cargar el préstamo.</p>
-              <p className="mt-1 text-xs text-rose-700">
-                {loanLoadErrorMessage}
-              </p>
+              <p className="mt-1 text-xs text-rose-700">{loanLoadErrorMessage}</p>
               <button
                 type="button"
                 onClick={() => refetch()}
@@ -366,7 +368,9 @@ export const LoanHandoverReturn: React.FC = () => {
               <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Préstamo</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Préstamo
+                    </p>
                     <p className="text-xl font-semibold text-slate-900">{displayRequestCode}</p>
                   </div>
                   <span
@@ -379,11 +383,15 @@ export const LoanHandoverReturn: React.FC = () => {
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Solicitante</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Solicitante
+                    </p>
                     <p className="text-sm font-medium text-slate-800">{loan.requester_name}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Estado técnico</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Estado técnico
+                    </p>
                     <span
                       className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                         statusBadgeStyles[loan.status] || 'bg-slate-100 text-slate-700'
@@ -393,7 +401,9 @@ export const LoanHandoverReturn: React.FC = () => {
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Área destino</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Área destino
+                    </p>
                     <p className="text-sm font-medium text-slate-800">
                       {loan.target_incident_area_name || 'No especificada'}
                     </p>
@@ -402,7 +412,9 @@ export const LoanHandoverReturn: React.FC = () => {
               </div>
 
               <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="mb-2 text-base font-semibold text-slate-900">Motivo de la solicitud</h2>
+                <h2 className="mb-2 text-base font-semibold text-slate-900">
+                  Motivo de la solicitud
+                </h2>
                 <p className="text-sm leading-relaxed text-slate-700">
                   {loan.request_notes?.trim() || 'El solicitante no registró un motivo adicional.'}
                 </p>
@@ -447,7 +459,9 @@ export const LoanHandoverReturn: React.FC = () => {
                       min={0}
                       max={100}
                       value={batteryLevel}
-                      onChange={(e) => setBatteryLevel(e.target.value === '' ? '' : Number(e.target.value))}
+                      onChange={(e) =>
+                        setBatteryLevel(e.target.value === '' ? '' : Number(e.target.value))
+                      }
                       disabled={!isChecklistEditable}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
                       placeholder="Ej: 85"
@@ -580,7 +594,9 @@ export const LoanHandoverReturn: React.FC = () => {
                       disabled={updatePendingChecklist.isPending}
                       className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                     >
-                      {updatePendingChecklist.isPending ? 'Actualizando...' : 'Actualizar checklist'}
+                      {updatePendingChecklist.isPending
+                        ? 'Actualizando...'
+                        : 'Actualizar checklist'}
                     </button>
                   )}
                 </div>
@@ -622,7 +638,10 @@ export const LoanHandoverReturn: React.FC = () => {
                   disabled={rejectLoan.isPending}
                   onClick={() => {
                     rejectLoan.mutate(
-                      { id: loan.id, reason: rejectReason.trim() || 'Rechazado por revisión administrativa' },
+                      {
+                        id: loan.id,
+                        reason: rejectReason.trim() || 'Rechazado por revisión administrativa',
+                      },
                       {
                         onSuccess: () => {
                           setIsRejectModalOpen(false);

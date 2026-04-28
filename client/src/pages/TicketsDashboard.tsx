@@ -113,7 +113,6 @@ export const TicketsDashboard: React.FC = () => {
   
   const totalPorEstado = stats.porEstado.reduce((sum, estado) => sum + (estado.cantidad || 0), 0);
   const totalPorCategoria = stats.porCategoria.reduce((sum, categoria) => sum + (categoria.cantidad || 0), 0);
-  const totalPorDireccion = stats.porDireccion?.reduce((sum, direccion) => sum + (direccion.cantidad || 0), 0) ?? 0;
 
   return (
     <>
