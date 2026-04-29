@@ -114,8 +114,8 @@ export const rejectEquipmentLoan = async (req, res) => {
 
 export const deliverEquipmentLoan = async (req, res) => {
     try {
-        if (!ensureItRole(req.user.role)) {
-            return sendError(res, 'Solo IT puede registrar entregas', null, 403);
+        if (req.user.role !== 'administrator') {
+            return sendError(res, 'Solo administrador puede registrar entregas', null, 403);
         }
         const loan = await EquipmentLoan.deliver(Number(req.params.id), req.user.id, req.body);
         sendSuccess(res, 'Entrega registrada correctamente', loan);

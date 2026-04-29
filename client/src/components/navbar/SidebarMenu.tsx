@@ -28,6 +28,7 @@ export const SidebarMenu: React.FC = () => {
 
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [loansOpen, setLoansOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,6 +65,7 @@ export const SidebarMenu: React.FC = () => {
       pathname.startsWith('/consumables/analytics') ||
       pathname.startsWith('/loans/reports')
     );
+    setLoansOpen(pathname.startsWith('/loans') && !pathname.startsWith('/loans/reports'));
   }, [location.pathname]);
 
   const isActive = (path: string) => {
@@ -163,30 +165,6 @@ export const SidebarMenu: React.FC = () => {
       icon: ReportsIcon,
       show: user?.role === 'administrator',
     },
-    {
-      path: '/loans',
-      label: 'Préstamos',
-      icon: EquipmentIcon,
-      show: true,
-    },
-    {
-      path: '/loans/create',
-      label: 'Solicitar Préstamo',
-      icon: EquipmentIcon,
-      show: true,
-    },
-    {
-      path: '/loans/history',
-      label: 'Historial Préstamos',
-      icon: EquipmentIcon,
-      show: true,
-    },
-    {
-      path: '/loans/approval',
-      label: 'Aprobar Préstamos',
-      icon: EquipmentIcon,
-      show: user?.role === 'administrator',
-    },
   ].filter((link) => link.show);
 
   return (
@@ -228,6 +206,69 @@ export const SidebarMenu: React.FC = () => {
               onClick={() => setMenuOpen(false)}
             />
           ))}
+
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setLoansOpen(!loansOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                loansOpen
+                  ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <EquipmentIcon
+                  className={`flex-shrink-0 h-5 w-5 ${loansOpen ? 'text-white' : 'text-gray-600'}`}
+                />
+                <span>Préstamos</span>
+              </span>
+              <svg
+                className={`h-4 w-4 transform transition-transform ${loansOpen ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {loansOpen && (
+              <div className="mt-1 space-y-1 ml-6">
+                <NavLink
+                  path="/loans/create"
+                  label="Solicitar Préstamo"
+                  icon={EquipmentIcon}
+                  isActive={isActive('/loans/create')}
+                  onClick={() => setMenuOpen(false)}
+                />
+                <NavLink
+                  path="/loans/history"
+                  label="Historial de Préstamos"
+                  icon={EquipmentIcon}
+                  isActive={isActive('/loans/history')}
+                  onClick={() => setMenuOpen(false)}
+                />
+                {user?.role === 'administrator' && (
+                  <NavLink
+                    path="/loans/approval"
+                    label="Aprobar Préstamos"
+                    icon={EquipmentIcon}
+                    isActive={isActive('/loans/approval')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                )}
+                {(user?.role === 'administrator' || user?.role === 'technician') && (
+                  <NavLink
+                    path="/loans/reports"
+                    label="Reporte Préstamos"
+                    icon={ReportsIcon}
+                    isActive={isActive('/loans/reports')}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Grupo Inventario - Solo para técnicos y administradores */}
           {(user?.role === 'technician' || user?.role === 'administrator') && (
@@ -321,13 +362,6 @@ export const SidebarMenu: React.FC = () => {
               </button>
               {analyticsOpen && (
                 <div className="mt-1 space-y-1 ml-6">
-                  <NavLink
-                    path="/loans/reports"
-                    label="Reporte Préstamos"
-                    icon={ReportsIcon}
-                    isActive={isActive('/loans/reports')}
-                    onClick={() => setMenuOpen(false)}
-                  />
                   <NavLink
                     path="/analytics"
                     label="Estadísticas de Tickets"

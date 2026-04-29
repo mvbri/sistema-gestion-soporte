@@ -3,6 +3,16 @@ import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { useLoansSummaryReport } from '../hooks/useLoans';
 
+const loanStatusLabels: Record<string, string> = {
+  pending: 'Pendiente',
+  approved: 'Aprobado',
+  delivered: 'Entregado',
+  overdue: 'Vencido',
+  returned: 'Devuelto',
+  rejected: 'Rechazado',
+  cancelled: 'Cancelado',
+};
+
 function defaultDateRange() {
   const to = new Date();
   const from = new Date();
@@ -76,7 +86,7 @@ export const LoanReportsPage: React.FC = () => {
                   <ul className="space-y-1 text-sm">
                     {report.byStatus.map((row) => (
                       <li key={row.status} className="flex justify-between border-b pb-1">
-                        <span>{row.status}</span>
+                        <span>{loanStatusLabels[row.status] || row.status}</span>
                         <span>{row.count}</span>
                       </li>
                     ))}

@@ -516,7 +516,7 @@ export const LoanHandoverReturn: React.FC = () => {
                       Imprimir solicitud (PDF)
                     </button>
                   )}
-                  {loan.status === 'approved' && (
+                  {loan.status === 'approved' && canReviewLoans && (
                     <button
                       type="button"
                       onClick={() => printActa('ENTREGA')}
@@ -554,7 +554,7 @@ export const LoanHandoverReturn: React.FC = () => {
                       </button>
                     </>
                   )}
-                  {loan.status === 'approved' && (
+                  {loan.status === 'approved' && canReviewLoans && (
                     <button
                       type="button"
                       onClick={() => deliverLoan.mutate({ id: loan.id, payload: checklistPayload })}
