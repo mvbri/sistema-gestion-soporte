@@ -601,3 +601,99 @@ export interface EquipmentLoanSummaryReport {
     count: number;
   }>;
 }
+
+export type MaterialRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type MaterialType = 'equipment' | 'consumable' | 'tool';
+
+export interface MaterialRequestItem {
+  id: number;
+  material_request_id: number;
+  material_type: MaterialType | 'manual';
+  source_mode?: 'catalog' | 'manual';
+  reference_id?: number | null;
+  custom_material_name?: string | null;
+  custom_material_description?: string | null;
+  quantity: number;
+  material_name?: string | null;
+  equipment_serial_number?: string | null;
+  tool_code?: string | null;
+  consumable_unit?: string | null;
+  consumable_available_quantity?: number | null;
+}
+
+export interface MaterialRequestHistory {
+  id: number;
+  material_request_id: number;
+  changed_by_user_id: number;
+  changed_by_user_name?: string;
+  previous_status?: MaterialRequestStatus | null;
+  new_status: MaterialRequestStatus;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface MaterialRequestComment {
+  id: number;
+  material_request_id: number;
+  comment_text: string;
+  created_by_user_id: number;
+  created_by_user_name?: string;
+  created_by_user_role?: Role;
+  created_at: string;
+}
+
+export interface MaterialRequest {
+  id: number;
+  request_code?: string;
+  requester_user_id: number;
+  requester_name: string;
+  requester_email?: string;
+  /** Nombre de la persona a quien va dirigida la solicitud. */
+  addressee_name?: string | null;
+  /** Cargo o denominación del destinatario. */
+  addressee_title?: string | null;
+  /** Texto al destinatario: dependencia de su cargo y motivo de la solicitud de materiales. */
+  addressee_addressing_text?: string | null;
+  approved_by_user_id?: number | null;
+  approved_by_user_name?: string | null;
+  status: MaterialRequestStatus;
+  request_notes?: string | null;
+  approval_notes?: string | null;
+  rejection_reason?: string | null;
+  cancelled_notes?: string | null;
+  created_at: string;
+  items: MaterialRequestItem[];
+  history: MaterialRequestHistory[];
+  comments: MaterialRequestComment[];
+}
+
+export interface MaterialRequestListItem {
+  id: number;
+  request_code?: string;
+  requester_user_id: number;
+  requester_name: string;
+  status: MaterialRequestStatus;
+  request_notes?: string | null;
+  created_at: string;
+  items_count: number;
+}
+
+export interface MaterialRequestFilters {
+  status?: MaterialRequestStatus;
+  search?: string;
+  date_from?: string;
+  date_to?: string;
+  requester_user_id?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface MaterialRequestResponse {
+  requests: MaterialRequestListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

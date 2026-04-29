@@ -866,3 +866,124 @@ export const validateUpdatePendingLoanChecklist = [
     .withMessage('Las observaciones no pueden exceder 1000 caracteres'),
   handleValidationErrors,
 ];
+
+export const validateCreateMaterialRequest = [
+  body('addressee_name')
+    .trim()
+    .notEmpty()
+    .withMessage('Debes indicar el nombre de la persona a quien va dirigida la solicitud')
+    .isLength({ min: 2, max: 255 })
+    .withMessage('El nombre del destinatario debe tener entre 2 y 255 caracteres'),
+  body('addressee_title')
+    .trim()
+    .notEmpty()
+    .withMessage('Debes indicar el cargo del destinatario')
+    .isLength({ min: 2, max: 255 })
+    .withMessage('El cargo del destinatario debe tener entre 2 y 255 caracteres'),
+  body('addressee_addressing_text')
+    .trim()
+    .notEmpty()
+    .withMessage(
+      'Debes redactar el texto dirigido al destinatario (dependencia de su cargo y motivo de la solicitud)'
+    )
+    .isLength({ min: 20, max: 4000 })
+    .withMessage('El texto dirigido al destinatario debe tener entre 20 y 4000 caracteres'),
+  body('request_notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1500 })
+    .withMessage('Las notas no pueden exceder 1500 caracteres'),
+  body('items')
+    .isArray({ min: 1 })
+    .withMessage('Debes enviar al menos un material en la solicitud'),
+  body('items.*.source_mode')
+    .optional()
+    .isIn(['catalog', 'manual'])
+    .withMessage('El modo de item no es válido'),
+  body('items.*.material_type')
+    .optional()
+    .isIn(['equipment', 'consumable', 'tool', 'manual'])
+    .withMessage('El tipo de material no es válido'),
+  body('items.*.reference_id')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('La referencia del material no es válida'),
+  body('items.*.custom_material_name')
+    .optional({ nullable: true })
+    .trim()
+    .isLength({ min: 2, max: 255 })
+    .withMessage('El nombre del material manual debe tener entre 2 y 255 caracteres'),
+  body('items.*.custom_material_description')
+    .optional({ nullable: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('La descripción del material manual no puede exceder 1000 caracteres'),
+  body('items.*.quantity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('La cantidad debe ser mayor a 0'),
+  body('items').custom((items) => {
+    for (const item of items) {
+      const sourceMode = item?.source_mode || 'catalog';
+      if (sourceMode === 'manual') {
+        const materialType = item?.material_type;
+        if (!materialType || !['equipment', 'consumable', 'tool'].includes(materialType)) {
+          throw new Error(
+            'Cada material manual debe indicar si es equipo, consumible o herramienta'
+          );
+        }
+        if (!item?.custom_material_name || String(item.custom_material_name).trim().length < 2) {
+          throw new Error('Cada material manual debe incluir un nombre válido');
+        }
+        const qty = Number(item?.quantity || 1);
+        if (!Number.isInteger(qty) || qty < 1) {
+          throw new Error('La cantidad debe ser un entero mayor a 0');
+        }
+        continue;
+      }
+
+      const materialType = item?.material_type;
+      const quantity = Number(item?.quantity || 1);
+      if (!materialType || !['equipment', 'consumable', 'tool'].includes(materialType)) {
+        throw new Error('Cada item de catálogo debe indicar un tipo de material válido');
+      }
+      if (!item?.reference_id) {
+        throw new Error('Cada item de catálogo debe tener una referencia válida');
+      }
+      if ((materialType === 'equipment' || materialType === 'tool') && quantity !== 1) {
+        throw new Error('Equipos y herramientas deben tener cantidad 1 por item');
+      }
+    }
+    return true;
+  }),
+  handleValidationErrors,
+];
+
+export const validateApproveMaterialRequest = [
+  body('notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateRejectMaterialRequest = [
+  body('reason')
+    .notEmpty()
+    .withMessage('La razón de rechazo es requerida')
+    .trim()
+    .isLength({ min: 5, max: 1000 })
+    .withMessage('La razón de rechazo debe tener entre 5 y 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateMaterialRequestComment = [
+  body('comment_text')
+    .trim()
+    .notEmpty()
+    .withMessage('El comentario es requerido')
+    .isLength({ min: 2, max: 2000 })
+    .withMessage('El comentario debe tener entre 2 y 2000 caracteres'),
+  handleValidationErrors,
+];

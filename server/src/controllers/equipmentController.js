@@ -81,8 +81,10 @@ export const getEquipment = async (req, res) => {
 
         const filters = {};
 
-        if (role === 'end_user') {
-            filters.status = 'available';
+        if (role !== 'administrator') {
+            filters.assigned_to_user_id = userId;
+            if (status) filters.status = status;
+            if (type) filters.type = type;
         } else {
             if (status) filters.status = status;
             if (type) filters.type = type;
@@ -116,7 +118,7 @@ export const getEquipment = async (req, res) => {
 export const getEquipmentById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { role } = req.user;
+        const { role, id: userId } = req.user;
 
         const equipment = await Equipment.findById(id);
 
@@ -124,7 +126,7 @@ export const getEquipmentById = async (req, res) => {
             return sendError(res, 'Equipo no encontrado', null, 404);
         }
 
-        if (role === 'end_user' && equipment.status !== 'available') {
+        if (role !== 'administrator' && equipment.assigned_to_user_id !== userId) {
             return sendError(res, 'No tienes permiso para ver este equipo', null, 403);
         }
 

@@ -44,6 +44,9 @@ import { LoanApproval } from './pages/LoanApproval';
 import { LoanHandoverReturn } from './pages/LoanHandoverReturn';
 import { LoanHistory } from './pages/LoanHistory';
 import { LoanReportsPage } from './pages/LoanReportsPage';
+import { MaterialRequestsList } from './pages/MaterialRequestsList';
+import { CreateMaterialRequest } from './pages/CreateMaterialRequest';
+import { MaterialRequestDetail } from './pages/MaterialRequestDetail';
 
 function App() {
   return (
@@ -198,6 +201,30 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['administrator', 'technician']}>
                 <LoanReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/material-requests"
+            element={
+              <ProtectedRoute>
+                <MaterialRequestsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/material-requests/create"
+            element={
+              <ProtectedRoute>
+                <CreateMaterialRequest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/material-requests/:id"
+            element={
+              <ProtectedRoute>
+                <MaterialRequestDetail />
               </ProtectedRoute>
             }
           />

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, matchPath, useLocation } from 'react-router-dom';
 import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../hooks/useAuth';
 import { MenuToggleButton } from './MenuToggleButton';
@@ -11,14 +11,11 @@ import { SettingsIcon } from '../icons/SettingsIcon';
 import { CreateTicketIcon } from '../icons/CreateTicketIcon';
 import { EquipmentIcon } from '../icons/EquipmentIcon';
 import { UsersIcon } from '../icons/UsersIcon';
-import { ConsumablesIcon } from '../icons/ConsumablesIcon';
-import { ToolsIcon } from '../icons/ToolsIcon';
 import { FrequentIssueIcon } from '../icons/FrequentIssueIcon';
-import { TicketAnalyticsIcon } from '../icons/TicketAnalyticsIcon';
-import { EquipmentAnalyticsIcon } from '../icons/EquipmentAnalyticsIcon';
-import { ConsumablesAnalyticsIcon } from '../icons/ConsumablesAnalyticsIcon';
 import { BackupIcon } from '../icons/BackupIcon';
 import { ReportsIcon } from '../icons/ReportsIcon';
+import { HandRequestIcon } from '../icons/HandRequestIcon';
+import { LoansHandsIcon } from '../icons/LoansHandsIcon';
 
 export const SidebarMenu: React.FC = () => {
   const { menuOpen, setMenuOpen } = useMenu();
@@ -29,6 +26,35 @@ export const SidebarMenu: React.FC = () => {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [loansOpen, setLoansOpen] = useState(false);
+  const [materialRequestsOpen, setMaterialRequestsOpen] = useState(false);
+  const pathname = location.pathname;
+
+  const matchesAnyRoute = (patterns: string[]) =>
+    patterns.some((pattern) => Boolean(matchPath({ path: pattern, end: false }, pathname)));
+
+  const isRouteActive = (pattern: string, end = false) =>
+    Boolean(matchPath({ path: pattern, end }, pathname));
+
+  const inventoryActive = matchesAnyRoute([
+    '/equipment/*',
+    '/consumables/*',
+    '/tools/*',
+  ]);
+  const analyticsActive = matchesAnyRoute([
+    '/analytics',
+    '/equipment/analytics/*',
+    '/consumables/analytics/*',
+    '/loans/reports/*',
+  ]);
+  const loansActive = matchesAnyRoute([
+    '/loans',
+    '/loans/create',
+    '/loans/history',
+    '/loans/approval',
+    '/loans/:id',
+    '/loans/:id/*',
+  ]);
+  const materialRequestsActive = matchesAnyRoute(['/material-requests/*']);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,79 +78,73 @@ export const SidebarMenu: React.FC = () => {
   }, [setMenuOpen]);
 
   useEffect(() => {
-    const pathname = location.pathname;
-    setInventoryOpen(
-      pathname.startsWith('/loans') ||
-      pathname.startsWith('/equipment') ||
-      pathname.startsWith('/consumables') ||
-      pathname.startsWith('/tools')
-    );
-    setAnalyticsOpen(
-      pathname === '/analytics' ||
-      pathname.startsWith('/equipment/analytics') ||
-      pathname.startsWith('/consumables/analytics') ||
-      pathname.startsWith('/loans/reports')
-    );
-    setLoansOpen(pathname.startsWith('/loans') && !pathname.startsWith('/loans/reports'));
+    setInventoryOpen(inventoryActive);
+    setAnalyticsOpen(analyticsActive);
+    setLoansOpen(loansActive);
+    setMaterialRequestsOpen(materialRequestsActive);
   }, [location.pathname]);
 
   const isActive = (path: string) => {
-    if (location.pathname === path) {
-      return true;
-    }
-
     if (path === '/tickets') {
       return (
-        location.pathname.startsWith('/tickets') &&
-        !location.pathname.startsWith('/tickets/dashboard') &&
-        !location.pathname.startsWith('/tickets/crear') &&
-        location.pathname !== '/analytics'
+        isRouteActive('/tickets/*') &&
+        !isRouteActive('/tickets/dashboard/*') &&
+        !isRouteActive('/tickets/crear', true) &&
+        !isRouteActive('/analytics', true)
       );
     }
 
     if (path === '/tickets/crear') {
-      return location.pathname === '/tickets/crear';
+      return isRouteActive('/tickets/crear', true);
     }
 
     if (path === '/dashboard') {
-      return location.pathname === '/dashboard';
+      return isRouteActive('/dashboard', true);
     }
 
     if (path === '/tecnico/dashboard') {
-      return location.pathname === '/tecnico/dashboard';
+      return isRouteActive('/tecnico/dashboard', true);
     }
 
     if (path === '/analytics') {
-      return location.pathname === '/analytics';
+      return isRouteActive('/analytics', true);
     }
 
     if (path === '/admin/users') {
-      return location.pathname.startsWith('/admin/users');
+      return isRouteActive('/admin/users/*');
     }
 
     if (path === '/admin/frequent-issues') {
-      return location.pathname.startsWith('/admin/frequent-issues');
+      return isRouteActive('/admin/frequent-issues/*');
     }
 
     if (path === '/admin/reports') {
-      return location.pathname.startsWith('/admin/reports');
+      return isRouteActive('/admin/reports/*');
     }
 
     if (path === '/admin/backup') {
-      return location.pathname.startsWith('/admin/backup');
+      return isRouteActive('/admin/backup/*');
     }
 
     if (path === '/admin/config') {
-      return location.pathname.startsWith('/admin/config');
+      return isRouteActive('/admin/config/*');
     }
     if (path === '/loans') {
-      return location.pathname.startsWith('/loans') && !location.pathname.startsWith('/loans/reports');
+      return matchesAnyRoute(['/loans', '/loans/create', '/loans/history', '/loans/approval', '/loans/:id', '/loans/:id/*']);
     }
     if (path === '/loans/reports') {
-      return location.pathname.startsWith('/loans/reports');
+      return isRouteActive('/loans/reports/*');
+    }
+    if (path === '/material-requests') {
+      if (pathname === '/material-requests') return true;
+      const detail = matchPath({ path: '/material-requests/:id', end: true }, pathname);
+      return Boolean(detail?.params.id && detail.params.id !== 'create');
+    }
+    if (path === '/material-requests/create') {
+      return isRouteActive('/material-requests/create', true);
     }
 
-    return location.pathname.startsWith(path + '/');
+    return isRouteActive(path, true) || isRouteActive(`${path}/*`);
   };
 
   const navLinks = [
@@ -204,16 +224,65 @@ export const SidebarMenu: React.FC = () => {
           <div className="mt-2">
             <button
               type="button"
-              onClick={() => setLoansOpen(!loansOpen)}
+              onClick={() => setMaterialRequestsOpen(!materialRequestsOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                loansOpen
+                materialRequestsActive
                   ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
             >
               <span className="flex items-center gap-3">
-                <EquipmentIcon
-                  className={`flex-shrink-0 h-5 w-5 ${loansOpen ? 'text-white' : 'text-gray-600'}`}
+                <HandRequestIcon
+                  className={`flex-shrink-0 h-5 w-5 ${
+                    materialRequestsActive ? 'text-white' : 'text-gray-600'
+                  }`}
+                />
+                <span>Solicitudes de Materiales</span>
+              </span>
+              <svg
+                className={`h-4 w-4 transform transition-transform ${materialRequestsOpen ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {materialRequestsOpen && (
+              <div className="mt-1 space-y-1 ml-6">
+                <NavLink
+                  path="/material-requests/create"
+                  label="Nueva solicitud"
+                  variant="subitem"
+                  isActive={isActive('/material-requests/create')}
+                  onClick={() => setMenuOpen(false)}
+                />
+                <NavLink
+                  path="/material-requests"
+                  label={
+                    user?.role === 'administrator' ? 'Listado de solicitudes' : 'Mis solicitudes'
+                  }
+                  variant="subitem"
+                  isActive={isActive('/material-requests')}
+                  onClick={() => setMenuOpen(false)}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setLoansOpen(!loansOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                loansActive
+                  ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <LoansHandsIcon
+                  className={`flex-shrink-0 h-5 w-5 ${loansActive ? 'text-white' : 'text-gray-600'}`}
                 />
                 <span>Préstamos</span>
               </span>
@@ -231,14 +300,14 @@ export const SidebarMenu: React.FC = () => {
                 <NavLink
                   path="/loans/create"
                   label="Solicitar Préstamo"
-                  icon={EquipmentIcon}
+                  variant="subitem"
                   isActive={isActive('/loans/create')}
                   onClick={() => setMenuOpen(false)}
                 />
                 <NavLink
                   path="/loans/history"
                   label="Historial de Préstamos"
-                  icon={EquipmentIcon}
+                  variant="subitem"
                   isActive={isActive('/loans/history')}
                   onClick={() => setMenuOpen(false)}
                 />
@@ -246,7 +315,7 @@ export const SidebarMenu: React.FC = () => {
                   <NavLink
                     path="/loans/approval"
                     label="Aprobar Préstamos"
-                    icon={EquipmentIcon}
+                    variant="subitem"
                     isActive={isActive('/loans/approval')}
                     onClick={() => setMenuOpen(false)}
                   />
@@ -255,7 +324,7 @@ export const SidebarMenu: React.FC = () => {
                   <NavLink
                     path="/loans/reports"
                     label="Reporte Préstamos"
-                    icon={ReportsIcon}
+                    variant="subitem"
                     isActive={isActive('/loans/reports')}
                     onClick={() => setMenuOpen(false)}
                   />
@@ -271,7 +340,7 @@ export const SidebarMenu: React.FC = () => {
                 type="button"
                 onClick={() => setInventoryOpen(!inventoryOpen)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                  inventoryOpen
+                  inventoryActive
                     ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
                     : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
@@ -279,7 +348,7 @@ export const SidebarMenu: React.FC = () => {
                 <span className="flex items-center gap-3">
                   <EquipmentIcon
                     className={`flex-shrink-0 h-5 w-5 ${
-                      inventoryOpen ? 'text-white' : 'text-gray-600'
+                      inventoryActive ? 'text-white' : 'text-gray-600'
                     }`}
                   />
                   <span>Inventario</span>
@@ -300,21 +369,21 @@ export const SidebarMenu: React.FC = () => {
                   <NavLink
                     path="/equipment"
                     label="Equipos"
-                    icon={EquipmentIcon}
+                    variant="subitem"
                     isActive={isActive('/equipment')}
                     onClick={() => setMenuOpen(false)}
                   />
                   <NavLink
                     path="/consumables"
                     label="Consumibles"
-                    icon={ConsumablesIcon}
+                    variant="subitem"
                     isActive={isActive('/consumables')}
                     onClick={() => setMenuOpen(false)}
                   />
                   <NavLink
                     path="/tools"
                     label="Herramientas"
-                    icon={ToolsIcon}
+                    variant="subitem"
                     isActive={isActive('/tools')}
                     onClick={() => setMenuOpen(false)}
                   />
@@ -330,7 +399,7 @@ export const SidebarMenu: React.FC = () => {
                 type="button"
                 onClick={() => setAnalyticsOpen(!analyticsOpen)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                  analyticsOpen
+                  analyticsActive
                     ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
                     : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
@@ -338,7 +407,7 @@ export const SidebarMenu: React.FC = () => {
                 <span className="flex items-center gap-3">
                   <AnalyticsIcon
                     className={`flex-shrink-0 h-5 w-5 ${
-                      analyticsOpen ? 'text-white' : 'text-gray-600'
+                      analyticsActive ? 'text-white' : 'text-gray-600'
                     }`}
                   />
                   <span>Estadísticas</span>
@@ -359,28 +428,28 @@ export const SidebarMenu: React.FC = () => {
                   <NavLink
                     path="/analytics"
                     label="Estadísticas de Tickets"
-                    icon={TicketAnalyticsIcon}
+                    variant="subitem"
                     isActive={isActive('/analytics')}
                     onClick={() => setMenuOpen(false)}
                   />
                   <NavLink
                     path="/equipment/analytics"
                     label="Estadísticas de Equipos"
-                    icon={EquipmentAnalyticsIcon}
+                    variant="subitem"
                     isActive={isActive('/equipment/analytics')}
                     onClick={() => setMenuOpen(false)}
                   />
                   <NavLink
                     path="/consumables/analytics"
                     label="Estadísticas de Consumibles"
-                    icon={ConsumablesAnalyticsIcon}
+                    variant="subitem"
                     isActive={isActive('/consumables/analytics')}
                     onClick={() => setMenuOpen(false)}
                   />
                   <NavLink
                     path="/tools/analytics"
                     label="Estadísticas de Herramientas"
-                    icon={ToolsIcon}
+                    variant="subitem"
                     isActive={isActive('/tools/analytics')}
                     onClick={() => setMenuOpen(false)}
                   />

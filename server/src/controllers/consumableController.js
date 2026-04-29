@@ -1,5 +1,6 @@
 import Consumable from '../models/Consumable.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
+import { query } from '../config/database.js';
 
 const calculateConsumableStatus = (quantity, minimumQuantity, currentStatus) => {
     if (currentStatus === 'inactive') return 'inactive';
@@ -66,7 +67,7 @@ export const createConsumable = async (req, res) => {
 
 export const getConsumables = async (req, res) => {
     try {
-        const { role } = req.user;
+        const { role, id: userId } = req.user;
         const {
             status,
             type,
@@ -99,8 +100,79 @@ export const getConsumables = async (req, res) => {
         filters.limit = parseInt(limit, 10);
         filters.offset = offset;
 
-        const consumables = await Consumable.findAll(filters);
-        const total = await Consumable.count(filters);
+        let consumables;
+        let total;
+
+        if (role !== 'administrator') {
+            const assignedParams = [userId];
+            let assignedWhere = `
+                WHERE mr.active = TRUE
+                  AND mr.status = 'approved'
+                  AND mr.requester_user_id = ?
+                  AND mri.active = TRUE
+                  AND mri.material_type = 'consumable'
+            `;
+
+            if (status) {
+                assignedWhere += ' AND c.status = ?';
+                assignedParams.push(status);
+            }
+            if (type) {
+                const parsedType = Number(type);
+                if (Number.isNaN(parsedType)) {
+                    assignedWhere += ' AND ct.name = ?';
+                    assignedParams.push(type);
+                } else {
+                    assignedWhere += ' AND c.type_id = ?';
+                    assignedParams.push(parsedType);
+                }
+            }
+            if (search) {
+                assignedWhere += ' AND (c.name LIKE ? OR c.unit LIKE ? OR ct.name LIKE ?)';
+                const searchTerm = `%${search}%`;
+                assignedParams.push(searchTerm, searchTerm, searchTerm);
+            }
+            if (below_minimum === 'true') {
+                assignedWhere += ' AND c.quantity <= c.minimum_quantity';
+            }
+
+            const dataSql = `
+                SELECT
+                    c.*,
+                    ct.name AS type_name,
+                    ct.description AS type_description,
+                    SUM(mri.quantity) AS assigned_quantity
+                FROM material_request_items mri
+                INNER JOIN material_requests mr ON mr.id = mri.material_request_id
+                INNER JOIN consumables c ON c.id = mri.reference_id AND c.active = TRUE
+                LEFT JOIN consumable_types ct ON ct.id = c.type_id
+                ${assignedWhere}
+                GROUP BY c.id
+                ORDER BY c.created_at DESC
+                LIMIT ? OFFSET ?
+            `;
+
+            const dataParams = [...assignedParams, parseInt(limit, 10), offset];
+            consumables = await query(dataSql, dataParams);
+
+            const countSql = `
+                SELECT COUNT(*) AS total
+                FROM (
+                    SELECT c.id
+                    FROM material_request_items mri
+                    INNER JOIN material_requests mr ON mr.id = mri.material_request_id
+                    INNER JOIN consumables c ON c.id = mri.reference_id AND c.active = TRUE
+                    LEFT JOIN consumable_types ct ON ct.id = c.type_id
+                    ${assignedWhere}
+                    GROUP BY c.id
+                ) assigned_consumables
+            `;
+            const totalResult = await query(countSql, assignedParams);
+            total = Number(totalResult[0]?.total ?? 0);
+        } else {
+            consumables = await Consumable.findAll(filters);
+            total = await Consumable.count(filters);
+        }
 
         sendSuccess(res, 'Consumibles obtenidos exitosamente', {
             consumables,
@@ -120,11 +192,31 @@ export const getConsumables = async (req, res) => {
 export const getConsumableById = async (req, res) => {
     try {
         const { id } = req.params;
+        const { role, id: userId } = req.user;
 
         const consumable = await Consumable.findById(id);
 
         if (!consumable) {
             return sendError(res, 'Consumible no encontrado', null, 404);
+        }
+
+        if (role !== 'administrator') {
+            const assignment = await query(
+                `SELECT mri.id
+                 FROM material_request_items mri
+                 INNER JOIN material_requests mr ON mr.id = mri.material_request_id
+                 WHERE mr.active = TRUE
+                   AND mr.status = 'approved'
+                   AND mr.requester_user_id = ?
+                   AND mri.active = TRUE
+                   AND mri.material_type = 'consumable'
+                   AND mri.reference_id = ?
+                 LIMIT 1`,
+                [userId, id]
+            );
+            if (assignment.length === 0) {
+                return sendError(res, 'No tienes permiso para ver este consumible', null, 403);
+            }
         }
 
         sendSuccess(res, 'Consumible obtenido exitosamente', consumable);

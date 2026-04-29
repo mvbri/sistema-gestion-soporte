@@ -67,6 +67,7 @@ export const createTool = async (req, res) => {
 
 export const getTools = async (req, res) => {
     try {
+        const { role, id: userId } = req.user;
         const {
             status,
             type,
@@ -87,7 +88,9 @@ export const getTools = async (req, res) => {
             filters.type = Number.isNaN(parsedType) ? type : parsedType;
         }
 
-        if (assigned_to_user_id) {
+        if (role !== 'administrator') {
+            filters.assigned_to_user_id = userId;
+        } else if (assigned_to_user_id) {
             filters.assigned_to_user_id = parseInt(assigned_to_user_id, 10);
         }
 
@@ -120,11 +123,16 @@ export const getTools = async (req, res) => {
 export const getToolById = async (req, res) => {
     try {
         const { id } = req.params;
+        const { role, id: userId } = req.user;
 
         const tool = await Tool.findById(id);
 
         if (!tool) {
             return sendError(res, 'Herramienta no encontrada', null, 404);
+        }
+
+        if (role !== 'administrator' && tool.assigned_to_user_id !== userId) {
+            return sendError(res, 'No tienes permiso para ver esta herramienta', null, 403);
         }
 
         sendSuccess(res, 'Herramienta obtenida exitosamente', tool);

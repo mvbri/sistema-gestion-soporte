@@ -11,6 +11,7 @@ import consumableRoutes from './routes/consumableRoutes.js';
 import toolRoutes from './routes/toolRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import equipmentLoanRoutes from './routes/equipmentLoanRoutes.js';
+import materialRequestRoutes from './routes/materialRequestRoutes.js';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use('/api/consumables', consumableRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/equipment-loans', equipmentLoanRoutes);
+app.use('/api/material-requests', materialRequestRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
