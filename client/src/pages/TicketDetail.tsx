@@ -22,6 +22,7 @@ import { PriorityBadge } from '../components/tickets/PriorityBadge';
 import { CategoryBadge } from '../components/tickets/CategoryBadge';
 import { translateRole } from '../utils/roleTranslations';
 import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
+import type { EquipmentFilters } from '../types';
 
 const FREQUENT_ISSUE_COMMENT_BLOCK_START = 'Diagnóstico sugerido:';
 
@@ -46,7 +47,11 @@ export const TicketDetail: React.FC = () => {
   const { data: estados = [] } = useEstados();
   const { data: tecnicos = [] } = useTecnicos();
   const { data: frequentIssues = [] } = useFrequentIssues();
-  const { data: equipmentData } = useEquipment({ limit: 1000 });
+  const equipmentFilters: EquipmentFilters = {
+    limit: 1000,
+    ...(user?.role !== 'administrator' ? { for_tickets: true } : {}),
+  };
+  const { data: equipmentData } = useEquipment(equipmentFilters);
   const equipos = equipmentData?.equipment || [];
   
   const updateTicketMutation = useUpdateTicket();

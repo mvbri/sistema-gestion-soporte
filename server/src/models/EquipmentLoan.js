@@ -3,22 +3,6 @@ import { getConnection, query } from '../config/database.js';
 class EquipmentLoan {
     static allowedEquipmentStatuses = ['available', 'assigned', 'maintenance', 'retired'];
 
-    static async getAvailablePools() {
-        return await query(
-            `SELECT
-                id,
-                name,
-                description,
-                total_stock,
-                available_stock,
-                minimum_stock,
-                active
-             FROM equipment_pools
-             WHERE active = TRUE
-             ORDER BY name`
-        );
-    }
-
     static async create(data) {
         const {
             requester_user_id,
@@ -90,55 +74,60 @@ class EquipmentLoan {
     }
 
     static async _validateLoanItemAvailability(conn, item) {
-        if (item.equipment_id) {
-            const equipmentResult = await conn.query(
-                `SELECT id, status, active
-                 FROM equipment
-                 WHERE id = ?
-                 LIMIT 1`,
-                [item.equipment_id]
-            );
-            const equipment = equipmentResult[0];
-            if (!equipment || !equipment.active) {
-                throw new Error(`El equipo ${item.equipment_id} no existe o está inactivo`);
-            }
-            if (equipment.status !== 'available') {
-                throw new Error(`El equipo ${item.equipment_id} no está disponible para préstamo`);
-            }
-
-            const overlap = await conn.query(
-                `SELECT eli.id
-                 FROM equipment_loan_items eli
-                 INNER JOIN equipment_loans el ON el.id = eli.loan_id
-                 WHERE eli.equipment_id = ?
-                   AND eli.active = TRUE
-                   AND el.active = TRUE
-                   AND el.status IN ('approved', 'delivered', 'overdue')
-                 LIMIT 1`,
-                [item.equipment_id]
-            );
-            if (overlap.length > 0) {
-                throw new Error(`El equipo ${item.equipment_id} ya se encuentra prestado o reservado`);
-            }
-            return;
+        if (item.pool_id) {
+            throw new Error('Las solicitudes por pool están deshabilitadas');
+        }
+        if (!item.equipment_id) {
+            throw new Error('Cada ítem debe incluir un equipo');
+        }
+        const equipmentResult = await conn.query(
+            `SELECT id, status, active
+             FROM equipment
+             WHERE id = ?
+             LIMIT 1`,
+            [item.equipment_id]
+        );
+        const equipment = equipmentResult[0];
+        if (!equipment || !equipment.active) {
+            throw new Error(`El equipo ${item.equipment_id} no existe o está inactivo`);
+        }
+        if (equipment.status !== 'available') {
+            throw new Error(`El equipo ${item.equipment_id} no está disponible para préstamo`);
         }
 
-        if (item.pool_id) {
-            const poolResult = await conn.query(
-                `SELECT id, available_stock, active
-                 FROM equipment_pools
-                 WHERE id = ?
-                 LIMIT 1`,
-                [item.pool_id]
+        const overlap = await conn.query(
+            `SELECT eli.id
+             FROM equipment_loan_items eli
+             INNER JOIN equipment_loans el ON el.id = eli.loan_id
+             WHERE eli.equipment_id = ?
+               AND eli.active = TRUE
+               AND el.active = TRUE
+               AND el.status IN ('approved', 'delivered', 'overdue')
+             LIMIT 1`,
+            [item.equipment_id]
+        );
+        if (overlap.length > 0) {
+            throw new Error(`El equipo ${item.equipment_id} ya se encuentra prestado o reservado`);
+        }
+    }
+
+    /** Devuelve al pool de inventario los equipos concretos del préstamo (available, sin asignatario). */
+    static async _releaseLoanEquipmentItems(conn, loanId) {
+        const rows = await conn.query(
+            `SELECT equipment_id
+             FROM equipment_loan_items
+             WHERE loan_id = ?
+               AND active = TRUE
+               AND equipment_id IS NOT NULL`,
+            [loanId]
+        );
+        for (const row of rows) {
+            await conn.query(
+                `UPDATE equipment
+                 SET status = 'available', assigned_to_user_id = NULL
+                 WHERE id = ?`,
+                [row.equipment_id]
             );
-            const pool = poolResult[0];
-            if (!pool || !pool.active) {
-                throw new Error(`El pool ${item.pool_id} no existe o está inactivo`);
-            }
-            const requested = Number(item.quantity || 1);
-            if (requested > Number(pool.available_stock)) {
-                throw new Error(`Stock insuficiente para el pool ${item.pool_id}`);
-            }
         }
     }
 
@@ -208,18 +197,43 @@ class EquipmentLoan {
                 h.*,
                 u.full_name AS changed_by_user_name
              FROM equipment_loan_history h
-             INNER JOIN users u ON u.id = h.changed_by_user_id
+             LEFT JOIN users u ON u.id = h.changed_by_user_id
              WHERE h.loan_id = ?
              ORDER BY h.id`,
             [loanId]
         );
+
+        let comments = [];
+        try {
+            comments = await query(
+                `SELECT
+                    elc.*,
+                    u.full_name AS created_by_user_name,
+                    CASE
+                        WHEN u.role_id = 1 THEN 'administrator'
+                        WHEN u.role_id = 2 THEN 'technician'
+                        ELSE 'end_user'
+                    END AS created_by_user_role
+                 FROM equipment_loan_comments elc
+                 INNER JOIN users u ON u.id = elc.created_by_user_id
+                 WHERE elc.equipment_loan_id = ?
+                 ORDER BY elc.id`,
+                [loanId]
+            );
+        } catch (err) {
+            console.warn(
+                '[EquipmentLoan.findById] No se pudieron cargar comentarios (¿falta migración equipment_loan_comments?):',
+                err.message
+            );
+        }
 
         return {
             ...loanRows[0],
             items,
             checklists,
             incidents,
-            history
+            history,
+            comments
         };
     }
 
@@ -335,8 +349,10 @@ class EquipmentLoan {
             allowedCurrentStatuses: ['pending'],
             changedByUserId: approvedByUserId,
             notes: notes || 'Préstamo aprobado por IT',
+            beforeStatusChange: async (conn) => {
+                await this._ensureLoanItemsCanBeAllocated(conn, loanId, 'approve');
+            },
             sideEffects: async (conn, loan) => {
-                await this._ensureLoanItemsCanBeAllocated(conn, loanId);
                 await conn.query(
                     'UPDATE equipment_loans SET approved_by_user_id = ? WHERE id = ?',
                     [approvedByUserId, loanId]
@@ -354,6 +370,28 @@ class EquipmentLoan {
                     );
                     if (Number(stockUpdateResult.affectedRows || 0) === 0) {
                         throw new Error(`Stock insuficiente para el pool ${item.pool_id}`);
+                    }
+                }
+
+                const requesterRows = await conn.query(
+                    'SELECT requester_user_id FROM equipment_loans WHERE id = ?',
+                    [loanId]
+                );
+                const requesterId = requesterRows[0]?.requester_user_id;
+                if (requesterId != null) {
+                    const eqItems = await conn.query(
+                        `SELECT equipment_id
+                         FROM equipment_loan_items
+                         WHERE loan_id = ? AND active = TRUE AND equipment_id IS NOT NULL`,
+                        [loanId]
+                    );
+                    for (const row of eqItems) {
+                        await conn.query(
+                            `UPDATE equipment
+                             SET status = 'assigned', assigned_to_user_id = ?
+                             WHERE id = ?`,
+                            [requesterId, row.equipment_id]
+                        );
                     }
                 }
             }
@@ -390,22 +428,7 @@ class EquipmentLoan {
                     }
                 }
 
-                const equipmentItems = await conn.query(
-                    `SELECT equipment_id
-                     FROM equipment_loan_items
-                     WHERE loan_id = ?
-                       AND active = TRUE
-                       AND equipment_id IS NOT NULL`,
-                    [loanId]
-                );
-                for (const item of equipmentItems) {
-                    await conn.query(
-                        `UPDATE equipment
-                         SET status = 'available', assigned_to_user_id = NULL
-                         WHERE id = ?`,
-                        [item.equipment_id]
-                    );
-                }
+                await this._releaseLoanEquipmentItems(conn, loanId);
             }
         });
     }
@@ -446,18 +469,6 @@ class EquipmentLoan {
                 ]
             );
 
-            await conn.query(
-                `INSERT INTO equipment_loan_history (loan_id, changed_by_user_id, previous_status, new_status, notes)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [
-                    loanId,
-                    userId,
-                    loan.status,
-                    loan.status,
-                    'Checklist de solicitud pendiente actualizado'
-                ]
-            );
-
             await conn.commit();
             return await this.findById(loanId);
         } catch (error) {
@@ -475,12 +486,19 @@ class EquipmentLoan {
             allowedCurrentStatuses: ['approved'],
             changedByUserId: deliveredByUserId,
             notes: payload.notes || 'Entrega registrada',
+            beforeStatusChange: async (conn) => {
+                await this._ensureLoanItemsCanBeAllocated(conn, loanId, 'deliver');
+            },
             sideEffects: async (conn) => {
-                await this._ensureLoanItemsCanBeAllocated(conn, loanId);
                 await conn.query(
                     'UPDATE equipment_loans SET delivered_by_user_id = ?, delivered_at = NOW() WHERE id = ?',
                     [deliveredByUserId, loanId]
                 );
+                const reqRows = await conn.query(
+                    'SELECT requester_user_id FROM equipment_loans WHERE id = ?',
+                    [loanId]
+                );
+                const requesterUserId = reqRows[0]?.requester_user_id ?? null;
                 const loanItems = await conn.query(
                     'SELECT id, equipment_id FROM equipment_loan_items WHERE loan_id = ? AND active = TRUE',
                     [loanId]
@@ -489,9 +507,9 @@ class EquipmentLoan {
                     if (item.equipment_id) {
                         await conn.query(
                             `UPDATE equipment
-                             SET status = 'assigned'
+                             SET status = 'assigned', assigned_to_user_id = ?
                              WHERE id = ?`,
-                            [item.equipment_id]
+                            [requesterUserId, item.equipment_id]
                         );
                     }
                     await conn.query(
@@ -512,13 +530,38 @@ class EquipmentLoan {
         });
     }
 
-    static async _ensureLoanItemsCanBeAllocated(conn, loanId) {
+    static _equipmentLabel(item) {
+        const name = item.equipment_name || 'Equipo';
+        if (item.equipment_serial) {
+            return `${name} (SN: ${item.equipment_serial})`;
+        }
+        return name;
+    }
+
+    /** @param {'approve' | 'deliver'} phase */
+    static _loanAllocationErrorPrefix(phase) {
+        if (phase === 'deliver') {
+            return 'No se puede registrar la entrega:';
+        }
+        return 'No se puede aprobar el préstamo:';
+    }
+
+    static async _ensureLoanItemsCanBeAllocated(conn, loanId, phase = 'approve') {
+        const p = this._loanAllocationErrorPrefix(phase);
+        const metaRows = await conn.query(
+            'SELECT requester_user_id FROM equipment_loans WHERE id = ?',
+            [loanId]
+        );
+        const requesterUserId = metaRows[0]?.requester_user_id ?? null;
+
         const equipmentItems = await conn.query(
             `SELECT
                 eli.equipment_id,
                 e.name AS equipment_name,
+                e.serial_number AS equipment_serial,
                 e.status AS equipment_status,
-                e.active AS equipment_active
+                e.active AS equipment_active,
+                e.assigned_to_user_id AS equipment_assigned_to_user_id
              FROM equipment_loan_items eli
              INNER JOIN equipment e ON e.id = eli.equipment_id
              WHERE eli.loan_id = ?
@@ -528,11 +571,33 @@ class EquipmentLoan {
         );
 
         for (const item of equipmentItems) {
+            const label = this._equipmentLabel(item);
+
             if (!item.equipment_active) {
-                throw new Error(`El equipo "${item.equipment_name}" está inactivo`);
+                throw new Error(`${p} el equipo "${label}" está inactivo.`);
             }
-            if (item.equipment_status !== 'available') {
-                throw new Error(`El equipo "${item.equipment_name}" no está disponible`);
+
+            const assignedToBorrower =
+                phase === 'deliver' &&
+                item.equipment_status === 'assigned' &&
+                requesterUserId != null &&
+                Number(item.equipment_assigned_to_user_id) === Number(requesterUserId);
+
+            if (assignedToBorrower) {
+                // Reservado al aprobar el préstamo; la entrega solo registra checklist.
+            } else if (item.equipment_status === 'assigned') {
+                throw new Error(
+                    `${p} el equipo "${label}" ya está asignado. ` +
+                        'Verifique si corresponde a otra persona o devuelva el préstamo anterior antes de continuar.'
+                );
+            } else if (item.equipment_status === 'maintenance') {
+                throw new Error(`${p} el equipo "${label}" está en mantenimiento.`);
+            } else if (item.equipment_status === 'retired') {
+                throw new Error(`${p} el equipo "${label}" está dado de baja.`);
+            } else if (item.equipment_status !== 'available') {
+                throw new Error(
+                    `${p} el equipo "${label}" no está disponible (estado: ${item.equipment_status}).`
+                );
             }
 
             const overlap = await conn.query(
@@ -550,7 +615,8 @@ class EquipmentLoan {
 
             if (overlap.length > 0) {
                 throw new Error(
-                    `El equipo "${item.equipment_name}" ya está prestado o asignado a otro préstamo activo`
+                    `${p} el equipo "${label}" ya forma parte de otro préstamo aprobado, entregado o vencido. ` +
+                        'Cancele o cierre el otro movimiento antes de continuar.'
                 );
             }
         }
@@ -641,9 +707,75 @@ class EquipmentLoan {
                             [item.quantity, item.pool_id]
                         );
                     }
+                    await this._releaseLoanEquipmentItems(conn, loanId);
                 }
             }
         });
+    }
+
+    static async revokeApproval(loanId, revokedByUserId, notes) {
+        return await this._changeStatus({
+            loanId,
+            nextStatus: 'pending',
+            allowedCurrentStatuses: ['approved'],
+            changedByUserId: revokedByUserId,
+            notes: notes?.trim() || 'Aprobación anulada por administración',
+            sideEffects: async (conn) => {
+                await conn.query(
+                    `UPDATE equipment_loans
+                     SET approved_by_user_id = NULL, approval_notes = NULL
+                     WHERE id = ?`,
+                    [loanId]
+                );
+                const poolItems = await conn.query(
+                    `SELECT pool_id, quantity
+                     FROM equipment_loan_items
+                     WHERE loan_id = ? AND active = TRUE AND pool_id IS NOT NULL`,
+                    [loanId]
+                );
+                for (const item of poolItems) {
+                    await conn.query(
+                        'UPDATE equipment_pools SET available_stock = available_stock + ? WHERE id = ?',
+                        [item.quantity, item.pool_id]
+                    );
+                }
+                await this._releaseLoanEquipmentItems(conn, loanId);
+            }
+        });
+    }
+
+    static async addComment(equipmentLoanId, userId, commentText) {
+        await query(
+            `INSERT INTO equipment_loan_comments
+                (equipment_loan_id, comment_text, created_by_user_id)
+             VALUES (?, ?, ?)`,
+            [equipmentLoanId, commentText, userId]
+        );
+        const comments = await this.getComments(equipmentLoanId);
+        return comments[comments.length - 1] || null;
+    }
+
+    static async getComments(equipmentLoanId) {
+        try {
+            return await query(
+                `SELECT
+                    elc.*,
+                    u.full_name AS created_by_user_name,
+                    CASE
+                        WHEN u.role_id = 1 THEN 'administrator'
+                        WHEN u.role_id = 2 THEN 'technician'
+                        ELSE 'end_user'
+                    END AS created_by_user_role
+                 FROM equipment_loan_comments elc
+                 INNER JOIN users u ON u.id = elc.created_by_user_id
+                 WHERE elc.equipment_loan_id = ?
+                 ORDER BY elc.id`,
+                [equipmentLoanId]
+            );
+        } catch (err) {
+            console.warn('[EquipmentLoan.getComments]', err.message);
+            return [];
+        }
     }
 
     static async markOverdue() {
@@ -721,6 +853,7 @@ class EquipmentLoan {
         allowedCurrentStatuses,
         changedByUserId,
         notes,
+        beforeStatusChange,
         sideEffects
     }) {
         const conn = await getConnection();
@@ -734,15 +867,29 @@ class EquipmentLoan {
             if (!loan) {
                 throw new Error('Préstamo no encontrado');
             }
-            if (!allowedCurrentStatuses.includes(loan.status)) {
-                throw new Error(`No se puede cambiar de ${loan.status} a ${nextStatus}`);
+            const previousStatus =
+                loan.status === null || loan.status === undefined
+                    ? ''
+                    : String(loan.status).trim();
+            if (!allowedCurrentStatuses.includes(previousStatus)) {
+                throw new Error(`No se puede cambiar de ${previousStatus || loan.status} a ${nextStatus}`);
+            }
+
+            if (beforeStatusChange) {
+                await beforeStatusChange(conn, loan);
             }
 
             await conn.query('UPDATE equipment_loans SET status = ? WHERE id = ?', [nextStatus, loanId]);
             await conn.query(
                 `INSERT INTO equipment_loan_history (loan_id, changed_by_user_id, previous_status, new_status, notes)
                  VALUES (?, ?, ?, ?, ?)`,
-                [loanId, changedByUserId, loan.status, nextStatus, notes || null]
+                [
+                    loanId,
+                    changedByUserId,
+                    previousStatus || null,
+                    nextStatus,
+                    notes || null
+                ]
             );
 
             if (sideEffects) {

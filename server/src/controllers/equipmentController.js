@@ -76,20 +76,40 @@ export const getEquipment = async (req, res) => {
             assigned_to_user_id,
             search,
             page = 1,
-            limit = 10
+            limit = 10,
+            for_tickets: forTicketsRaw,
+            for_loans: forLoansRaw
         } = req.query;
+
+        const forTickets =
+            forTicketsRaw === '1' ||
+            forTicketsRaw === 'true' ||
+            forTicketsRaw === true;
+
+        const forLoans =
+            forLoansRaw === '1' ||
+            forLoansRaw === 'true' ||
+            forLoansRaw === true;
 
         const filters = {};
 
-        if (role !== 'administrator') {
-            filters.assigned_to_user_id = userId;
-            if (status) filters.status = status;
-            if (type) filters.type = type;
+        if (forLoans) {
+            filters.for_loan_selection = true;
+            filters.status = 'available';
+        } else if (role !== 'administrator') {
+            if (forTickets) {
+                filters.for_ticket_selection = true;
+                filters.ticket_user_id = userId;
+            } else {
+                filters.assigned_to_user_id = userId;
+                if (status) filters.status = status;
+            }
         } else {
             if (status) filters.status = status;
-            if (type) filters.type = type;
             if (assigned_to_user_id) filters.assigned_to_user_id = parseInt(assigned_to_user_id);
         }
+
+        if (type) filters.type = type;
 
         if (search) filters.search = search;
 

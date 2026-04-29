@@ -189,7 +189,7 @@ export const AdminConfig: React.FC = () => {
       case '2':
         return 'bg-yellow-100';
       case '3':
-        return 'bg-orange-100';
+        return 'bg-red-100';
       case '4':
         return 'bg-red-100';
       default:

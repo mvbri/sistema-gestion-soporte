@@ -62,7 +62,7 @@ export const LoansList: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="py-6 px-4 max-w-7xl mx-auto">
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Préstamos de Equipos</h1>

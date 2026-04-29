@@ -23,10 +23,11 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
       : prioridad.color || 'bg-gray-100';
 
   const prioridadColor = (colorOverride && colorOverride.trim()) || baseColor;
+  const textColor = /\bbg-red-/.test(prioridadColor) ? 'text-red-800' : 'text-gray-800';
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prioridadColor} text-gray-800 ${className}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prioridadColor} ${textColor} ${className}`}
     >
       {prioridadNombre}
     </span>

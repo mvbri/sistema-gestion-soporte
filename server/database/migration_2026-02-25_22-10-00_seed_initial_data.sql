@@ -29,7 +29,7 @@ INSERT IGNORE INTO ticket_categories (name, description) VALUES
 INSERT IGNORE INTO ticket_priorities (name, level, color, description) VALUES
 ('Baja', 1, 'bg-green-100', 'Prioridad baja, puede esperar'),
 ('Media', 2, 'bg-yellow-100', 'Prioridad media, atención normal'),
-('Alta', 3, 'bg-orange-100', 'Prioridad alta, requiere atención pronta'),
+('Alta', 3, 'bg-red-100', 'Prioridad alta, requiere atención pronta'),
 ('Urgente', 4, 'bg-red-100', 'Prioridad urgente, requiere atención inmediata');
 
 -- Seed incident areas (directions / locations)

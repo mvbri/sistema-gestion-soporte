@@ -578,6 +578,51 @@ class Usuario {
         const result = await query(sql);
         return result[0] || null;
     }
+
+    /**
+     * Equipo o herramienta asignados al usuario, o consumible ligado a solicitud de materiales aprobada
+     * (misma idea que los listados filtrados para no administradores).
+     */
+    static async userHasInventoryAssignments(userId) {
+        const uid = Number(userId);
+        if (!Number.isFinite(uid) || uid < 1) {
+            return false;
+        }
+        try {
+            const rows = await query(
+                `SELECT (
+                    EXISTS (
+                        SELECT 1 FROM equipment e
+                        WHERE e.active = TRUE AND e.assigned_to_user_id = ?
+                        LIMIT 1
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM tools t
+                        WHERE t.active = TRUE AND t.assigned_to_user_id = ?
+                        LIMIT 1
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM material_request_items mri
+                        INNER JOIN material_requests mr ON mr.id = mri.material_request_id
+                        INNER JOIN consumables c ON c.id = mri.reference_id AND c.active = TRUE
+                        WHERE mr.requester_user_id = ?
+                          AND mr.active = TRUE
+                          AND mr.status = 'approved'
+                          AND mri.active = TRUE
+                          AND mri.material_type = 'consumable'
+                        LIMIT 1
+                    )
+                ) AS flag`,
+                [uid, uid, uid]
+            );
+            const flag = rows[0]?.flag;
+            return flag === 1 || flag === true;
+        } catch (error) {
+            console.warn('[Usuario.userHasInventoryAssignments]', error.message);
+            return false;
+        }
+    }
 }
 
 export default Usuario;

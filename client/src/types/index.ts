@@ -7,6 +7,8 @@ export interface User {
   department?: string;
   incident_area_id?: number | null;
   email_verified: boolean;
+  /** Equipo/herramienta asignados o consumible en solicitud aprobada; siempre true para administrador */
+  has_inventory_assignments?: boolean;
   active?: boolean;
   created_at?: string;
 }
@@ -298,6 +300,10 @@ export interface EquipmentFilters {
   search?: string;
   page?: number;
   limit?: number;
+  /** List equipment eligible to link on tickets (available pool + assigned to current user). Server-only flag. */
+  for_tickets?: boolean;
+  /** List all available pool equipment for loan request form (non-admin). Server-only flag. */
+  for_loans?: boolean;
 }
 
 export interface EquipmentStats {
@@ -515,6 +521,16 @@ export interface EquipmentLoanHistory {
   created_at: string;
 }
 
+export interface EquipmentLoanComment {
+  id: number;
+  equipment_loan_id: number;
+  comment_text: string;
+  created_by_user_id: number;
+  created_by_user_name?: string;
+  created_by_user_role?: Role;
+  created_at: string;
+}
+
 export interface EquipmentLoan {
   id: number;
   request_code?: string;
@@ -540,6 +556,7 @@ export interface EquipmentLoan {
   checklists: EquipmentLoanChecklist[];
   incidents: EquipmentLoanIncident[];
   history: EquipmentLoanHistory[];
+  comments: EquipmentLoanComment[];
   created_at: string;
 }
 

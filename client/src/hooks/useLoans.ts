@@ -26,15 +26,6 @@ export const useLoanById = (id: number | undefined) => {
   });
 };
 
-export const useLoanPools = () => {
-  return useQuery({
-    queryKey: ['equipmentLoanPools'],
-    queryFn: () => loanService.getPools(),
-    select: (response) => response.data,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
 export const useCreateLoan = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -130,6 +121,34 @@ export const useCancelLoan = () => {
       toast.success('Préstamo cancelado');
     },
     onError: (error: any) => toast.error(error.response?.data?.message || 'No se pudo cancelar'),
+  });
+};
+
+export const useRevokeLoanApproval = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) => loanService.revokeApproval(id, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['equipmentLoans'] });
+      queryClient.invalidateQueries({ queryKey: ['equipmentLoan'] });
+      toast.success('Aprobación anulada');
+    },
+    onError: (error: any) =>
+      toast.error(error.response?.data?.message || 'No se pudo anular la aprobación'),
+  });
+};
+
+export const useAddEquipmentLoanComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, commentText }: { id: number; commentText: string }) =>
+      loanService.addComment(id, commentText),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['equipmentLoan', variables.id] });
+      toast.success('Comentario enviado');
+    },
+    onError: (error: any) =>
+      toast.error(error.response?.data?.message || 'No se pudo enviar el comentario'),
   });
 };
 

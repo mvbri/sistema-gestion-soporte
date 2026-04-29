@@ -722,31 +722,24 @@ export const validateCreateEquipmentLoan = [
     .isLength({ max: 1000 })
     .withMessage('Las notas no pueden exceder 1000 caracteres'),
   body('items')
-    .isArray({ min: 1 })
-    .withMessage('Debes enviar al menos un item para el préstamo'),
+    .isArray({ min: 1, max: 1 })
+    .withMessage('Cada solicitud admite exactamente un equipo'),
   body('items.*.equipment_id')
-    .optional({ nullable: true })
+    .notEmpty()
+    .withMessage('Cada ítem debe incluir un equipo')
     .isInt({ min: 1 })
     .withMessage('El ID del equipo debe ser válido'),
-  body('items.*.pool_id')
-    .optional({ nullable: true })
-    .isInt({ min: 1 })
-    .withMessage('El ID del pool debe ser válido'),
   body('items.*.quantity')
     .optional()
     .isInt({ min: 1 })
     .withMessage('La cantidad debe ser mayor a 0'),
   body('items').custom((items) => {
     for (const item of items) {
-      const hasEquipment = item.equipment_id !== undefined && item.equipment_id !== null;
-      const hasPool = item.pool_id !== undefined && item.pool_id !== null;
-      if ((hasEquipment && hasPool) || (!hasEquipment && !hasPool)) {
-        throw new Error(
-          'Cada item debe tener equipo serial o pool, pero no ambos al mismo tiempo'
-        );
+      if (item.pool_id !== undefined && item.pool_id !== null && item.pool_id !== '') {
+        throw new Error('Las solicitudes nuevas solo admiten equipos por serial, no pool');
       }
-      if (hasEquipment && item.quantity && Number(item.quantity) !== 1) {
-        throw new Error('Los items por equipo serial deben tener cantidad 1');
+      if (item.quantity != null && Number(item.quantity) !== 1) {
+        throw new Error('Cada ítem por equipo debe tener cantidad 1');
       }
     }
     return true;
@@ -760,6 +753,25 @@ export const validateApproveEquipmentLoan = [
     .trim()
     .isLength({ max: 1000 })
     .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateRevokeEquipmentLoanApproval = [
+  body('notes')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Las notas no pueden exceder 1000 caracteres'),
+  handleValidationErrors,
+];
+
+export const validateEquipmentLoanComment = [
+  body('comment_text')
+    .trim()
+    .notEmpty()
+    .withMessage('El comentario es requerido')
+    .isLength({ min: 2, max: 2000 })
+    .withMessage('El comentario debe tener entre 2 y 2000 caracteres'),
   handleValidationErrors,
 ];
 

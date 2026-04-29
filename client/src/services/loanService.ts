@@ -2,15 +2,14 @@ import api from '../utils/api';
 import type {
   ApiResponse,
   EquipmentLoan,
+  EquipmentLoanComment,
   EquipmentLoanFilters,
-  EquipmentPool,
   EquipmentLoanResponse,
   EquipmentLoanSummaryReport,
 } from '../types';
 
 export interface LoanRequestItemInput {
-  equipment_id?: number;
-  pool_id?: number;
+  equipment_id: number;
   quantity?: number;
 }
 
@@ -73,11 +72,6 @@ export const loanService = {
     return response.data;
   },
 
-  async getPools(): Promise<ApiResponse<EquipmentPool[]>> {
-    const response = await api.get<ApiResponse<EquipmentPool[]>>('/equipment-loans/pools');
-    return response.data;
-  },
-
   async approve(id: number, notes?: string): Promise<ApiResponse<EquipmentLoan>> {
     const response = await api.patch<ApiResponse<EquipmentLoan>>(`/equipment-loans/${id}/approve`, {
       notes,
@@ -123,6 +117,29 @@ export const loanService = {
     const response = await api.patch<ApiResponse<EquipmentLoan>>(`/equipment-loans/${id}/cancel`, {
       notes,
     });
+    return response.data;
+  },
+
+  async revokeApproval(id: number, notes?: string): Promise<ApiResponse<EquipmentLoan>> {
+    const response = await api.patch<ApiResponse<EquipmentLoan>>(
+      `/equipment-loans/${id}/revoke-approval`,
+      { notes }
+    );
+    return response.data;
+  },
+
+  async getComments(id: number): Promise<ApiResponse<EquipmentLoanComment[]>> {
+    const response = await api.get<ApiResponse<EquipmentLoanComment[]>>(
+      `/equipment-loans/${id}/comments`
+    );
+    return response.data;
+  },
+
+  async addComment(id: number, commentText: string): Promise<ApiResponse<EquipmentLoanComment>> {
+    const response = await api.post<ApiResponse<EquipmentLoanComment>>(
+      `/equipment-loans/${id}/comments`,
+      { comment_text: commentText }
+    );
     return response.data;
   },
 

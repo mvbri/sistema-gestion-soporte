@@ -5,6 +5,12 @@ const IT_ROLES = ['administrator', 'technician'];
 
 const ensureItRole = (role) => IT_ROLES.includes(role);
 
+const canAccessEquipmentLoan = (loan, user) => {
+    if (!loan) return false;
+    if (user.role === 'administrator') return true;
+    return loan.requester_user_id === user.id;
+};
+
 const parsePagination = (query) => {
     const page = Math.max(Number(query.page || 1), 1);
     const limit = Math.max(Number(query.limit || 10), 1);
@@ -169,6 +175,56 @@ export const cancelEquipmentLoan = async (req, res) => {
     }
 };
 
+export const revokeEquipmentLoanApproval = async (req, res) => {
+    try {
+        if (req.user.role !== 'administrator') {
+            return sendError(res, 'Solo administrador puede anular la aprobación', null, 403);
+        }
+        const loanId = Number(req.params.id);
+        const loan = await EquipmentLoan.revokeApproval(loanId, req.user.id, req.body.notes);
+        sendSuccess(res, 'Aprobación anulada; el préstamo volvió a pendiente', loan);
+    } catch (error) {
+        console.error('Error al anular aprobación de préstamo:', error);
+        sendError(res, error.message || 'Error al anular la aprobación', null, 400);
+    }
+};
+
+export const getEquipmentLoanComments = async (req, res) => {
+    try {
+        const loanId = Number(req.params.id);
+        const loan = await EquipmentLoan.findById(loanId);
+        if (!loan) {
+            return sendError(res, 'Préstamo no encontrado', null, 404);
+        }
+        if (!canAccessEquipmentLoan(loan, req.user)) {
+            return sendError(res, 'No tienes permiso para ver los comentarios', null, 403);
+        }
+        const comments = await EquipmentLoan.getComments(loanId);
+        sendSuccess(res, 'Comentarios obtenidos correctamente', comments);
+    } catch (error) {
+        console.error('Error al obtener comentarios del préstamo:', error);
+        sendError(res, 'Error al obtener comentarios del préstamo', null, 500);
+    }
+};
+
+export const addEquipmentLoanComment = async (req, res) => {
+    try {
+        const loanId = Number(req.params.id);
+        const loan = await EquipmentLoan.findById(loanId);
+        if (!loan) {
+            return sendError(res, 'Préstamo no encontrado', null, 404);
+        }
+        if (!canAccessEquipmentLoan(loan, req.user)) {
+            return sendError(res, 'No tienes permiso para comentar en este préstamo', null, 403);
+        }
+        const createdComment = await EquipmentLoan.addComment(loanId, req.user.id, req.body.comment_text.trim());
+        sendSuccess(res, 'Comentario agregado correctamente', createdComment, 201);
+    } catch (error) {
+        console.error('Error al agregar comentario al préstamo:', error);
+        sendError(res, error.message || 'Error al agregar comentario', null, 400);
+    }
+};
+
 export const getEquipmentLoansSummaryReport = async (req, res) => {
     try {
         if (!ensureItRole(req.user.role)) {
@@ -192,12 +248,3 @@ export const getEquipmentLoansSummaryReport = async (req, res) => {
     }
 };
 
-export const getAvailableEquipmentPools = async (_req, res) => {
-    try {
-        const pools = await EquipmentLoan.getAvailablePools();
-        sendSuccess(res, 'Pools disponibles obtenidos correctamente', pools);
-    } catch (error) {
-        console.error('Error al obtener pools disponibles:', error);
-        sendError(res, 'Error al obtener pools disponibles', null, 500);
-    }
-};

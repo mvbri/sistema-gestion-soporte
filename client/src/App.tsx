@@ -247,7 +247,7 @@ function App() {
           <Route
             path="/equipment"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <EquipmentList />
               </ProtectedRoute>
             }
@@ -263,7 +263,7 @@ function App() {
           <Route
             path="/equipment/:id"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <EquipmentDetail />
               </ProtectedRoute>
             }
@@ -287,7 +287,7 @@ function App() {
           <Route
             path="/consumables"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <ConsumablesList />
               </ProtectedRoute>
             }
@@ -303,7 +303,7 @@ function App() {
           <Route
             path="/consumables/:id"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <ConsumableDetail />
               </ProtectedRoute>
             }
@@ -327,7 +327,7 @@ function App() {
           <Route
             path="/tools"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <ToolsList />
               </ProtectedRoute>
             }
@@ -343,7 +343,7 @@ function App() {
           <Route
             path="/tools/:id"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator', 'technician', 'end_user']}>
                 <ToolDetail />
               </ProtectedRoute>
             }

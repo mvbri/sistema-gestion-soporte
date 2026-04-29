@@ -18,9 +18,10 @@ export const CreateTicket: React.FC = () => {
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
   const { data: frequentIssues = [] } = useFrequentIssues();
-  const equipmentFilters: EquipmentFilters = user?.role === 'end_user'
-    ? { status: 'available', limit: 1000 }
-    : { limit: 1000 };
+  const equipmentFilters: EquipmentFilters = {
+    limit: 1000,
+    ...(user?.role !== 'administrator' ? { for_tickets: true } : {}),
+  };
   const { data: equipmentData } = useEquipment(equipmentFilters);
   const equipos = equipmentData?.equipment || [];
   const createTicketMutation = useCreateTicketWithFormData();

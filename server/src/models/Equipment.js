@@ -119,10 +119,26 @@ class Equipment {
 
     static async _executeFindAll(sql, filters) {
         const params = [];
+        const ticketSelection =
+            filters.for_ticket_selection === true && filters.ticket_user_id != null;
+        const loanSelection = filters.for_loan_selection === true;
 
-        if (filters.status) {
+        if (ticketSelection) {
+            sql += ' AND (e.status = ? OR e.assigned_to_user_id = ?)';
+            params.push('available', filters.ticket_user_id);
+        } else if (loanSelection) {
             sql += ' AND e.status = ?';
-            params.push(filters.status);
+            params.push(filters.status || 'available');
+        } else {
+            if (filters.status) {
+                sql += ' AND e.status = ?';
+                params.push(filters.status);
+            }
+
+            if (filters.assigned_to_user_id) {
+                sql += ' AND e.assigned_to_user_id = ?';
+                params.push(filters.assigned_to_user_id);
+            }
         }
 
         if (filters.type) {
@@ -133,11 +149,6 @@ class Equipment {
                 sql += ' AND et.name = ?';
                 params.push(filters.type);
             }
-        }
-
-        if (filters.assigned_to_user_id) {
-            sql += ' AND e.assigned_to_user_id = ?';
-            params.push(filters.assigned_to_user_id);
         }
 
         if (filters.search) {
@@ -265,11 +276,27 @@ class Equipment {
     static async count(filters = {}) {
         let sql = 'SELECT COUNT(*) as total FROM equipment WHERE active = TRUE';
         const params = [];
+        const ticketSelection =
+            filters.for_ticket_selection === true && filters.ticket_user_id != null;
+        const loanSelection = filters.for_loan_selection === true;
 
         try {
-            if (filters.status) {
+            if (ticketSelection) {
+                sql += ' AND (status = ? OR assigned_to_user_id = ?)';
+                params.push('available', filters.ticket_user_id);
+            } else if (loanSelection) {
                 sql += ' AND status = ?';
-                params.push(filters.status);
+                params.push(filters.status || 'available');
+            } else {
+                if (filters.status) {
+                    sql += ' AND status = ?';
+                    params.push(filters.status);
+                }
+
+                if (filters.assigned_to_user_id) {
+                    sql += ' AND assigned_to_user_id = ?';
+                    params.push(filters.assigned_to_user_id);
+                }
             }
 
             if (filters.type) {
@@ -280,11 +307,6 @@ class Equipment {
                     sql += ' AND type_id IN (SELECT id FROM equipment_types WHERE name = ? AND active = TRUE)';
                     params.push(filters.type);
                 }
-            }
-
-            if (filters.assigned_to_user_id) {
-                sql += ' AND assigned_to_user_id = ?';
-                params.push(filters.assigned_to_user_id);
             }
 
             if (filters.search) {

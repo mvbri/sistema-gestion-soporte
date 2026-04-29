@@ -2,17 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
-import { useCreateLoan, useLoanPools } from '../hooks/useLoans';
+import { useCreateLoan } from '../hooks/useLoans';
 import { useEquipment } from '../hooks/useEquipment';
 import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
 import { useAuth } from '../hooks/useAuth';
-
-interface LoanItemDraft {
-  mode: 'equipment' | 'pool';
-  equipment_id?: number;
-  pool_id?: number;
-  quantity: number;
-}
 
 const equipmentStatusLabels: Record<string, string> = {
   available: 'Disponible',
@@ -33,19 +26,20 @@ export const CreateLoanRequest: React.FC = () => {
   const { user } = useAuth();
   const createLoan = useCreateLoan();
   const { data: equipmentData, isLoading: isLoadingEquipment } = useEquipment({
-    status: 'available',
+    for_loans: true,
     limit: 1000,
   });
-  const { data: loanPools, isLoading: isLoadingLoanPools } = useLoanPools();
   const { data: incidentAreas = [], isLoading: isLoadingIncidentAreas } = useDireccionesOptions();
   const availableIncidentAreas = incidentAreas.filter((area) => area.active);
   const [startDate, setStartDate] = useState('');
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
   const [requestNotes, setRequestNotes] = useState('');
   const [targetIncidentAreaId, setTargetIncidentAreaId] = useState<number | ''>('');
-  const [items, setItems] = useState<LoanItemDraft[]>([{ mode: 'equipment', quantity: 1 }]);
+  const [equipmentId, setEquipmentId] = useState<number | ''>('');
   const availableEquipment = equipmentData?.equipment ?? [];
-  const availablePools = (loanPools ?? []).filter((pool) => pool.active);
+  const selectedEquipment =
+    equipmentId === '' ? undefined : availableEquipment.find((eq) => eq.id === equipmentId);
+  const selectedStatus = selectedEquipment?.status || 'retired';
   const isAdministrator = user?.role === 'administrator';
   const userIncidentAreaId = user?.incident_area_id ?? null;
   const userIncidentArea = availableIncidentAreas.find((area) => area.id === userIncidentAreaId);
@@ -54,11 +48,6 @@ export const CreateLoanRequest: React.FC = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payloadItems = items.map((item) =>
-      item.mode === 'equipment'
-        ? { equipment_id: Number(item.equipment_id), quantity: 1 }
-        : { pool_id: Number(item.pool_id), quantity: Number(item.quantity || 1) }
-    );
     if (!canSubmitLoan) return;
 
     await createLoan.mutateAsync({
@@ -66,7 +55,7 @@ export const CreateLoanRequest: React.FC = () => {
       start_date: startDate,
       expected_return_date: expectedReturnDate,
       request_notes: requestNotes || undefined,
-      items: payloadItems,
+      items: [{ equipment_id: Number(equipmentId), quantity: 1 }],
     });
     navigate('/loans');
   };
@@ -167,132 +156,43 @@ export const CreateLoanRequest: React.FC = () => {
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-gray-900">Items solicitados</h2>
-                  <button
-                    type="button"
-                    className="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
-                    onClick={() =>
-                      setItems((prev) => [...prev, { mode: 'equipment', quantity: 1 }])
-                    }
-                  >
-                    + Agregar item
-                  </button>
-                </div>
+                <h2 className="mb-2 text-base font-semibold text-gray-900">Equipo solicitado</h2>
                 <p className="mb-3 text-xs text-gray-500">
-                  Puedes solicitar equipos por serial o elementos de pool por cantidad.
+                  Cada solicitud incluye un solo equipo (nombre y número de serie).
                 </p>
-                <div className="space-y-3">
-                  {items.map((item, index) => (
-                    (() => {
-                      const selectedEquipment = availableEquipment.find((eq) => eq.id === item.equipment_id);
-                      const selectedStatus = selectedEquipment?.status || 'retired';
-                      return (
-                    <div
-                      key={index}
-                      className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:grid-cols-4"
+                <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <select
+                    required
+                    value={equipmentId === '' ? '' : equipmentId}
+                    onChange={(e) =>
+                      setEquipmentId(e.target.value === '' ? '' : Number(e.target.value))
+                    }
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoadingEquipment || availableEquipment.length === 0}
+                  >
+                    <option value="">
+                      {isLoadingEquipment
+                        ? 'Cargando equipos disponibles...'
+                        : availableEquipment.length === 0
+                          ? 'No hay equipos disponibles'
+                          : 'Selecciona un equipo'}
+                    </option>
+                    {availableEquipment.map((equipment) => (
+                      <option key={equipment.id} value={equipment.id}>
+                        {equipment.name}
+                        {equipment.serial_number ? ` - SN: ${equipment.serial_number}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {equipmentId !== '' ? (
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        equipmentStatusBadgeStyles[selectedStatus] || 'bg-slate-100 text-slate-700'
+                      }`}
                     >
-                      <select
-                        value={item.mode}
-                        onChange={(e) =>
-                          setItems((prev) =>
-                            prev.map((x, i) =>
-                              i === index ? { mode: e.target.value as 'equipment' | 'pool', quantity: 1 } : x
-                            )
-                          )
-                        }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="equipment">Equipo (serial)</option>
-                        <option value="pool">Pool (stock)</option>
-                      </select>
-                      {item.mode === 'equipment' ? (
-                        <div className="space-y-2">
-                          <select
-                            required
-                            value={item.equipment_id || ''}
-                            onChange={(e) =>
-                              setItems((prev) =>
-                                prev.map((x, i) => (i === index ? { ...x, equipment_id: Number(e.target.value) } : x))
-                              )
-                            }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            disabled={isLoadingEquipment || availableEquipment.length === 0}
-                          >
-                            <option value="">
-                              {isLoadingEquipment
-                                ? 'Cargando equipos disponibles...'
-                                : availableEquipment.length === 0
-                                  ? 'No hay equipos disponibles'
-                                  : 'Selecciona un equipo'}
-                            </option>
-                            {availableEquipment.map((equipment) => (
-                              <option key={equipment.id} value={equipment.id}>
-                                {equipment.name}
-                                {equipment.serial_number ? ` - SN: ${equipment.serial_number}` : ''}
-                              </option>
-                            ))}
-                          </select>
-                          {item.equipment_id && (
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                equipmentStatusBadgeStyles[selectedStatus] || 'bg-slate-100 text-slate-700'
-                              }`}
-                            >
-                              {equipmentStatusLabels[selectedStatus] || 'No disponible'}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <select
-                          required
-                          value={item.pool_id || ''}
-                          onChange={(e) =>
-                            setItems((prev) =>
-                              prev.map((x, i) => (i === index ? { ...x, pool_id: Number(e.target.value) } : x))
-                            )
-                          }
-                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          disabled={isLoadingLoanPools || availablePools.length === 0}
-                        >
-                          <option value="">
-                            {isLoadingLoanPools
-                              ? 'Cargando categorías...'
-                              : availablePools.length === 0
-                                ? 'No hay categorías configuradas'
-                                : 'Selecciona una categoría'}
-                          </option>
-                          {availablePools.map((pool) => (
-                            <option key={pool.id} value={pool.id}>
-                              {pool.name} ({pool.available_stock} disponibles)
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <input
-                        type="number"
-                        min={1}
-                        value={item.quantity}
-                        onChange={(e) =>
-                          setItems((prev) =>
-                            prev.map((x, i) => (i === index ? { ...x, quantity: Number(e.target.value) } : x))
-                          )
-                        }
-                        disabled={item.mode === 'equipment'}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
-                        className="w-full rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={items.length === 1}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                      );
-                    })()
-                  ))}
+                      {equipmentStatusLabels[selectedStatus] || 'No disponible'}
+                    </span>
+                  ) : null}
                 </div>
               </div>
 

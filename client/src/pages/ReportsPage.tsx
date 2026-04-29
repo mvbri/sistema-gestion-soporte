@@ -253,7 +253,7 @@ function fillForPriority(
 function colorForPriorityName(nombre: string, index: number): string {
   const n = nombre.toLowerCase();
   if (n.includes('urgente')) return '#ef4444';
-  if (n.includes('alta')) return '#f97316';
+  if (n.includes('alta')) return '#dc2626';
   if (n.includes('media')) return '#eab308';
   if (n.includes('baja')) return '#22c55e';
   return CHART_PALETTE[index % CHART_PALETTE.length];

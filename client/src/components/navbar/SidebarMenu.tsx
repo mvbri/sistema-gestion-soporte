@@ -56,6 +56,9 @@ export const SidebarMenu: React.FC = () => {
   ]);
   const materialRequestsActive = matchesAnyRoute(['/material-requests/*']);
 
+  const canSeeInventoryMenu =
+    user?.role === 'administrator' || user?.has_inventory_assignments === true;
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -333,8 +336,8 @@ export const SidebarMenu: React.FC = () => {
             )}
           </div>
 
-          {/* Grupo Inventario - Solo para técnicos y administradores */}
-          {(user?.role === 'technician' || user?.role === 'administrator') && (
+          {/* Inventario: administrador siempre; resto solo si tiene equipo/herramienta asignados o consumible en solicitud aprobada */}
+          {canSeeInventoryMenu && (
             <div className="mt-2">
               <button
                 type="button"

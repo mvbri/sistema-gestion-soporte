@@ -7,6 +7,28 @@ import { enviarEmailVerificacion, enviarEmailRecuperacion } from '../config/emai
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { query } from '../config/database.js';
 
+const buildClientUserPayload = async (userRow) => {
+    if (!userRow || userRow.id == null) {
+        return null;
+    }
+    const roleName = userRow.role_name;
+    const has_inventory_assignments =
+        roleName === 'administrator'
+            ? true
+            : await Usuario.userHasInventoryAssignments(userRow.id);
+    return {
+        id: userRow.id,
+        full_name: userRow.full_name,
+        email: userRow.email,
+        role: roleName,
+        phone: userRow.phone,
+        department: userRow.department,
+        incident_area_id: userRow.incident_area_id || null,
+        email_verified: Boolean(userRow.email_verified),
+        has_inventory_assignments
+    };
+};
+
 // Registro de nuevo usuario
 export const register = async (req, res) => {
     let userId = null;
@@ -133,15 +155,7 @@ export const login = async (req, res) => {
 
         sendSuccess(res, 'Login exitoso', {
             token,
-            user: {
-                id: user.id,
-                full_name: user.full_name,
-                email: user.email,
-                role: user.role_name,
-                phone: user.phone,
-                department: user.department,
-                incident_area_id: user.incident_area_id || null
-            }
+            user: await buildClientUserPayload(user)
         });
     } catch (error) {
         console.error('Error en login:', error);
@@ -528,16 +542,7 @@ export const getCurrentUser = async (req, res) => {
             return sendError(res, 'Usuario no encontrado', null, 404);
         }
 
-        sendSuccess(res, 'Usuario obtenido exitosamente', {
-            id: user.id,
-            full_name: user.full_name,
-            email: user.email,
-            role: user.role_name,
-            phone: user.phone,
-            department: user.department,
-            incident_area_id: user.incident_area_id || null,
-            email_verified: user.email_verified
-        });
+        sendSuccess(res, 'Usuario obtenido exitosamente', await buildClientUserPayload(user));
     } catch (error) {
         console.error('Error al obtener usuario:', error);
         sendError(res, 'Error al obtener información del usuario', null, 500);
@@ -611,16 +616,7 @@ export const updateCurrentUser = async (req, res) => {
             return sendError(res, 'Usuario no encontrado después de la actualización', null, 404);
         }
 
-        sendSuccess(res, 'Perfil actualizado exitosamente', {
-            id: updatedUser.id,
-            full_name: updatedUser.full_name,
-            email: updatedUser.email,
-            role: updatedUser.role_name,
-            phone: updatedUser.phone,
-            department: updatedUser.department,
-            incident_area_id: updatedUser.incident_area_id || null,
-            email_verified: updatedUser.email_verified
-        });
+        sendSuccess(res, 'Perfil actualizado exitosamente', await buildClientUserPayload(updatedUser));
     } catch (error) {
         console.error('=== ERROR AL ACTUALIZAR PERFIL ===');
         console.error('Error completo:', error);

@@ -3,14 +3,17 @@ import { useParams } from 'react-router-dom';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import {
+  useAddEquipmentLoanComment,
   useApproveLoan,
   useDeliverLoan,
   useLoanById,
   useRejectLoan,
-  useUpdatePendingLoanChecklist,
   useReturnLoan,
+  useRevokeLoanApproval,
+  useUpdatePendingLoanChecklist,
 } from '../hooks/useLoans';
 import { useAuth } from '../hooks/useAuth';
+import { translateRole } from '../utils/roleTranslations';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendiente',
@@ -55,6 +58,8 @@ export const LoanHandoverReturn: React.FC = () => {
   const updatePendingChecklist = useUpdatePendingLoanChecklist();
   const deliverLoan = useDeliverLoan();
   const returnLoan = useReturnLoan();
+  const revokeApproval = useRevokeLoanApproval();
+  const addLoanComment = useAddEquipmentLoanComment();
   const [physicalCondition, setPhysicalCondition] = useState<'new' | 'good' | 'worn' | 'damaged'>(
     'good'
   );
@@ -62,6 +67,9 @@ export const LoanHandoverReturn: React.FC = () => {
   const [observations, setObservations] = useState('');
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [isRevokeModalOpen, setIsRevokeModalOpen] = useState(false);
+  const [revokeNotes, setRevokeNotes] = useState('');
+  const [loanCommentText, setLoanCommentText] = useState('');
 
   const checklistPayload = {
     physical_condition: physicalCondition,
@@ -98,6 +106,11 @@ export const LoanHandoverReturn: React.FC = () => {
       year: 'numeric',
     });
   };
+
+  const formatDateTime = (value?: string | null) =>
+    value
+      ? new Date(value).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
+      : '-';
 
   const escapeHtml = (value: string) =>
     value
@@ -555,14 +568,24 @@ export const LoanHandoverReturn: React.FC = () => {
                     </>
                   )}
                   {loan.status === 'approved' && canReviewLoans && (
-                    <button
-                      type="button"
-                      onClick={() => deliverLoan.mutate({ id: loan.id, payload: checklistPayload })}
-                      disabled={deliverLoan.isPending}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                    >
-                      {deliverLoan.isPending ? 'Registrando entrega...' : 'Registrar entrega'}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => deliverLoan.mutate({ id: loan.id, payload: checklistPayload })}
+                        disabled={deliverLoan.isPending}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                      >
+                        {deliverLoan.isPending ? 'Registrando entrega...' : 'Registrar entrega'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsRevokeModalOpen(true)}
+                        disabled={revokeApproval.isPending}
+                        className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Anular aprobación
+                      </button>
+                    </>
                   )}
                   {(loan.status === 'delivered' || loan.status === 'overdue') && (
                     <button
@@ -599,6 +622,97 @@ export const LoanHandoverReturn: React.FC = () => {
                         : 'Actualizar checklist'}
                     </button>
                   )}
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <h2 className="mb-3 text-lg font-semibold text-slate-900">Historial</h2>
+                  <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    {(loan.history || []).map((entry) => (
+                      <div key={entry.id} className="rounded-lg border border-slate-200 p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-semibold text-slate-900">
+                            {entry.changed_by_user_name}
+                          </span>
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              statusBadgeStyles[entry.new_status] || 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {statusLabels[entry.new_status] || entry.new_status}
+                          </span>
+                        </div>
+                        {entry.previous_status && (
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            Desde: {statusLabels[entry.previous_status] || entry.previous_status}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500">{formatDateTime(entry.created_at)}</p>
+                        {entry.notes && (
+                          <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">{entry.notes}</p>
+                        )}
+                      </div>
+                    ))}
+                    {(loan.history || []).length === 0 && (
+                      <p className="text-sm text-slate-500">Sin movimientos registrados.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <h2 className="mb-3 text-lg font-semibold text-slate-900">Comentarios</h2>
+                  <p className="mb-3 text-xs text-slate-500">
+                    Comunícate con {canReviewLoans ? 'el solicitante' : 'administración'} aquí.
+                  </p>
+                  <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    {(loan.comments || []).map((comment) => (
+                      <div key={comment.id} className="rounded-lg border border-slate-200 p-3">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {comment.created_by_user_name}{' '}
+                          {comment.created_by_user_role && (
+                            <span className="font-normal text-slate-600">
+                              ({translateRole(comment.created_by_user_role)})
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-500">{formatDateTime(comment.created_at)}</p>
+                        <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
+                          {comment.comment_text}
+                        </p>
+                      </div>
+                    ))}
+                    {(loan.comments || []).length === 0 && (
+                      <p className="text-sm text-slate-500">Aún no hay comentarios.</p>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <textarea
+                      value={loanCommentText}
+                      onChange={(e) => setLoanCommentText(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      placeholder="Escribe un mensaje para la otra parte..."
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!loanCommentText.trim()) return;
+                          await addLoanComment.mutateAsync({
+                            id: loan.id,
+                            commentText: loanCommentText.trim(),
+                          });
+                          setLoanCommentText('');
+                          refetch();
+                        }}
+                        disabled={addLoanComment.isPending}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                      >
+                        Enviar comentario
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
@@ -653,6 +767,62 @@ export const LoanHandoverReturn: React.FC = () => {
                   className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
                 >
                   {rejectLoan.isPending ? 'Rechazando...' : 'Confirmar rechazo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isRevokeModalOpen && loan && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+              <h3 className="text-lg font-bold text-slate-900">Anular aprobación</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                El préstamo {displayRequestCode} volverá a estado pendiente. Podrás aprobarlo de nuevo
+                cuando corresponda.
+              </p>
+              <label className="mt-4 block text-sm font-medium text-slate-700">
+                Nota interna (opcional)
+                <textarea
+                  value={revokeNotes}
+                  onChange={(e) => setRevokeNotes(e.target.value)}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+                  placeholder="Ej: Se revierte para cambiar el equipo asignado."
+                />
+              </label>
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRevokeModalOpen(false);
+                    setRevokeNotes('');
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  disabled={revokeApproval.isPending}
+                  onClick={() => {
+                    revokeApproval.mutate(
+                      {
+                        id: loanId,
+                        notes: revokeNotes.trim() || undefined,
+                      },
+                      {
+                        onSuccess: async () => {
+                          setIsRevokeModalOpen(false);
+                          setRevokeNotes('');
+                          await refetch();
+                        },
+                      }
+                    );
+                  }}
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+                >
+                  {revokeApproval.isPending ? 'Anulando...' : 'Confirmar anulación'}
                 </button>
               </div>
             </div>
