@@ -159,12 +159,6 @@ export const SidebarMenu: React.FC = () => {
       icon: FrequentIssueIcon,
       show: user?.role === 'administrator',
     },
-    {
-      path: '/admin/reports',
-      label: 'Reportes',
-      icon: ReportsIcon,
-      show: user?.role === 'administrator',
-    },
   ].filter((link) => link.show);
 
   return (
@@ -393,6 +387,17 @@ export const SidebarMenu: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Reportes */}
+          {user?.role === 'administrator' && (
+            <NavLink
+              path="/admin/reports"
+              label="Reportes"
+              icon={ReportsIcon}
+              isActive={isActive('/admin/reports')}
+              onClick={() => setMenuOpen(false)}
+            />
           )}
 
           {/* Respaldo y Restauración */}
