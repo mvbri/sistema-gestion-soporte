@@ -47,6 +47,7 @@ import { LoanReportsPage } from './pages/LoanReportsPage';
 import { MaterialRequestsList } from './pages/MaterialRequestsList';
 import { CreateMaterialRequest } from './pages/CreateMaterialRequest';
 import { MaterialRequestDetail } from './pages/MaterialRequestDetail';
+import { UserManual } from './pages/UserManual';
 
 function App() {
   return (
@@ -241,6 +242,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manual"
+            element={
+              <ProtectedRoute>
+                <UserManual />
               </ProtectedRoute>
             }
           />

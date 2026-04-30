@@ -3,11 +3,15 @@ import { ticketService, type CreateTicketData, type UpdateTicketData, type Comme
 import type { TicketFilters } from '../types';
 import { toast } from 'react-toastify';
 
-export const useTickets = (filters?: TicketFilters) => {
+export const useTickets = (
+  filters?: TicketFilters,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: ['tickets', filters],
     queryFn: () => ticketService.getAll(filters),
     select: (response) => response.data,
+    enabled: options?.enabled !== false,
   });
 };
 

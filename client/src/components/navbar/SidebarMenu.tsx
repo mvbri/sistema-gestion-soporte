@@ -16,6 +16,7 @@ import { BackupIcon } from '../icons/BackupIcon';
 import { ReportsIcon } from '../icons/ReportsIcon';
 import { HandRequestIcon } from '../icons/HandRequestIcon';
 import { LoansHandsIcon } from '../icons/LoansHandsIcon';
+import { BookOpen } from 'lucide-react';
 
 export const SidebarMenu: React.FC = () => {
   const { menuOpen, setMenuOpen } = useMenu();
@@ -105,6 +106,10 @@ export const SidebarMenu: React.FC = () => {
       return isRouteActive('/dashboard', true);
     }
 
+    if (path === '/manual') {
+      return isRouteActive('/manual', true);
+    }
+
     if (path === '/tecnico/dashboard') {
       return isRouteActive('/tecnico/dashboard', true);
     }
@@ -156,6 +161,12 @@ export const SidebarMenu: React.FC = () => {
       label: 'Dashboard',
       icon: DashboardIcon,
       show: user?.role === 'administrator' || user?.role === 'end_user' || user?.role === 'technician',
+    },
+    {
+      path: '/manual',
+      label: 'Manual de usuario',
+      icon: BookOpen,
+      show: true,
     },
     {
       path: '/tecnico/dashboard',

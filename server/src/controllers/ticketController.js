@@ -132,8 +132,9 @@ export const createTicket = async (req, res) => {
 
 /**
  * Obtiene la lista de tickets con filtros aplicados.
- * Los usuarios con rol 'end_user' (Colaboradores) solo pueden ver sus propios tickets.
- * Este filtro se aplica automáticamente y no puede ser anulado.
+ * Los usuarios con rol 'end_user' solo ven tickets que ellos crearon (filtro fijo).
+ * Los técnicos ven por defecto solo tickets asignados a ellos; con query scope=created_by_me
+ * solo los que crearon (para listados secundarios en el cliente).
  */
 export const getTickets = async (req, res) => {
     try {
@@ -154,10 +155,14 @@ export const getTickets = async (req, res) => {
 
         if (role === 'end_user') {
             filters.created_by_user_id = id;
-        }
-
-        if (assigned_technician_id && (role === 'administrator' || role === 'technician')) {
-            filters.assigned_technician_id = parseInt(assigned_technician_id);
+        } else if (role === 'technician') {
+            if (req.query.scope === 'created_by_me') {
+                filters.created_by_user_id = id;
+            } else {
+                filters.assigned_technician_id = id;
+            }
+        } else if (role === 'administrator' && assigned_technician_id) {
+            filters.assigned_technician_id = parseInt(assigned_technician_id, 10);
         }
 
         if (state_id) filters.state_id = parseInt(state_id);
@@ -202,6 +207,14 @@ export const getTicketById = async (req, res) => {
 
         if (role === 'end_user' && ticket.created_by_user_id !== userId) {
             return sendError(res, 'No tienes permiso para ver este ticket', null, 403);
+        }
+
+        if (role === 'technician') {
+            const isAssigned = ticket.assigned_technician_id === userId;
+            const isCreator = ticket.created_by_user_id === userId;
+            if (!isAssigned && !isCreator) {
+                return sendError(res, 'No tienes permiso para ver este ticket', null, 403);
+            }
         }
 
         const comentarios = await TicketComentario.findByTicketId(id);
@@ -552,6 +565,14 @@ export const addComment = async (req, res) => {
         const { role, id: currentUserId } = req.user;
         if (role === 'end_user' && ticket.created_by_user_id !== currentUserId) {
             return sendError(res, 'No tienes permiso para comentar en este ticket', null, 403);
+        }
+
+        if (role === 'technician') {
+            const isAssigned = ticket.assigned_technician_id === currentUserId;
+            const isCreator = ticket.created_by_user_id === currentUserId;
+            if (!isAssigned && !isCreator) {
+                return sendError(res, 'No tienes permiso para comentar en este ticket', null, 403);
+            }
         }
 
         const fechaActual = new Date().toISOString().slice(0, 19).replace('T', ' ');

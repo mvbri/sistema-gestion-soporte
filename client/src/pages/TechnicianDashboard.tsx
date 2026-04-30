@@ -17,7 +17,6 @@ export const TechnicianDashboard: React.FC = () => {
     page: 1,
     limit: 10,
     estado_id: undefined,
-    assigned_technician_id: user?.id,
   };
   const [filters, setFilters] = useState<TicketFilters>(initialFilters);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,13 +24,6 @@ export const TechnicianDashboard: React.FC = () => {
   useEffect(() => {
     if (user?.role !== 'technician') {
       navigate('/dashboard');
-      return;
-    }
-    if (user?.id) {
-      setFilters((prev) => ({
-        ...prev,
-        assigned_technician_id: user.id,
-      }));
     }
   }, [user, navigate]);
 
@@ -51,7 +43,6 @@ export const TechnicianDashboard: React.FC = () => {
   const filtersForCounts: TicketFilters = {
     page: 1,
     limit: 1000,
-    assigned_technician_id: user?.id,
   };
   const { data: allTicketsData } = useTickets(filtersForCounts);
   const allTickets = allTicketsData?.tickets || [];
@@ -65,16 +56,16 @@ export const TechnicianDashboard: React.FC = () => {
   };
 
   const handleFilterChange = (key: keyof TicketFilters, value: string | number | undefined) => {
-    setFilters((prev) => ({ ...prev, [key]: value, page: 1, assigned_technician_id: user?.id }));
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
   const handleSearch = () => {
-    setFilters((prev) => ({ ...prev, busqueda: searchTerm || undefined, page: 1, assigned_technician_id: user?.id }));
+    setFilters((prev) => ({ ...prev, busqueda: searchTerm || undefined, page: 1 }));
   };
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setFilters({ ...initialFilters, assigned_technician_id: user?.id });
+    setFilters({ ...initialFilters });
   };
 
   const formatDate = (dateString: string | null | undefined) => {

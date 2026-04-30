@@ -25,7 +25,13 @@ export const TicketsList: React.FC = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
+  const isTechnician = user?.role === 'technician';
+
   const { data: ticketsData, isLoading: loadingTickets } = useTickets(filters);
+  const { data: createdByMeData, isLoading: loadingCreatedByMe } = useTickets(
+    { scope: 'created_by_me', page: 1, limit: 8 },
+    { enabled: isTechnician }
+  );
   const { data: estados = [] } = useEstados();
   const { data: categorias = [] } = useCategorias();
   const { data: prioridades = [] } = usePrioridades();
@@ -33,6 +39,7 @@ export const TicketsList: React.FC = () => {
   const deleteTicketMutation = useDeleteTicket();
 
   const tickets = ticketsData?.tickets || [];
+  const createdByMeTickets = createdByMeData?.tickets || [];
   const pagination = ticketsData?.pagination || {
     page: 1,
     limit: 10,
@@ -91,8 +98,10 @@ export const TicketsList: React.FC = () => {
               {user?.role === 'end_user' && (
                 <p className="mt-1 text-xs sm:text-sm text-gray-600">Solo puedes ver tus propios tickets</p>
               )}
-              {user?.role === 'technician' && (
-                <p className="mt-1 text-xs sm:text-sm text-gray-600">Puedes ver todos los tickets del sistema</p>
+              {isTechnician && (
+                <p className="mt-1 text-xs sm:text-sm text-gray-600">
+                  Solo ves los tickets asignados a ti; más abajo, los que hayas creado como solicitante.
+                </p>
               )}
             </div>
             {user?.role === 'end_user' && (
@@ -335,7 +344,7 @@ export const TicketsList: React.FC = () => {
               </div>
             </div>
 
-            {(user?.role === 'administrator' || user?.role === 'technician') && (
+            {user?.role === 'administrator' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <div className="min-w-0">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
@@ -388,6 +397,47 @@ export const TicketsList: React.FC = () => {
             )}
           </div>
 
+          {isTechnician && (
+            <div className="mb-4 sm:mb-5 rounded-lg border border-amber-100 bg-amber-50/80 px-4 py-3 sm:px-5 sm:py-4">
+              <h2 className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Tickets que creaste
+              </h2>
+              {loadingCreatedByMe ? (
+                <p className="text-xs text-amber-800/80">Cargando…</p>
+              ) : createdByMeTickets.length === 0 ? (
+                <p className="text-xs text-amber-800/80">Aún no has creado ningún ticket.</p>
+              ) : (
+                <ul className="divide-y divide-amber-100/90 border border-amber-100 rounded-md bg-white/90 overflow-hidden">
+                  {createdByMeTickets.map((ticket) => (
+                    <li key={ticket.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 truncate">{ticket.title}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <StatusBadge estado={ticket.state_name || ''} colorOverride={ticket.state_color} />
+                          {ticket.assigned_technician_name && (
+                            <span className="text-xs text-gray-500 truncate">
+                              Asignado: {ticket.assigned_technician_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/tickets/${ticket.id}`)}
+                        className="shrink-0 px-3 py-1 text-xs font-medium rounded-md bg-amber-600 text-white hover:bg-amber-700"
+                      >
+                        Ver
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {loadingTickets ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -395,10 +445,15 @@ export const TicketsList: React.FC = () => {
             </div>
           ) : tickets.length === 0 ? (
             <div className="bg-white shadow rounded-lg p-12 text-center">
-              <p className="text-gray-500">No se encontraron tickets</p>
+              <p className="text-gray-500">
+                {isTechnician ? 'No tienes tickets asignados con estos filtros.' : 'No se encontraron tickets'}
+              </p>
             </div>
           ) : (
             <>
+              {isTechnician && (
+                <h2 className="text-lg font-semibold text-gray-800 mb-3">Tickets asignados a ti</h2>
+              )}
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200">
                   {tickets.map((ticket) => (
