@@ -64,6 +64,24 @@ Ejecutar estas migraciones **en este orden**:
     - Inserta datos iniciales en `roles`, `ticket_states`, `ticket_categories`,
       `ticket_priorities` e `incident_areas` usando `INSERT IGNORE`.
 
+19. **`migration_2026-04-29_14-02-00_create_material_requests.sql`**
+    - Crea `material_requests`, `material_request_items`, `material_request_history` y `material_request_comments`.
+
+20. **`migration_2026-04-29_15-35-00_allow_manual_material_items.sql`**
+    - Permite ítems manuales en solicitudes de materiales (`source_mode`, nombres personalizados).
+
+21. **`migration_2026-04-29_16-30-00_add_material_request_addressed_to_and_area.sql`**
+    - Agrega `addressed_to` y `request_area` a `material_requests`.
+
+22. **`migration_2026-04-29_18-00-00_remove_quantity_not_applicable_from_material_items.sql`**
+    - Ajusta restricciones de cantidad en ítems de solicitud.
+
+23. **`migration_2026-04-29_19-15-00_add_addressee_name_and_title.sql`**
+    - Agrega `addressee_name` y `addressee_title`, migra datos desde `addressed_to` y elimina esa columna.
+
+24. **`migration_2026-04-29_20-30-00_rename_request_area_to_addressee_addressing_text.sql`**
+    - Renombra `request_area` → `addressee_addressing_text` (TEXT). **Requerida** para crear solicitudes con el código actual.
+
 ---
 
 ## 🧪 Cómo ejecutar todo en otra PC
@@ -89,9 +107,26 @@ SOURCE server/database/migration_2026-02-25_21-00-00_add_consumables.sql;
 SOURCE server/database/migration_2026-02-25_21-20-00_add_tools.sql;
 SOURCE server/database/migration_2026-02-24_21-10-00_add_ticket_equipment.sql;
 SOURCE server/database/migration_2026-02-25_22-10-00_seed_initial_data.sql;
+SOURCE server/database/migration_2026-04-29_14-02-00_create_material_requests.sql;
+SOURCE server/database/migration_2026-04-29_15-35-00_allow_manual_material_items.sql;
+SOURCE server/database/migration_2026-04-29_16-30-00_add_material_request_addressed_to_and_area.sql;
+SOURCE server/database/migration_2026-04-29_18-00-00_remove_quantity_not_applicable_from_material_items.sql;
+SOURCE server/database/migration_2026-04-29_19-15-00_add_addressee_name_and_title.sql;
+SOURCE server/database/migration_2026-04-29_20-30-00_rename_request_area_to_addressee_addressing_text.sql;
 ```
 
 Puedes adaptar las rutas según dónde ejecutes MySQL (por ejemplo, usando rutas absolutas).
+
+### Diagnóstico rápido (formularios ↔ esquema BD)
+
+Desde `server/`:
+
+```bash
+node scripts/check-db-schema.js
+node scripts/apply-pending-schema-fixes.js
+```
+
+Ver `server/scripts/README.md` para un formulario concreto (`create-ticket`, `create-loan`, etc.).
 
 ---
 

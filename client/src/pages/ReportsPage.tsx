@@ -104,25 +104,33 @@ async function loadImageAsDataUrl(path: string): Promise<string | null> {
   }
 }
 
+const PDF_HEADER_BLUE: [number, number, number] = [37, 99, 235];
+
 async function downloadTicketsReportPdf(report: TicketsPeriodReport): Promise<void> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const marginLeft = 40;
   const pageWidth = doc.internal.pageSize.getWidth();
-  let startY = 40;
+  const headerH = 88;
 
+  doc.setFillColor(...PDF_HEADER_BLUE);
+  doc.rect(0, 0, pageWidth, headerH, 'F');
+
+  const logoTop = 22;
   const logoDataUrl = await loadImageAsDataUrl(COMPANY_LOGO_PATH);
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, 'PNG', marginLeft, startY, 120, 40);
+    doc.addImage(logoDataUrl, 'PNG', marginLeft, logoTop, 120, 40);
   }
 
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text(COMPANY_NAME, pageWidth - 40, startY + 18, { align: 'right' });
+  doc.text(COMPANY_NAME, pageWidth - 40, logoTop + 18, { align: 'right' });
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('Reporte de tickets por periodo', pageWidth - 40, startY + 36, { align: 'right' });
+  doc.text('Reporte de tickets por periodo', pageWidth - 40, logoTop + 36, { align: 'right' });
+  doc.setTextColor(0, 0, 0);
 
-  startY += 60;
+  let startY = headerH + 24;
   autoTable(doc, {
     startY,
     head: [['Metrica', 'Valor']],
@@ -137,7 +145,7 @@ async function downloadTicketsReportPdf(report: TicketsPeriodReport): Promise<vo
       ],
     ],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [37, 99, 235] },
+    headStyles: { fillColor: PDF_HEADER_BLUE, textColor: 255 },
   });
 
   startY = (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY
@@ -176,7 +184,7 @@ async function downloadTicketsReportPdf(report: TicketsPeriodReport): Promise<vo
       head: [[section.title, 'Cantidad']],
       body: section.rows,
       styles: { fontSize: 10 },
-      headStyles: { fillColor: [74, 111, 165] },
+      headStyles: { fillColor: PDF_HEADER_BLUE, textColor: 255 },
       columnStyles: {
         1: { halign: 'right' },
       },

@@ -78,12 +78,13 @@ export const useTicketStats = (dateFrom: string, dateTo: string) => {
   });
 };
 
-export const useFrequentIssues = () => {
+export const useFrequentIssues = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['frequentIssues'],
     queryFn: () => ticketService.getFrequentIssues(),
     select: (response) => response.data,
     staleTime: 10 * 60 * 1000,
+    enabled: options?.enabled ?? true,
   });
 };
 

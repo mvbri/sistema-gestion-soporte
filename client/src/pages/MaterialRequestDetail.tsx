@@ -311,7 +311,7 @@ export const MaterialRequestDetail: React.FC = () => {
       doc.setDrawColor(120, 120, 120);
       const lineY = y + 14;
       doc.line(sigX + 2, lineY, sigX + sigColW - 2, lineY);
-      doc.text('Firma y sello', sigX + 2, lineY + 4);
+      doc.text(i === 0 ? 'Firma' : 'Firma y sello', sigX + 2, lineY + 4);
       doc.text('Apellidos y nombres:', sigX + 2, lineY + 9);
       doc.text('Cédula de identidad:', sigX + 2, lineY + 14);
       doc.text('Cargo:', sigX + 2, lineY + 19);

@@ -63,7 +63,7 @@ const technicianSections: ManualSection[] = [
     id: 'intro',
     title: 'Introducción',
     paragraphs: [
-      'Como técnico gestionás tickets asignados, inventario, estadísticas y préstamos en la medida en que la aplicación te lo permita. El menú lateral agrupa Dashboard, Panel del técnico, Tickets, Solicitudes de materiales, Préstamos, Inventario y Estadísticas.',
+      'Como técnico gestionás tickets asignados, inventario y préstamos en la medida en que la aplicación te lo permita. El menú lateral agrupa Dashboard, Panel del técnico, Tickets, Solicitudes de materiales, Préstamos e Inventario.',
       'Las opciones exactas dependen de tu usuario; este manual describe las pantallas habituales del rol técnico.',
     ],
   },
@@ -96,7 +96,6 @@ const technicianSections: ManualSection[] = [
     paragraphs: [
       'Solicitar préstamo (/loans/create) e Historial de préstamos (/loans/history) funcionan igual que para el usuario final.',
       'En la ficha de un préstamo (/loans/:id) podés registrar entregas, devoluciones u observaciones cuando el flujo lo requiera.',
-      'Reporte préstamos (/loans/reports) muestra información agregada para seguimiento y reportes del área.',
     ],
   },
   {
@@ -105,13 +104,6 @@ const technicianSections: ManualSection[] = [
     paragraphs: [
       'Inventario incluye Equipos (/equipment), Consumibles (/consumables) y Herramientas (/tools). Consultá listados y fichas; la creación y edición fuerte puede estar limitada a administradores según pantalla.',
       'Las rutas de alta suelen ser /equipment/crear, /consumables/crear y /tools/crear si tu rol las tiene habilitadas.',
-    ],
-  },
-  {
-    id: 'analytics',
-    title: 'Estadísticas',
-    paragraphs: [
-      'En el grupo Estadísticas accedés a Estadísticas de tickets (/analytics), Estadísticas de equipos (/equipment/analytics), de consumibles (/consumables/analytics) y de herramientas (/tools/analytics) para gráficos y métricas de gestión.',
     ],
   },
   {
@@ -178,7 +170,7 @@ const administratorSections: ManualSection[] = [
     title: 'Qué ven los otros roles',
     paragraphs: [
       'Usuario final: crea tickets desde Crear ticket, ve sus solicitudes de materiales y préstamos, y puede tener inventario limitado si tiene asignaciones.',
-      'Técnico: usa el panel del técnico, atiende tickets asignados, inventario y estadísticas, y participa en préstamos y reportes de préstamos sin necesidad de permisos de administrador.',
+      'Técnico: usa el panel del técnico, atiende tickets asignados, inventario y préstamos operativos sin los reportes ni estadísticas globales reservados al administrador.',
       'Usá las pestañas de este manual para leer las guías detalladas de cada rol si necesitás capacitar o documentar procesos cruzados.',
     ],
   },

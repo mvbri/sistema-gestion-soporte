@@ -873,29 +873,31 @@ export const markAsResolved = async (req, res) => {
         const { id } = req.params;
         const { role, id: userId } = req.user;
 
-        if (role !== 'technician' && role !== 'administrator') {
-            return sendError(res, 'Solo los técnicos pueden marcar tickets como resueltos', null, 403);
-        }
-
         const ticket = await Ticket.findById(id);
         if (!ticket) {
             return sendError(res, 'Ticket no encontrado', null, 404);
         }
 
-        if (role === 'technician' && ticket.assigned_technician_id !== userId) {
+        const isEndUser = role === 'end_user';
+        const isTechnician = role === 'technician';
+        const isAdmin = role === 'administrator';
+
+        if (!isEndUser && !isTechnician && !isAdmin) {
+            return sendError(res, 'No autorizado para marcar este ticket como resuelto', null, 403);
+        }
+
+        if (isEndUser) {
+            if (ticket.created_by_user_id !== userId) {
+                return sendError(res, 'Solo puedes marcar como resueltos los tickets que creaste', null, 403);
+            }
+        }
+
+        if (isTechnician && ticket.assigned_technician_id !== userId) {
             return sendError(res, 'Solo puedes marcar como resueltos los tickets asignados a ti', null, 403);
         }
 
-        if (!ticket.assigned_technician_id) {
+        if ((isTechnician || isAdmin) && !ticket.assigned_technician_id) {
             return sendError(res, 'El ticket debe estar asignado a un técnico', null, 400);
-        }
-
-        if (ticket.state_id === 1) {
-            return sendError(res, 'No se puede marcar como resuelto un ticket "Abierto". Debe estar "Asignado" y "En Proceso" primero', null, 400);
-        }
-
-        if (ticket.state_id === 2) {
-            return sendError(res, 'No se puede marcar como resuelto un ticket "Asignado". Debe estar "En Proceso" primero', null, 400);
         }
 
         if (ticket.state_id === 4) {
@@ -906,8 +908,33 @@ export const markAsResolved = async (req, res) => {
             return sendError(res, 'No se puede marcar como resuelto un ticket "Cerrado"', null, 400);
         }
 
-        if (ticket.state_id !== 3) {
-            return sendError(res, 'Solo se puede marcar como resuelto un ticket que está "En Proceso"', null, 400);
+        if (ticket.state_id === 1) {
+            return sendError(
+                res,
+                isEndUser
+                    ? 'No se puede marcar como resuelto un ticket "Abierto". Debe estar asignado o en proceso primero'
+                    : 'No se puede marcar como resuelto un ticket "Abierto". Debe estar "Asignado" y "En Proceso" primero',
+                null,
+                400
+            );
+        }
+
+        if (isEndUser) {
+            if (ticket.state_id !== 2 && ticket.state_id !== 3) {
+                return sendError(
+                    res,
+                    'Solo puedes marcar como resuelto un ticket asignado o en proceso',
+                    null,
+                    400
+                );
+            }
+        } else {
+            if (ticket.state_id === 2) {
+                return sendError(res, 'No se puede marcar como resuelto un ticket "Asignado". Debe estar "En Proceso" primero', null, 400);
+            }
+            if (ticket.state_id !== 3) {
+                return sendError(res, 'Solo se puede marcar como resuelto un ticket que está "En Proceso"', null, 400);
+            }
         }
 
         const estadoAnterior = await query('SELECT name FROM ticket_states WHERE id = ?', [ticket.state_id]);

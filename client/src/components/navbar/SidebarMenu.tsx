@@ -334,7 +334,7 @@ export const SidebarMenu: React.FC = () => {
                     onClick={() => setMenuOpen(false)}
                   />
                 )}
-                {(user?.role === 'administrator' || user?.role === 'technician') && (
+                {user?.role === 'administrator' && (
                   <NavLink
                     path="/loans/reports"
                     label="Reporte Préstamos"
@@ -406,8 +406,8 @@ export const SidebarMenu: React.FC = () => {
             </div>
           )}
 
-          {/* Grupo Estadísticas - Solo para técnicos y administradores */}
-          {(user?.role === 'technician' || user?.role === 'administrator') && (
+          {/* Grupo Estadísticas - Solo administradores */}
+          {user?.role === 'administrator' && (
             <div className="mt-2">
               <button
                 type="button"

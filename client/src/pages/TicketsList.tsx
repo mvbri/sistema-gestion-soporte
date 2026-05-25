@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
-import { useTickets, useEstados, useCategorias, usePrioridades, useTecnicos, useDeleteTicket } from '../hooks/useTickets';
+import {
+  useTickets,
+  useEstados,
+  useCategorias,
+  usePrioridades,
+  useTecnicos,
+  useDeleteTicket,
+  useMarkAsResolved,
+} from '../hooks/useTickets';
 import type { Ticket, TicketFilters } from '../types';
 import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
@@ -37,6 +45,7 @@ export const TicketsList: React.FC = () => {
   const { data: prioridades = [] } = usePrioridades();
   const { data: tecnicos = [] } = useTecnicos();
   const deleteTicketMutation = useDeleteTicket();
+  const markAsResolvedMutation = useMarkAsResolved();
 
   const tickets = ticketsData?.tickets || [];
   const createdByMeTickets = createdByMeData?.tickets || [];
@@ -86,6 +95,17 @@ export const TicketsList: React.FC = () => {
   const canEdit = user?.role === 'administrator';
   const canDelete = user?.role === 'administrator';
 
+  const endUserCanMarkResolved = (ticket: Ticket) =>
+    Boolean(
+      user &&
+        user.role === 'end_user' &&
+        user.id === ticket.created_by_user_id &&
+        (ticket.state_id === 2 || ticket.state_id === 3)
+    );
+
+  const isMarkingResolved = (ticketId: string) =>
+    markAsResolvedMutation.isPending && markAsResolvedMutation.variables === ticketId;
+
   return (
     <>
       <MainNavbar />
@@ -94,7 +114,9 @@ export const TicketsList: React.FC = () => {
         <div className="py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Tickets</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                {user?.role === 'end_user' ? 'Mis tickets' : 'Gestión de Tickets'}
+              </h1>
               {user?.role === 'end_user' && (
                 <p className="mt-1 text-xs sm:text-sm text-gray-600">Solo puedes ver tus propios tickets</p>
               )}
@@ -488,7 +510,17 @@ export const TicketsList: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
+                        <div className="flex items-center justify-end sm:justify-start flex-wrap gap-2 flex-shrink-0">
+                          {endUserCanMarkResolved(ticket) && (
+                            <button
+                              type="button"
+                              onClick={() => markAsResolvedMutation.mutate(ticket.id)}
+                              disabled={isMarkingResolved(ticket.id)}
+                              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out whitespace-nowrap disabled:opacity-50"
+                            >
+                              {isMarkingResolved(ticket.id) ? 'Marcando…' : 'Marcar resuelto'}
+                            </button>
+                          )}
                           <button
                             onClick={() => navigate(`/tickets/${ticket.id}`)}
                             className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-300 ease-in-out whitespace-nowrap"

@@ -46,7 +46,10 @@ export const TicketDetail: React.FC = () => {
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
   const { data: tecnicos = [] } = useTecnicos();
-  const { data: frequentIssues = [] } = useFrequentIssues();
+  const showFrequentIssueCommentTemplates = user?.role !== 'end_user';
+  const { data: frequentIssues = [] } = useFrequentIssues({
+    enabled: showFrequentIssueCommentTemplates,
+  });
   const equipmentFilters: EquipmentFilters = {
     limit: 1000,
     ...(user?.role !== 'administrator' ? { for_tickets: true } : {}),
@@ -229,6 +232,8 @@ export const TicketDetail: React.FC = () => {
   };
 
   const isAssignedTechnician = user?.role === 'technician' && ticket?.assigned_technician_id === user?.id;
+  const isTicketCreatorEndUser =
+    user?.role === 'end_user' && ticket?.created_by_user_id === user?.id;
   const canEdit = user?.role === 'administrator' || isAssignedTechnician;
   const canComment = user?.role !== undefined;
 
@@ -356,7 +361,9 @@ export const TicketDetail: React.FC = () => {
           </div>
 
           {/* Barra de Acciones */}
-          {((isAssignedTechnician && (ticket.state_id === 2 || ticket.state_id === 3)) || (canEdit && !isEditing)) ? (
+          {((isAssignedTechnician && (ticket.state_id === 2 || ticket.state_id === 3)) ||
+            (canEdit && !isEditing) ||
+            (isTicketCreatorEndUser && (ticket.state_id === 2 || ticket.state_id === 3))) ? (
             <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 sm:px-8 py-4">
               <div className="flex flex-wrap items-center gap-3">
                 {isAssignedTechnician && ticket.state_id === 2 && (
@@ -388,7 +395,8 @@ export const TicketDetail: React.FC = () => {
                   </button>
                 )}
 
-                {isAssignedTechnician && ticket.state_id === 3 && (
+                {((isAssignedTechnician && ticket.state_id === 3) ||
+                  (isTicketCreatorEndUser && (ticket.state_id === 2 || ticket.state_id === 3))) && (
                   <button
                     onClick={handleMarkAsResolved}
                     disabled={markAsResolvedMutation.isPending}
@@ -839,37 +847,41 @@ export const TicketDetail: React.FC = () => {
               Agregar Comentario
             </h2>
             <form onSubmit={handleSubmitComment(onComment)}>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FrequentIssueIcon className="h-5 w-5 shrink-0 text-blue-600" />
-                Plantilla de falla frecuente (opcional)
-              </label>
-              <select
-                defaultValue=""
-                aria-label="Insertar plantilla de falla frecuente"
-                onChange={(e) => {
-                  const selectedIssueId = Number(e.target.value);
-                  if (!selectedIssueId) return;
+              {showFrequentIssueCommentTemplates && (
+                <>
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <FrequentIssueIcon className="h-5 w-5 shrink-0 text-blue-600" />
+                    Plantilla de falla frecuente (opcional)
+                  </label>
+                  <select
+                    defaultValue=""
+                    aria-label="Insertar plantilla de falla frecuente"
+                    onChange={(e) => {
+                      const selectedIssueId = Number(e.target.value);
+                      if (!selectedIssueId) return;
 
-                  const selectedIssue = frequentIssues.find((issue) => issue.id === selectedIssueId);
-                  if (!selectedIssue) return;
+                      const selectedIssue = frequentIssues.find((issue) => issue.id === selectedIssueId);
+                      if (!selectedIssue) return;
 
-                  const currentComment = getCommentValues('contenido') || '';
-                  const solutionBlock = `Diagnóstico sugerido: ${selectedIssue.title}\nPosible solución: ${selectedIssue.possible_solution}`;
-                  const userText = stripFrequentIssueCommentTemplates(currentComment);
-                  const nextComment =
-                    userText.length > 0 ? `${userText}\n\n${solutionBlock}` : solutionBlock;
+                      const currentComment = getCommentValues('contenido') || '';
+                      const solutionBlock = `Diagnóstico sugerido: ${selectedIssue.title}\nPosible solución: ${selectedIssue.possible_solution}`;
+                      const userText = stripFrequentIssueCommentTemplates(currentComment);
+                      const nextComment =
+                        userText.length > 0 ? `${userText}\n\n${solutionBlock}` : solutionBlock;
 
-                  setCommentValue('contenido', nextComment, { shouldValidate: true });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
-              >
-                <option value="">Insertar plantilla de falla frecuente (opcional)</option>
-                {frequentIssues.map((issue) => (
-                  <option key={issue.id} value={issue.id}>
-                    {issue.title}
-                  </option>
-                ))}
-              </select>
+                      setCommentValue('contenido', nextComment, { shouldValidate: true });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3"
+                  >
+                    <option value="">Insertar plantilla de falla frecuente (opcional)</option>
+                    {frequentIssues.map((issue) => (
+                      <option key={issue.id} value={issue.id}>
+                        {issue.title}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
               <textarea
                 {...registerComment('contenido')}
                 rows={4}

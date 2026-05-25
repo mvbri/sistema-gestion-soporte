@@ -112,7 +112,7 @@ function App() {
           <Route
             path="/analytics"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator']}>
                 <TicketsDashboard />
               </ProtectedRoute>
             }
@@ -200,7 +200,7 @@ function App() {
           <Route
             path="/loans/reports"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator']}>
                 <LoanReportsPage />
               </ProtectedRoute>
             }
@@ -288,7 +288,7 @@ function App() {
           <Route
             path="/equipment/analytics"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator']}>
                 <EquipmentDashboard />
               </ProtectedRoute>
             }
@@ -328,7 +328,7 @@ function App() {
           <Route
             path="/consumables/analytics"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator']}>
                 <ConsumablesDashboard />
               </ProtectedRoute>
             }
@@ -368,7 +368,7 @@ function App() {
           <Route
             path="/tools/analytics"
             element={
-              <ProtectedRoute allowedRoles={['administrator', 'technician']}>
+              <ProtectedRoute allowedRoles={['administrator']}>
                 <ToolsDashboard />
               </ProtectedRoute>
             }

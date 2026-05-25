@@ -227,8 +227,8 @@ export const addEquipmentLoanComment = async (req, res) => {
 
 export const getEquipmentLoansSummaryReport = async (req, res) => {
     try {
-        if (!ensureItRole(req.user.role)) {
-            return sendError(res, 'Solo IT puede ver el reporte', null, 403);
+        if (req.user.role !== 'administrator') {
+            return sendError(res, 'Solo administradores pueden ver el reporte de préstamos', null, 403);
         }
 
         const today = new Date();
