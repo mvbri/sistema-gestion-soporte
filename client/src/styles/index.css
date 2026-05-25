@@ -3,49 +3,123 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply text-slate-100;
+  }
+
+  /*
+   * Scrollbar = estilo header, tono un poco más claro
+   * (slate-900/sky-900 + borde sky-400/40)
+   */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(12, 74, 110, 0.82) rgba(15, 23, 42, 0.38);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.38) 0%,
+      rgba(12, 74, 110, 0.34) 50%,
+      rgba(15, 23, 42, 0.38) 100%
+    );
+    border-radius: 9999px;
+    box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.28);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.88) 0%,
+      rgba(12, 74, 110, 0.82) 50%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    border-radius: 9999px;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 2px 8px rgba(14, 116, 144, 0.35);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      rgba(30, 41, 59, 0.92) 0%,
+      rgba(14, 116, 144, 0.88) 50%,
+      rgba(30, 41, 59, 0.92) 100%
+    );
+    border-color: rgba(125, 211, 252, 0.55);
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: rgba(15, 23, 42, 0.38);
   }
 }
 
 @layer components {
+  /* Azul semitransparente, tono un poco más claro */
+  .app-shell {
+    @apply relative min-h-screen isolate;
+    background-color: #64748b;
+    background-image:
+      linear-gradient(
+        to bottom right,
+        rgba(37, 99, 235, 0.45),
+        rgba(14, 165, 233, 0.38),
+        rgba(2, 132, 199, 0.42)
+      ),
+      linear-gradient(to bottom right, #94a3b8, #64748b, #38bdf8);
+  }
+
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold tracking-wide
-           bg-gradient-to-r from-primary-500 to-primary-600 text-white
-           shadow-md hover:shadow-xl
-           hover:from-primary-600 hover:to-primary-700
-           focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+           bg-gradient-to-r from-sky-500 to-blue-600 text-white
+           shadow-lg shadow-blue-900/40
+           hover:from-sky-400 hover:to-blue-500 hover:shadow-xl
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-900
            transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium 
-           bg-gray-200 text-gray-800 shadow-sm
-           hover:bg-gray-300 hover:shadow-md
-           focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium
+           bg-slate-800/80 text-slate-100 border border-sky-400/35 shadow-sm
+           hover:bg-slate-700/90 hover:border-sky-400/50 hover:shadow-md
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-600
            transition-all duration-300 ease-out;
   }
 
   .btn-warning {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold 
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold
            bg-orange-600 text-white shadow-md
            hover:bg-orange-700 hover:shadow-lg
-           focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2
+           focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-slate-900
            transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold 
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold
            bg-red-600 text-white shadow-md
            hover:bg-red-700 hover:shadow-lg
-           focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2
+           focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-900
            transition-all duration-300 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Easing suave estándar para todos los botones */
   .btn-primary,
   .btn-secondary,
   .btn-warning,
@@ -54,45 +128,234 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
-           focus:outline-none focus:ring-2 focus:ring-primary-500 
-           focus:border-transparent transition-all;
+    @apply w-full px-4 py-2 rounded-xl bg-slate-900/55 border border-sky-300/40
+           text-slate-50 placeholder-slate-400/80 shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400
+           transition-colors duration-150;
   }
 
-  /* Variante de input oscuro para pantallas de auth */
   .input-dark {
-    @apply w-full px-4 py-2 rounded-xl bg-slate-900/65 border border-sky-300/45 
+    @apply w-full px-4 py-2 rounded-xl bg-slate-900/65 border border-sky-300/45
            text-slate-50 placeholder-slate-100/80 shadow-sm
            focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400
            transition-colors duration-150;
   }
 
   .label-field {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-blue-50/95 mb-1;
   }
 
   .error-message {
-    @apply text-red-600 text-sm mt-1;
+    @apply text-red-300 text-sm mt-1;
   }
 
+  /* Tarjeta principal (glassmorphism como login) */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply rounded-2xl p-6
+           bg-gradient-to-b from-slate-950/90 via-sky-950/80 to-slate-950/90
+           backdrop-blur-xl shadow-2xl shadow-sky-950/50
+           border border-sky-400/35;
+  }
+
+  .page-heading {
+    @apply text-2xl sm:text-3xl font-bold text-white drop-shadow-sm;
+  }
+
+  .page-subheading {
+    @apply mt-1 text-xs sm:text-sm text-blue-100/85;
+  }
+
+  .content-panel {
+    @apply rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6
+           bg-gradient-to-br from-slate-950/85 via-sky-950/70 to-slate-950/85
+           backdrop-blur-lg shadow-xl shadow-sky-950/40
+           border border-sky-400/30;
+  }
+
+  .stat-card {
+    @apply rounded-2xl p-4 sm:p-5 border backdrop-blur-md shadow-lg
+           bg-gradient-to-br from-slate-900/75 via-sky-950/55 to-slate-900/75;
+  }
+
+  .stat-card-icon {
+    @apply flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center border;
   }
 }
 
 @layer base {
-  /* Unificar estilo de inputs autocompletados (Chrome/Edge) con los inputs oscuros */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   textarea:-webkit-autofill,
   select:-webkit-autofill {
-    /* mismo tono que bg-slate-900/65 ≈ rgba(15,23,42,0.65) */
-    -webkit-box-shadow: 0 0 0px 1000px rgba(15,23,42,0.65) inset !important;
-    box-shadow: 0 0 0px 1000px rgba(15,23,42,0.65) inset !important;
-    -webkit-text-fill-color: #e5e7eb !important;                  /* gray-200 */
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.65) inset !important;
+    box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.65) inset !important;
+    -webkit-text-fill-color: #e5e7eb !important;
     caret-color: #e5e7eb !important;
   }
 }
 
+/* Texto y paneles sobre fondo medio-oscuro (valores CSS: evita circular @apply) */
+.app-shell .text-gray-900 {
+  color: #f8fafc;
+}
 
+.app-shell .text-gray-800 {
+  color: #f1f5f9;
+}
+
+.app-shell .text-gray-700 {
+  color: #e2e8f0;
+}
+
+.app-shell .text-gray-600 {
+  color: rgba(219, 234, 254, 0.85);
+}
+
+.app-shell .text-gray-500 {
+  color: #cbd5e1;
+}
+
+.app-shell .bg-white {
+  background-color: rgba(51, 65, 85, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.app-shell .bg-gray-50 {
+  background-color: rgba(51, 65, 85, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.app-shell .bg-gray-100 {
+  background-color: rgba(71, 85, 105, 0.55);
+}
+
+.app-shell .hover\:bg-gray-50:hover {
+  background-color: rgba(71, 85, 105, 0.65);
+}
+
+.app-shell .hover\:bg-gray-100:hover {
+  background-color: rgba(71, 85, 105, 0.75);
+}
+
+.app-shell .hover\:bg-gray-200:hover {
+  background-color: rgba(100, 116, 139, 0.75);
+}
+
+.app-shell .border-gray-100 {
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.app-shell .border-gray-200 {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.app-shell .border-gray-300 {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.app-shell .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.app-shell .from-white {
+  --tw-gradient-from: rgb(71 85 105 / 0.8) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(71 85 105 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.app-shell .to-gray-50 {
+  --tw-gradient-to: rgb(7 89 133 / 0.4) var(--tw-gradient-to-position);
+}
+
+.app-shell .from-blue-50 {
+  --tw-gradient-from: rgb(71 85 105 / 0.7) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(71 85 105 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.app-shell .to-indigo-50 {
+  --tw-gradient-to: rgb(29 78 216 / 0.35) var(--tw-gradient-to-position);
+}
+
+.app-shell select,
+.app-shell textarea:not(.input-dark):not(.input-field) {
+  @apply rounded-xl bg-slate-900/55 border border-sky-300/40 text-slate-50
+         focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400;
+}
+
+/* Tablas: estilo claro original (blanco / gris) */
+.app-shell table .text-gray-900 {
+  color: #111827;
+}
+
+.app-shell table .text-gray-800 {
+  color: #1f2937;
+}
+
+.app-shell table .text-gray-700 {
+  color: #374151;
+}
+
+.app-shell table .text-gray-600 {
+  color: #4b5563;
+}
+
+.app-shell table .text-gray-500 {
+  color: #6b7280;
+}
+
+.app-shell table thead,
+.app-shell table thead.bg-gray-50 {
+  background-color: #f9fafb;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.app-shell table thead.bg-gradient-to-r {
+  background-image: linear-gradient(to right, #f9fafb, #f3f4f6);
+}
+
+.app-shell table tbody.bg-white,
+.app-shell table .bg-white {
+  background-color: #ffffff;
+  backdrop-filter: none;
+  border-width: 0;
+  box-shadow: none;
+}
+
+.app-shell table tbody tr:hover,
+.app-shell table tr.hover\:bg-gray-50:hover {
+  background-color: #f9fafb;
+}
+
+.app-shell table .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e5e7eb;
+}
+
+.app-shell table .border-gray-200 {
+  border-color: #e5e7eb;
+}
+
+/* Listas con fondo claro (tickets, etc.) */
+.app-shell .tickets-list-light .text-gray-900 {
+  color: #111827;
+}
+
+.app-shell .tickets-list-light .text-gray-800 {
+  color: #1f2937;
+}
+
+.app-shell .tickets-list-light .text-gray-700 {
+  color: #374151;
+}
+
+.app-shell .tickets-list-light .text-gray-600 {
+  color: #4b5563;
+}
+
+.app-shell .tickets-list-light .text-gray-500 {
+  color: #6b7280;
+}

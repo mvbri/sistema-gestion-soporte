@@ -26,7 +26,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoColor} text-gray-800 ${className}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/15 shadow-sm ${estadoColor} text-gray-900 ${className}`}
     >
       {estadoNombre}
     </span>

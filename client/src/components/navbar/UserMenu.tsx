@@ -41,9 +41,9 @@ export const UserMenu: React.FC = () => {
       <button
         type="button"
         onClick={() => setUserMenuOpen((prev) => !prev)}
-        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
+        className="flex items-center space-x-3 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-900"
       >
-        <div className="h-9 w-9 rounded-full bg-blue-300/30 flex items-center justify-center">
+        <div className="h-9 w-9 rounded-full bg-sky-500/30 border border-sky-400/40 flex items-center justify-center">
           <UserProfileIcon className="h-5 w-5 text-white" />
         </div>
         <span className="text-sm font-medium text-white hidden sm:inline">
@@ -67,19 +67,19 @@ export const UserMenu: React.FC = () => {
       </button>
 
       {userMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-20">
-          <div className="px-4 py-3 border-b border-gray-100">
+        <div className="absolute right-0 top-full mt-2 w-64 rounded-xl py-2 z-20 bg-gradient-to-b from-slate-950/95 via-sky-950/90 to-slate-950/95 backdrop-blur-xl border border-sky-400/35 shadow-2xl shadow-sky-950/60">
+          <div className="px-4 py-3 border-b border-sky-400/25">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-white">
                 {user?.full_name}
               </p>
               {user?.role === 'administrator' && (
-                <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
+                <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-sky-500/30 text-sky-100 border border-sky-400/40">
                   Administrador
                 </span>
               )}
               {user?.role === 'technician' && (
-                <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/30 text-blue-100 border border-blue-400/40">
                   Técnico
                 </span>
               )}
@@ -91,14 +91,14 @@ export const UserMenu: React.FC = () => {
               setUserMenuOpen(false);
               navigate('/perfil');
             }}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full text-left px-4 py-2.5 text-sm text-blue-50 hover:bg-slate-800/60 transition-colors"
           >
             Actualizar información
           </button>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full text-left px-4 py-2.5 text-sm text-blue-50 hover:bg-slate-800/60 transition-colors"
           >
             Cerrar sesión
           </button>

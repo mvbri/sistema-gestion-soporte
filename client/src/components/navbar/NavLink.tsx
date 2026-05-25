@@ -29,11 +29,11 @@ export const NavLink: React.FC<NavLinkProps> = ({
       } ${
         isActive
           ? isSubitem
-            ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/80 shadow-sm'
-            : 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
+            ? 'bg-sky-500/25 text-sky-100 ring-1 ring-sky-400/50 shadow-sm'
+            : 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md border-l-4 border-sky-300'
           : isSubitem
-            ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+            ? 'text-blue-100/80 hover:bg-slate-800/60 hover:text-white'
+            : 'text-blue-50/90 hover:bg-slate-800/50 hover:text-white'
       }`}
     >
       {isSubitem ? (
@@ -43,7 +43,7 @@ export const NavLink: React.FC<NavLinkProps> = ({
         >
           <span
             className={`rounded-full ${
-              isActive ? 'h-1.5 w-1.5 bg-blue-600' : 'h-1.5 w-1.5 bg-gray-400'
+              isActive ? 'h-1.5 w-1.5 bg-sky-300' : 'h-1.5 w-1.5 bg-slate-500'
             }`}
           />
         </span>
@@ -51,7 +51,7 @@ export const NavLink: React.FC<NavLinkProps> = ({
         Icon && (
           <Icon
             className={`flex-shrink-0 h-5 w-5 ${
-              isActive ? 'text-white' : 'text-gray-600'
+              isActive ? 'text-white' : 'text-blue-200/80'
             }`}
           />
         )

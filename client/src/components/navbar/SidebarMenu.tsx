@@ -198,12 +198,12 @@ export const SidebarMenu: React.FC = () => {
   return (
     <div
       ref={menuRef}
-      className={`fixed top-0 left-0 h-full w-80 shadow-xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+      className={`fixed top-0 left-0 h-full w-80 z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto border-r border-sky-400/35 bg-gradient-to-b from-slate-950/98 via-sky-950/95 to-slate-950/98 backdrop-blur-xl shadow-2xl shadow-sky-950/60 ${
         menuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
       <div className="pb-4 h-full flex flex-col">
-        <div className="px-5 py-5 border-b border-blue-400/30" style={{ backgroundColor: '#4A6FA5' }}>
+        <div className="px-5 py-5 border-b border-sky-400/30 bg-gradient-to-r from-slate-950/90 via-sky-950/80 to-slate-950/90">
           <div className="flex items-center space-x-3">
             <MenuToggleButton
               isOpen={menuOpen}
@@ -223,7 +223,7 @@ export const SidebarMenu: React.FC = () => {
             </Link>
           </div>
         </div>
-        <nav className="px-3 py-4 space-y-1 bg-gray-50 flex-1">
+        <nav className="px-3 py-4 space-y-1 flex-1">
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
@@ -241,14 +241,14 @@ export const SidebarMenu: React.FC = () => {
               onClick={() => setMaterialRequestsOpen(!materialRequestsOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 materialRequestsActive
-                  ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md border-l-4 border-sky-300'
+                  : 'text-blue-50/90 hover:bg-slate-800/50 hover:text-white'
               }`}
             >
               <span className="flex items-center gap-3">
                 <HandRequestIcon
                   className={`flex-shrink-0 h-5 w-5 ${
-                    materialRequestsActive ? 'text-white' : 'text-gray-600'
+                    materialRequestsActive ? 'text-white' : 'text-blue-200/80'
                   }`}
                 />
                 <span>Solicitudes de Materiales</span>
@@ -290,13 +290,13 @@ export const SidebarMenu: React.FC = () => {
               onClick={() => setLoansOpen(!loansOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 loansActive
-                  ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md border-l-4 border-sky-300'
+                  : 'text-blue-50/90 hover:bg-slate-800/50 hover:text-white'
               }`}
             >
               <span className="flex items-center gap-3">
                 <LoansHandsIcon
-                  className={`flex-shrink-0 h-5 w-5 ${loansActive ? 'text-white' : 'text-gray-600'}`}
+                  className={`flex-shrink-0 h-5 w-5 ${loansActive ? 'text-white' : 'text-blue-200/80'}`}
                 />
                 <span>Préstamos</span>
               </span>
@@ -355,14 +355,14 @@ export const SidebarMenu: React.FC = () => {
                 onClick={() => setInventoryOpen(!inventoryOpen)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                   inventoryActive
-                    ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
-                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md border-l-4 border-sky-300'
+                    : 'text-blue-50/90 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
                 <span className="flex items-center gap-3">
                   <EquipmentIcon
                     className={`flex-shrink-0 h-5 w-5 ${
-                      inventoryActive ? 'text-white' : 'text-gray-600'
+                      inventoryActive ? 'text-white' : 'text-blue-200/80'
                     }`}
                   />
                   <span>Inventario</span>
@@ -414,14 +414,14 @@ export const SidebarMenu: React.FC = () => {
                 onClick={() => setAnalyticsOpen(!analyticsOpen)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                   analyticsActive
-                    ? 'bg-blue-500 text-white shadow-sm border-l-4 border-blue-600'
-                    : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md border-l-4 border-sky-300'
+                    : 'text-blue-50/90 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
                 <span className="flex items-center gap-3">
                   <AnalyticsIcon
                     className={`flex-shrink-0 h-5 w-5 ${
-                      analyticsActive ? 'text-white' : 'text-gray-600'
+                      analyticsActive ? 'text-white' : 'text-blue-200/80'
                     }`}
                   />
                   <span>Estadísticas</span>

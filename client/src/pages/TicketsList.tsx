@@ -112,35 +112,36 @@ export const TicketsList: React.FC = () => {
       <PageWrapper>
       <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="page-heading">
                 {user?.role === 'end_user' ? 'Mis tickets' : 'Gestión de Tickets'}
               </h1>
               {user?.role === 'end_user' && (
-                <p className="mt-1 text-xs sm:text-sm text-gray-600">Solo puedes ver tus propios tickets</p>
+                <p className="page-subheading">Solo puedes ver tus propios tickets</p>
               )}
               {isTechnician && (
-                <p className="mt-1 text-xs sm:text-sm text-gray-600">
+                <p className="page-subheading">
                   Solo ves los tickets asignados a ti; más abajo, los que hayas creado como solicitante.
                 </p>
               )}
             </div>
             {user?.role === 'end_user' && (
               <button
+                type="button"
                 onClick={() => navigate('/tickets/crear')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm sm:text-base whitespace-nowrap"
+                className="btn-primary text-sm sm:text-base whitespace-nowrap"
               >
                 Crear Ticket
               </button>
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <div className="flex items-center space-x-2">
+          <div className="content-panel mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-5">
+              <div className="flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -152,12 +153,12 @@ export const TicketsList: React.FC = () => {
                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                   />
                 </svg>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Filtros de Búsqueda</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Filtros de Búsqueda</h2>
               </div>
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm whitespace-nowrap"
                 aria-label="Limpiar todos los filtros"
                 title="Limpiar filtros"
               >
@@ -168,9 +169,9 @@ export const TicketsList: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-4 sm:mb-5">
               <div className="min-w-0">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
                   <svg
-                    className="w-4 h-4 text-blue-600"
+                    className="w-4 h-4 text-sky-300 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -198,11 +199,12 @@ export const TicketsList: React.FC = () => {
                     }}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Título o descripción..."
-                    className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    className="input-field flex-1 min-w-0 rounded-l-xl rounded-r-none border-r-0"
                   />
                   <button
+                    type="button"
                     onClick={handleSearch}
-                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 flex-shrink-0 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                    className="btn-primary px-5 py-2.5 rounded-l-none rounded-r-xl flex-shrink-0"
                   >
                     <svg
                       className="w-5 h-5"
@@ -222,9 +224,9 @@ export const TicketsList: React.FC = () => {
               </div>
 
               <div className="min-w-0">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
                   <svg
-                    className="w-4 h-4 text-green-600"
+                    className="w-4 h-4 text-emerald-300 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -242,7 +244,7 @@ export const TicketsList: React.FC = () => {
                   <select
                     value={filters.estado_id || ''}
                     onChange={(e) => handleFilterChange('estado_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                    className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
                   >
                     <option value="">Todos</option>
                     {estados.map((estado) => (
@@ -253,7 +255,7 @@ export const TicketsList: React.FC = () => {
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="w-5 h-5 text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -270,9 +272,9 @@ export const TicketsList: React.FC = () => {
               </div>
 
               <div className="min-w-0">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
                   <svg
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-violet-300 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -290,7 +292,7 @@ export const TicketsList: React.FC = () => {
                   <select
                     value={filters.categoria_id || ''}
                     onChange={(e) => handleFilterChange('categoria_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                    className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
                   >
                     <option value="">Todas</option>
                     {categorias.map((categoria) => (
@@ -301,7 +303,7 @@ export const TicketsList: React.FC = () => {
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="w-5 h-5 text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -318,9 +320,9 @@ export const TicketsList: React.FC = () => {
               </div>
 
               <div className="min-w-0">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
                   <svg
-                    className="w-4 h-4 text-orange-600"
+                    className="w-4 h-4 text-amber-300 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -338,7 +340,7 @@ export const TicketsList: React.FC = () => {
                   <select
                     value={filters.prioridad_id || ''}
                     onChange={(e) => handleFilterChange('prioridad_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                    className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
                   >
                     <option value="">Todas</option>
                     {prioridades.map((prioridad) => (
@@ -349,7 +351,7 @@ export const TicketsList: React.FC = () => {
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="w-5 h-5 text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -369,9 +371,9 @@ export const TicketsList: React.FC = () => {
             {user?.role === 'administrator' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <div className="min-w-0">
-                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                  <label className="label-field flex items-center gap-2 !mb-2">
                     <svg
-                      className="w-4 h-4 text-indigo-600"
+                      className="w-4 h-4 text-indigo-300 shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -389,7 +391,7 @@ export const TicketsList: React.FC = () => {
                     <select
                       value={filters.assigned_technician_id || ''}
                       onChange={(e) => handleFilterChange('assigned_technician_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                      className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                      className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
                     >
                       <option value="">Todos</option>
                       {tecnicos.map((tecnico) => (
@@ -400,7 +402,7 @@ export const TicketsList: React.FC = () => {
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <svg
-                        className="w-5 h-5 text-gray-400"
+                        className="w-5 h-5 text-slate-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -420,21 +422,21 @@ export const TicketsList: React.FC = () => {
           </div>
 
           {isTechnician && (
-            <div className="mb-4 sm:mb-5 rounded-lg border border-amber-100 bg-amber-50/80 px-4 py-3 sm:px-5 sm:py-4">
-              <h2 className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-2">
+            <div className="mb-6 rounded-2xl border border-amber-400/35 bg-amber-500/15 backdrop-blur-sm px-4 py-4 sm:px-5">
+              <h2 className="text-sm font-semibold text-amber-100 mb-3 flex items-center gap-2">
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Tickets que creaste
               </h2>
               {loadingCreatedByMe ? (
-                <p className="text-xs text-amber-800/80">Cargando…</p>
+                <p className="text-xs text-amber-100/80">Cargando…</p>
               ) : createdByMeTickets.length === 0 ? (
-                <p className="text-xs text-amber-800/80">Aún no has creado ningún ticket.</p>
+                <p className="text-xs text-amber-100/80">Aún no has creado ningún ticket.</p>
               ) : (
-                <ul className="divide-y divide-amber-100/90 border border-amber-100 rounded-md bg-white/90 overflow-hidden">
+                <ul className="tickets-list-light divide-y divide-gray-200 border border-sky-400/20 rounded-xl bg-white/95 overflow-hidden shadow-sm">
                   {createdByMeTickets.map((ticket) => (
-                    <li key={ticket.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                    <li key={ticket.id} className="flex items-center justify-between gap-2 px-3 py-2.5 text-sm hover:bg-sky-50/80 transition-colors">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 truncate">{ticket.title}</p>
                         <div className="flex flex-wrap items-center gap-1.5 mt-1">
@@ -449,7 +451,7 @@ export const TicketsList: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        className="shrink-0 px-3 py-1 text-xs font-medium rounded-md bg-amber-600 text-white hover:bg-amber-700"
+                        className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-sm"
                       >
                         Ver
                       </button>
@@ -461,25 +463,28 @@ export const TicketsList: React.FC = () => {
           )}
 
           {loadingTickets ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Cargando tickets...</p>
+            <div className="card py-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent"></div>
+              <p className="mt-3 text-blue-100/85">Cargando tickets...</p>
             </div>
           ) : tickets.length === 0 ? (
-            <div className="bg-white shadow rounded-lg p-12 text-center">
-              <p className="text-gray-500">
+            <div className="card py-12 text-center">
+              <p className="text-blue-100/80">
                 {isTechnician ? 'No tienes tickets asignados con estos filtros.' : 'No se encontraron tickets'}
               </p>
             </div>
           ) : (
             <>
               {isTechnician && (
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">Tickets asignados a ti</h2>
+                <h2 className="text-lg font-semibold text-white mb-4">Tickets asignados a ti</h2>
               )}
-              <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
+              <div className="card !p-0 overflow-hidden">
+                <ul className="tickets-list-light divide-y divide-gray-200 bg-white/95">
                   {tickets.map((ticket) => (
-                    <li key={ticket.id} className="px-3 sm:px-6 py-4 hover:bg-gray-50">
+                    <li
+                      key={ticket.id}
+                      className="px-4 sm:px-6 py-4 hover:bg-sky-50/90 transition-colors"
+                    >
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
@@ -498,7 +503,7 @@ export const TicketsList: React.FC = () => {
                               <CategoryBadge categoria={ticket.category_name || ''} />
                             </div>
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600">
                             <span className="truncate">ID: {ticket.id.substring(0, 8)}...</span>
                             <span className="truncate">Creado: {formatDate(ticket.created_at)}</span>
                             {ticket.closed_at && (
@@ -578,23 +583,25 @@ export const TicketsList: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-                <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs sm:text-sm text-blue-50/90 text-center sm:text-left">
                   Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
                   {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} tickets
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1 }))}
                     disabled={pagination.page === 1}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                    className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
                   >
                     Anterior
                   </button>
                   <button
+                    type="button"
                     onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1 }))}
                     disabled={pagination.page >= pagination.totalPages}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                    className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
                   >
                     Siguiente
                   </button>

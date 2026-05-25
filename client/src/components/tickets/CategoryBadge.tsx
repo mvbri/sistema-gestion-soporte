@@ -10,7 +10,7 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ categoria, classNa
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ${className}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300/60 shadow-sm ${className}`}
     >
       {categoriaNombre}
     </span>

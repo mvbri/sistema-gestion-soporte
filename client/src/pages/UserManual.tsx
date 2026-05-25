@@ -31,17 +31,17 @@ export const UserManual: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <header className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manual de usuario</h1>
-            <p className="mt-2 text-gray-600 text-base">
+            <h1 className="page-heading">Manual de usuario</h1>
+            <p className="page-subheading max-w-3xl">
               Guía de uso según el rol. La pestaña inicial coincide con tu cuenta; podés cambiar de rol
               para consultar otras guías.
             </p>
           </header>
 
           <div
-            className="flex flex-wrap gap-2 mb-8 p-1 bg-gray-200/80 rounded-lg"
+            className="flex flex-wrap gap-2 mb-8 p-1.5 rounded-2xl bg-slate-950/55 backdrop-blur-md border border-sky-400/30 shadow-lg shadow-sky-950/30"
             role="tablist"
             aria-label="Rol del manual"
           >
@@ -51,10 +51,10 @@ export const UserManual: React.FC = () => {
                 type="button"
                 role="tab"
                 aria-selected={selectedRole === role}
-                className={`flex-1 min-w-[8.5rem] px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 min-w-[8.5rem] px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   selectedRole === role
-                    ? 'bg-white text-blue-800 shadow-sm ring-1 ring-gray-200'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-900/40 ring-1 ring-sky-300/50'
+                    : 'text-blue-50/90 hover:text-white hover:bg-slate-800/55'
                 }`}
                 onClick={() => setSelectedRole(role)}
               >
@@ -63,24 +63,26 @@ export const UserManual: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <nav
               aria-label="Contenido del manual"
-              className="lg:w-56 flex-shrink-0 lg:sticky lg:top-24 lg:self-start"
+              className="card lg:w-64 flex-shrink-0 lg:sticky lg:top-24 lg:self-start !p-5"
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-sky-300/90 mb-4">
                 En esta guía
               </p>
-              <ul className="space-y-1.5 border-l-2 border-blue-200 pl-3">
+              <ul className="space-y-0.5 border-l-2 border-sky-400/40 pl-4">
                 {sections.map((s) => {
                   const href = `#${sectionAnchorId(selectedRole, s.id)}`;
                   return (
                     <li key={s.id}>
                       <a
                         href={href}
-                        className="text-sm text-blue-700 hover:text-blue-900 hover:underline"
+                        className="group block py-2 pl-2 -ml-0.5 rounded-r-lg text-sm text-blue-50/90 hover:text-white hover:bg-sky-500/15 border-l-2 border-transparent hover:border-sky-400 transition-colors"
                       >
-                        {s.title}
+                        <span className="group-hover:underline underline-offset-2 decoration-sky-300/70">
+                          {s.title}
+                        </span>
                       </a>
                     </li>
                   );
@@ -88,27 +90,29 @@ export const UserManual: React.FC = () => {
               </ul>
             </nav>
 
-            <div className="min-w-0 flex-1 space-y-10">
-              {sections.map((section) => (
-                <section
-                  key={section.id}
-                  id={sectionAnchorId(selectedRole, section.id)}
-                  className="scroll-mt-24"
-                  aria-labelledby={`heading-${selectedRole}-${section.id}`}
-                >
-                  <h2
-                    id={`heading-${selectedRole}-${section.id}`}
-                    className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-4"
+            <div className="card min-w-0 flex-1 !p-6 sm:!p-8">
+              <div className="space-y-12">
+                {sections.map((section) => (
+                  <section
+                    key={section.id}
+                    id={sectionAnchorId(selectedRole, section.id)}
+                    className="scroll-mt-28 rounded-xl -mx-2 px-4 py-3 transition-colors target:bg-sky-500/10 target:ring-1 target:ring-sky-400/35"
+                    aria-labelledby={`heading-${selectedRole}-${section.id}`}
                   >
-                    {section.title}
-                  </h2>
-                  <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-                    {section.paragraphs.map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
-                  </div>
-                </section>
-              ))}
+                    <h2
+                      id={`heading-${selectedRole}-${section.id}`}
+                      className="text-xl font-semibold text-white border-b border-sky-400/30 pb-3 mb-4"
+                    >
+                      {section.title}
+                    </h2>
+                    <div className="space-y-4 text-blue-50/90 text-base leading-relaxed">
+                      {section.paragraphs.map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
           </div>
         </div>

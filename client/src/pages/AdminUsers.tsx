@@ -231,83 +231,87 @@ export const AdminUsers: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
-                <p className="text-sm sm:text-base text-gray-600">Administra y gestiona todos los usuarios del sistema</p>
-              </div>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="btn-primary flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto"
-              >
-                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>Crear Usuario</span>
-              </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="page-heading">Gestión de Usuarios</h1>
+              <p className="page-subheading">
+                Administra y gestiona todos los usuarios del sistema
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span>Crear Usuario</span>
+            </button>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Usuarios</p>
-                    <p className="text-2xl sm:text-3xl font-bold">{pagination.total}</p>
-                  </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="stat-card border-sky-400/35">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-sky-200/85 mb-1">Total Usuarios</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">{pagination.total}</p>
+                </div>
+                <div className="stat-card-icon bg-sky-500/25 border-sky-400/40 text-sky-300">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Usuarios Activos</p>
-                    <p className="text-2xl sm:text-3xl font-bold">{activeUsersCount}</p>
-                  </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
+            </div>
+            <div className="stat-card border-emerald-400/35">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-emerald-200/85 mb-1">Usuarios Activos</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">{activeUsersCount}</p>
+                </div>
+                <div className="stat-card-icon bg-emerald-500/25 border-emerald-400/40 text-emerald-300">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Usuarios Inactivos</p>
-                    <p className="text-2xl sm:text-3xl font-bold">{inactiveUsersCount}</p>
-                  </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
+            </div>
+            <div className="stat-card border-red-400/35">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-red-200/85 mb-1">Usuarios Inactivos</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">{inactiveUsersCount}</p>
+                </div>
+                <div className="stat-card-icon bg-red-500/25 border-red-400/40 text-red-300">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Emails Verificados</p>
-                    <p className="text-2xl sm:text-3xl font-bold">{verifiedUsersCount}</p>
-                  </div>
-                  <div className="bg-white bg-opacity-20 rounded-full p-2 sm:p-3">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
+            </div>
+            <div className="stat-card border-violet-400/35">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-violet-200/85 mb-1">Emails Verificados</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">{verifiedUsersCount}</p>
+                </div>
+                <div className="stat-card-icon bg-violet-500/25 border-violet-400/40 text-violet-300">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-4 sm:mb-6 p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Filtros de Búsqueda</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="content-panel">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-4">Filtros de Búsqueda</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
+                  <svg className="w-4 h-4 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                   Buscar
                 </label>
                 <div className="relative">
@@ -316,15 +320,18 @@ export const AdminUsers: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Nombre o email..."
-                    className="input-field w-full pl-10 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="input-field w-full pl-10"
                   />
-                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
+                  <svg className="w-4 h-4 text-emerald-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   Estado
                 </label>
                 <select
@@ -334,7 +341,7 @@ export const AdminUsers: React.FC = () => {
                     setActiveFilter(value === '' ? undefined : value === 'true');
                     setPage(1);
                   }}
-                  className="input-field w-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="input-field w-full"
                 >
                   <option value="">Todos</option>
                   <option value="true">Activos</option>
@@ -342,7 +349,10 @@ export const AdminUsers: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="label-field flex items-center gap-2 !mb-2">
+                  <svg className="w-4 h-4 text-violet-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                   Rol
                 </label>
                 <select
@@ -352,7 +362,7 @@ export const AdminUsers: React.FC = () => {
                     setRoleFilter(value === '' ? undefined : Number(value));
                     setPage(1);
                   }}
-                  className="input-field w-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="input-field w-full"
                 >
                   <option value="">Todos</option>
                   <option value="1">Administrador</option>
@@ -764,21 +774,21 @@ export const AdminUsers: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="card !p-0 overflow-hidden">
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"></div>
-                <p className="mt-4 text-gray-600 font-medium">Cargando usuarios...</p>
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-sky-400 border-t-transparent"></div>
+                <p className="mt-4 text-blue-100/85 font-medium">Cargando usuarios...</p>
               </div>
             ) : isError ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-12 px-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/20 border border-red-400/40 mb-4">
+                  <svg className="w-7 h-7 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
-                <p className="text-red-600 font-semibold text-lg">Error al cargar usuarios</p>
-                <p className="text-gray-500 mt-2">Por favor, intenta de nuevo</p>
+                <p className="text-red-200 font-semibold text-lg">Error al cargar usuarios</p>
+                <p className="text-blue-100/70 mt-2">Por favor, intenta de nuevo</p>
                 {error && typeof error === 'object' && 'response' in error && (
                   <p className="text-sm text-gray-400 mt-2">
                     {(error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error desconocido'}
@@ -786,14 +796,14 @@ export const AdminUsers: React.FC = () => {
                 )}
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-12 px-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-800/60 border border-sky-400/30 mb-4">
+                  <svg className="w-7 h-7 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
-                <p className="text-gray-600 font-semibold text-lg">No se encontraron usuarios</p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-white font-semibold text-lg">No se encontraron usuarios</p>
+                <p className="text-sm text-blue-100/75 mt-2">
                   {pagination.total === 0 
                     ? 'No hay usuarios registrados en el sistema' 
                     : 'Intenta ajustar los filtros de búsqueda'}
@@ -801,7 +811,7 @@ export const AdminUsers: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="tickets-list-light overflow-x-auto bg-white/95">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                       <tr>
@@ -949,7 +959,7 @@ export const AdminUsers: React.FC = () => {
                   </table>
                 </div>
                 {pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3 sm:gap-0">
+                  <div className="tickets-list-light bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3 sm:gap-0">
                     <div className="flex-1 flex justify-between sm:hidden w-full">
                       <button
                         onClick={() => setPage(Math.max(1, page - 1))}
@@ -991,7 +1001,7 @@ export const AdminUsers: React.FC = () => {
                               onClick={() => setPage(pageNum)}
                               className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
                                 pageNum === page
-                                  ? 'z-10 bg-primary-600 border-primary-600 text-white'
+                                  ? 'z-10 bg-gradient-to-r from-sky-500 to-blue-600 border-sky-500 text-white'
                                   : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                               }`}
                             >
