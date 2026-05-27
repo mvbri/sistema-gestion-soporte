@@ -1,61 +1,47 @@
-# Scripts de diagnóstico de base de datos
+# Scripts de base de datos
 
-Herramientas para detectar cuando la BD local no coincide con lo que esperan los formularios (error 1054, columnas desconocidas, etc.).
+Documentación general del backend y **sincronización en equipo**: [`../README.md`](../README.md).
 
-## Diagnóstico (todos los formularios)
+## Flujo recomendado
 
 ```bash
 cd server
-node scripts/check-db-schema.js
+npm run migrate          # muestra BD: sistema_soporte@localhost, aplica .sql pendientes
+npm run dev              # arranca solo si migraciones + columnas (modelos) coinciden
 ```
 
-Solo un formulario:
+Si la BD **ya tenía** todas las migraciones aplicadas a mano (antes de `schema_migrations`):
 
 ```bash
-node scripts/check-db-schema.js create-material-request
-node scripts/check-db-schema.js create-loan
-node scripts/check-db-schema.js --list
+npm run migrate:baseline   # registra archivos sin re-ejecutar SQL
+npm run dev
 ```
 
-Salida ejemplo:
+## Comandos
 
-- `[OK]` — tablas y columnas alineadas con el código
-- `[PROBLEMAS]` — falta tabla/columna o quedó nombre viejo (`request_area`, `addressed_to`)
-- Al final lista migraciones `.sql` sugeridas en `server/database/`
+| Comando | Descripción |
+|---------|-------------|
+| `npm run migrate` | Ejecuta migraciones pendientes en `server/database/` |
+| `npm run migrate:baseline` | Marca todas las migraciones como aplicadas sin ejecutar SQL |
+| `npm run schema:check` | Diagnóstico sin arrancar el servidor |
 
-## Reparación automática (parcial)
+Todos muestran la base objetivo como `DB_NAME@DB_HOST` (desde `.env`).
 
-```bash
-node scripts/apply-pending-schema-fixes.js
-```
+## Dónde se leen los archivos SQL
 
-Corrige sin ejecutar a mano:
+[`../src/lib/migrationRegistry.js`](../src/lib/migrationRegistry.js) lista y lee `server/database/migration_*.sql`.  
+[`migrate.js`](migrate.js) los ejecuta; [`startupSchemaCheck.js`](../src/lib/startupSchemaCheck.js) compara nombres con `schema_migrations`.
 
-- `material_requests`: renombrar `request_area`, quitar `addressed_to`
-- `material_request_items`: columnas de ítems manuales
-- `equipment_loans`: `target_incident_area_id`, checklist `pending_*`
-- `users`: columnas de preguntas de seguridad
+## Cómo se valida el esquema (automático al arrancar)
 
-Si falta una **tabla completa** (p. ej. `equipment_loans`), debes ejecutar la migración SQL indicada; este script no la crea.
+1. **Migraciones:** archivos `migration_*.sql` en disco vs tabla `schema_migrations`.
+2. **Columnas:** `INSERT INTO` en `server/src/models/*.js` vs `information_schema`.
 
-## Formularios cubiertos
+Si hay desfase, el servidor **no arranca** y muestra qué migración o columna falta.
 
-| id | Pantalla |
-|----|----------|
-| `register` | Registro |
-| `security-questions` | Preguntas de seguridad |
-| `create-ticket` | Nuevo ticket |
-| `create-material-request` | Solicitud de materiales |
-| `create-loan` | Solicitud de préstamo |
-| `loan-handover` | Entrega/devolución préstamo |
-| `create-equipment` | Nuevo equipo |
-| `create-consumable` | Nuevo consumible |
-| `create-tool` | Nueva herramienta |
-| `frequent-issues` | Fallas frecuentes (admin) |
+Emergencia local (no recomendado): `SKIP_SCHEMA_CHECK=true` en `.env`.
 
-Definición en `lib/schema-manifest.js` (ampliar al añadir formularios).
+## Scripts legacy
 
-## Scripts antiguos
-
-- `check-material-requests-schema.js` → usa `check-db-schema.js create-material-request`
-- `apply-material-request-migrations.js` → usa `apply-pending-schema-fixes.js`
+- `apply-pending-schema-fixes.js` — parches puntuales; preferir `npm run migrate`
+- `check-material-requests-schema.js` — redirige a `check-db-schema.js`

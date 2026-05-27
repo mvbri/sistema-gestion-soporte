@@ -6,12 +6,18 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "migrate": "node scripts/migrate.js",
+    "migrate:baseline": "node scripts/migrate.js --baseline",
+    "schema:check": "node scripts/check-db-schema.js",
+    "deploy:prepare": "npm run migrate && npm run schema:check",
+    "deploy:start": "npm run deploy:prepare && npm run start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

@@ -1,4 +1,4 @@
-import { tableExists, fetchTableColumns } from './schema-checker.js';
+import { tableExists, fetchTableColumns } from './dbSchemaUtils.js';
 
 async function columnExists(conn, table, column) {
     const cols = await fetchTableColumns(conn, table);

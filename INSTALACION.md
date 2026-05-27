@@ -132,6 +132,10 @@ FRONTEND_URL=http://localhost:5173
 4. Genera una contraseña de aplicación para "Correo"
 5. Usa esa contraseña en `EMAIL_PASS`
 
+#### Despliegue a producción
+
+Para Vercel + Render + TiDB + SendGrid + Cloudinary (sin servidor propio), sigue la guía paso a paso en [`deploy/README.md`](deploy/README.md). En producción el email usa SendGrid, no Gmail SMTP.
+
 ### 4. Iniciar la Aplicación
 
 #### Desarrollo (Frontend + Backend)

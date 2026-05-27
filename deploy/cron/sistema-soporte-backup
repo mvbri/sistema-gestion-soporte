@@ -1,0 +1,5 @@
+# Backup diario — copiar a /etc/cron.d/sistema-soporte-backup
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+0 2 * * * root /opt/sistema-gestion-soporte/deploy/scripts/backup.sh >> /var/log/sistema-soporte-backup.log 2>&1

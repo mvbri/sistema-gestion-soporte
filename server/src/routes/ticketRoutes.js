@@ -22,7 +22,7 @@ import {
     validateComment
 } from '../utils/validators.js';
 import { authenticate } from '../utils/jwt.js';
-import { upload } from '../config/upload.js';
+import { upload, cloudinaryUploadMiddleware } from '../config/upload.js';
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.get('/tecnicos', getTecnicos);
 router.get('/stats', getStats);
 router.get('/frequent-issues', getFrequentIssues);
 
-router.post('/', upload.array('imagenes', 5), validateCreateTicket, createTicket);
+router.post('/', upload.array('imagenes', 5), cloudinaryUploadMiddleware, validateCreateTicket, createTicket);
 router.get('/', getTickets);
 router.get('/:id', getTicketById);
 router.put('/:id', validateUpdateTicket, updateTicket);

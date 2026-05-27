@@ -329,7 +329,11 @@ export const requestRecovery = async (req, res) => {
                 response: error.response
             });
             
-            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            if (process.env.EMAIL_PROVIDER === 'sendgrid') {
+                if (!process.env.SENDGRID_API_KEY || !process.env.EMAIL_FROM) {
+                    return sendError(res, 'Servicio de email no configurado. Contacta al administrador.', null, 503);
+                }
+            } else if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
                 return sendError(res, 'Configuración de email incompleta. Por favor contacta al administrador.', null, 500);
             }
             

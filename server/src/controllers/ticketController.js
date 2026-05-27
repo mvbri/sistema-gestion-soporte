@@ -7,6 +7,10 @@ import { enviarEmailAsignacion } from '../config/email.js';
 import { query } from '../config/database.js';
 
 const buildTicketImagesFromRequest = (req) => {
+    if (Array.isArray(req.cloudinaryImageUrls) && req.cloudinaryImageUrls.length > 0) {
+        return req.cloudinaryImageUrls;
+    }
+
     if (Array.isArray(req.files) && req.files.length > 0) {
         return req.files.map((file) => `/uploads/tickets/${file.filename}`);
     }

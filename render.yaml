@@ -1,0 +1,29 @@
+# Render Blueprint — Sistema de Gestión de Soporte (API)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: sistema-soporte-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm run deploy:start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DB_SSL
+        value: "true"
+      - key: EMAIL_PROVIDER
+        value: sendgrid
+      - key: UPLOAD_PROVIDER
+        value: cloudinary
+      - key: CORS_ALLOW_VERCEL_PREVIEWS
+        value: "true"
+      # Configurar en el dashboard Render (secret):
+      # DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+      # JWT_SECRET, FRONTEND_URL, CORS_ORIGINS
+      # SENDGRID_API_KEY, EMAIL_FROM
+      # CLOUDINARY_URL

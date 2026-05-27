@@ -130,7 +130,7 @@ export const useRevokeLoanApproval = () => {
     mutationFn: ({ id, notes }: { id: number; notes?: string }) => loanService.revokeApproval(id, notes),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['equipmentLoans'] });
-      queryClient.invalidateQueries({ queryKey: ['equipmentLoan'] });
+      queryClient.invalidateQueries({ queryKey: ['equipmentLoan', variables.id] });
       toast.success('Aprobación anulada');
     },
     onError: (error: any) =>

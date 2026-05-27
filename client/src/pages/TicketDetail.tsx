@@ -304,6 +304,8 @@ export const TicketDetail: React.FC = () => {
   };
 
   const apiBaseUrl = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+  const resolveImageUrl = (url: string) =>
+    url.startsWith('http://') || url.startsWith('https://') ? url : `${apiBaseUrl}${url}`;
   const imagenes = ticket.imagenes && ticket.imagenes.length > 0
     ? ticket.imagenes
     : ticket.imagen_url
@@ -758,7 +760,7 @@ export const TicketDetail: React.FC = () => {
                     {imagenes.map((relativeUrl, index) => (
                       <div key={`${relativeUrl}-${index}`} className="relative group rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-lg transition-shadow duration-200">
                         <img
-                          src={`${apiBaseUrl}${relativeUrl}`}
+                          src={resolveImageUrl(relativeUrl)}
                           alt={`Imagen ${index + 1} del ticket`}
                           className="w-full h-48 object-cover"
                         />

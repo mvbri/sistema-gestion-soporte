@@ -12,17 +12,20 @@ import toolRoutes from './routes/toolRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import equipmentLoanRoutes from './routes/equipmentLoanRoutes.js';
 import materialRequestRoutes from './routes/materialRequestRoutes.js';
+import { assertSchemaReady, evaluateSchemaStatus } from './lib/startupSchemaCheck.js';
+import { getCorsOrigins, createCorsOriginValidator } from './lib/corsConfig.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const corsOrigins = getCorsOrigins();
 
 // Middlewares
 app.use(helmet());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
+    origin: createCorsOriginValidator(corsOrigins),
+    credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -56,8 +59,25 @@ app.use('/api/equipment-loans', equipmentLoanRoutes);
 app.use('/api/material-requests', materialRequestRoutes);
 
 // Ruta de salud
-app.get('/api/health', (req, res) => {
-    res.json({ success: true, message: 'Servidor funcionando correctamente' });
+app.get('/api/health', async (req, res) => {
+    try {
+        const schema = await evaluateSchemaStatus();
+        res.json({
+            success: true,
+            message: 'Servidor funcionando correctamente',
+            schema: {
+                ready: schema.ok,
+                pendingMigrations: schema.pendingMigrations,
+                missingColumnsCount: schema.missingColumns.length,
+            },
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: 'Error al evaluar esquema',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+        });
+    }
 });
 
 // Manejo de errores
@@ -70,24 +90,32 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Iniciar servidor
-const server = app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-    console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
-});
+async function startServer() {
+    await assertSchemaReady();
 
-server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`\n❌ Error: El puerto ${PORT} ya está en uso.`);
-        console.error(`💡 Soluciones:`);
-        console.error(`   1. Cierra la otra instancia del servidor que está usando el puerto ${PORT}`);
-        console.error(`   2. O cambia el puerto en el archivo .env (PORT=5001)`);
-        console.error(`   3. O mata el proceso: netstat -ano | findstr :${PORT} y luego taskkill /PID <PID> /F\n`);
-        process.exit(1);
-    } else {
-        console.error('Error al iniciar el servidor:', err);
-        process.exit(1);
-    }
+    const server = app.listen(PORT, () => {
+        console.log(`Servidor corriendo en puerto ${PORT}`);
+        console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`\n❌ Error: El puerto ${PORT} ya está en uso.`);
+            console.error(`💡 Soluciones:`);
+            console.error(`   1. Cierra la otra instancia del servidor que está usando el puerto ${PORT}`);
+            console.error(`   2. O cambia el puerto en el archivo .env (PORT=5001)`);
+            console.error(`   3. O mata el proceso: netstat -ano | findstr :${PORT} y luego taskkill /PID <PID> /F\n`);
+            process.exit(1);
+        } else {
+            console.error('Error al iniciar el servidor:', err);
+            process.exit(1);
+        }
+    });
+}
+
+startServer().catch((err) => {
+    console.error('Error al iniciar:', err.message);
+    process.exit(1);
 });
 
 

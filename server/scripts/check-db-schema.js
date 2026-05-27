@@ -1,35 +1,64 @@
 /**
- * Diagnóstico BD ↔ formularios del sistema.
+ * Diagnóstico BD ↔ código (migraciones registradas + columnas INSERT en modelos).
  *
  * Uso:
- *   node scripts/check-db-schema.js              # todos los formularios
- *   node scripts/check-db-schema.js create-ticket # un formulario
- *   node scripts/check-db-schema.js --list       # ids disponibles
+ *   node scripts/check-db-schema.js
  */
-import { createDbConnection, getDbLabel } from './lib/db-connection.js';
-import { checkAllForms, printCheckReport } from './lib/schema-checker.js';
-import { listFormIds } from './lib/schema-manifest.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { evaluateSchemaStatus } from '../src/lib/startupSchemaCheck.js';
+import { getExpectedColumnsByTable } from '../src/lib/schemaFromModels.js';
+import { getDbLabel } from './lib/db-connection.js';
 
-const arg = process.argv[2];
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
-if (arg === '--list' || arg === '-h' || arg === '--help') {
-    console.log('\nFormularios disponibles:\n');
-    for (const id of listFormIds()) {
-        console.log(`  ${id}`);
+const dbLabel = getDbLabel();
+console.log(`\nDiagnóstico de esquema — ${dbLabel}`);
+console.log(`(configuración: DB_NAME y DB_HOST en server/.env)\n`);
+
+const status = await evaluateSchemaStatus();
+
+if (status.schemaMigrationsTableMissing) {
+    console.log('[PROBLEMA] Tabla schema_migrations no existe.');
+}
+
+if (status.pendingMigrations.length > 0) {
+    console.log(`[PROBLEMA] ${status.pendingMigrations.length} migración(es) pendiente(s):`);
+    for (const f of status.pendingMigrations) {
+        console.log(`  - ${f}`);
     }
-    console.log('\nEjemplo: node scripts/check-db-schema.js create-material-request\n');
-    process.exit(0);
+    console.log('');
+} else if (!status.schemaMigrationsTableMissing) {
+    console.log('[OK] Todas las migraciones del repositorio están registradas.\n');
 }
 
-const conn = await createDbConnection();
+const expected = getExpectedColumnsByTable();
+console.log('Columnas esperadas (desde INSERT en server/src/models):');
+for (const [table, cols] of Object.entries(expected).sort()) {
+    console.log(`  ${table}: ${cols.join(', ')}`);
+}
+console.log('');
 
-try {
-    const results = await checkAllForms(conn, arg || null);
-    const issueCount = printCheckReport(results, getDbLabel());
-    process.exit(issueCount > 0 ? 1 : 0);
-} catch (err) {
-    console.error('Error:', err.message);
+if (status.missingColumns.length > 0) {
+    console.log(`[PROBLEMA] ${status.missingColumns.length} columna(s)/tabla(s) faltante(s):`);
+    for (const { table, column, reason } of status.missingColumns) {
+        if (reason === 'table_missing') {
+            console.log(`  - Tabla ausente: ${table}`);
+        } else {
+            console.log(`  - ${table}.${column}`);
+        }
+    }
+    console.log('\nEjecuta: cd server && npm run migrate');
+    console.log('BD ya migrada a mano: npm run migrate -- --baseline\n');
     process.exit(1);
-} finally {
-    await conn.end();
 }
+
+if (!status.ok) {
+    console.log('Ejecuta: cd server && npm run migrate\n');
+    process.exit(1);
+}
+
+console.log('Esquema alineado con modelos y migraciones registradas.\n');
+process.exit(0);

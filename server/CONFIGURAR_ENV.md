@@ -76,7 +76,7 @@ NODE_ENV=development
 - `PORT`: Puerto donde correrá el servidor backend (5000 por defecto)
 - `NODE_ENV`: `development` para desarrollo, `production` para producción
 
-### 4. Configuración de Email (Gmail SMTP - Gratuito)
+### 4. Email en desarrollo (Gmail SMTP)
 
 ```env
 EMAIL_HOST=smtp.gmail.com
@@ -111,7 +111,18 @@ EMAIL_USER=miemail@gmail.com
 EMAIL_PASS=abcd efgh ijkl mnop
 ```
 
-### 5. URL del Frontend
+### 5. Email y uploads en producción
+
+En **Render** no uses Gmail SMTP (puerto 587 bloqueado). Configura variables en el dashboard según [`server/.env.production.example`](.env.production.example):
+
+- Email: `EMAIL_PROVIDER=sendgrid`, `SENDGRID_API_KEY`, `EMAIL_FROM` — guía [`../deploy/sendgrid.md`](../deploy/sendgrid.md)
+- Imágenes: `UPLOAD_PROVIDER=cloudinary`, `CLOUDINARY_URL` — guía [`../deploy/cloudinary.md`](../deploy/cloudinary.md)
+
+**No** pongas `EMAIL_PROVIDER=sendgrid` en tu `.env` local de desarrollo.
+
+Despliegue completo: [`../deploy/README.md`](../deploy/README.md).
+
+### 6. URL del Frontend
 
 ```env
 FRONTEND_URL=http://localhost:5173
@@ -119,7 +130,7 @@ FRONTEND_URL=http://localhost:5173
 
 **Explicación:**
 - URL donde corre tu aplicación frontend (Vite usa 5173 por defecto)
-- En producción, cambia esto a tu dominio real
+- En producción (Vercel), configura `FRONTEND_URL` y `CORS_ORIGINS` en Render con la URL de Vercel
 
 ## Ejemplo Completo de .env
 
@@ -139,7 +150,7 @@ JWT_EXPIRES_IN=7d
 PORT=5000
 NODE_ENV=development
 
-# Email Configuration (Gmail SMTP - Free)
+# Email en desarrollo (Gmail SMTP — sin EMAIL_PROVIDER)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=miemail@gmail.com
@@ -162,7 +173,7 @@ npm run dev
 Si todo está bien, deberías ver:
 ```
 Servidor corriendo en puerto 5000
-Servidor de email listo para enviar mensajes
+Servidor de email listo (SMTP)
 ```
 
 Si hay errores, revisa:

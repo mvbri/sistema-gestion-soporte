@@ -1,0 +1,25 @@
+[Unit]
+Description=Sistema Gestion Soporte API (Node.js + Express)
+After=network.target mariadb.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/sistema-gestion-soporte/server
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/sistema-gestion-soporte/server/.env
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sistema-soporte-api
+
+# Permisos para uploads y backups
+ReadWritePaths=/opt/sistema-gestion-soporte/server/uploads
+ReadWritePaths=/opt/sistema-gestion-soporte/server/backups
+
+[Install]
+WantedBy=multi-user.target

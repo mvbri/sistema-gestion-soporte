@@ -1,37 +1,58 @@
-// Configuración de Nodemailer para envío de emails (gratuito con Gmail SMTP)
+// Email: Gmail SMTP (local) o SendGrid API HTTP (producción en Render)
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { sendSendGridEmail, verifySendGridConfig } from '../lib/sendgridEmail.js';
 
 dotenv.config();
 
-// Crear transporter con Gmail SMTP (gratuito)
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const useSendGrid = process.env.EMAIL_PROVIDER === 'sendgrid';
 
-// Verificar conexión al iniciar
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('Error en configuración de email:', error);
-    } else {
-        console.log('Servidor de email listo para enviar mensajes');
+let transporter = null;
+
+if (!useSendGrid) {
+    transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT, 10) || 587,
+        secure: process.env.EMAIL_SECURE === 'true',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    transporter.verify((error) => {
+        if (error) {
+            console.error('Error en configuración de email:', error.message);
+        } else {
+            console.log('Servidor de email listo (SMTP)');
+        }
+    });
+} else {
+    verifySendGridConfig();
+}
+
+async function dispatchEmail({ to, subject, html }) {
+    if (useSendGrid) {
+        return sendSendGridEmail({ to, subject, html });
     }
-});
+
+    await transporter.sendMail({
+        from: process.env.EMAIL_FROM,
+        to,
+        subject,
+        html,
+    });
+    return true;
+}
 
 export const enviarEmailVerificacion = async (email, token, name) => {
     const url = `${process.env.FRONTEND_URL}/verificar-email?token=${token}`;
-    
-    const mailOptions = {
-        from: process.env.EMAIL_FROM,
-        to: email,
-        subject: 'Verificación de Email - Sistema de Soporte Técnico',
-        html: `
+
+    try {
+        await dispatchEmail({
+            to: email,
+            subject: 'Verificación de Email - Sistema de Soporte Técnico',
+            html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #2563eb;">Verificación de Email</h2>
                 <p>Hola ${name},</p>
@@ -47,15 +68,9 @@ export const enviarEmailVerificacion = async (email, token, name) => {
                 <p>O copia y pega este enlace en tu navegador:</p>
                 <p style="color: #666; word-break: break-all;">${url}</p>
                 <p>Este enlace expirará en 24 horas.</p>
-                <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                    Si no solicitaste este registro, puedes ignorar este email.
-                </p>
             </div>
-        `
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
+        `,
+        });
         return true;
     } catch (error) {
         console.error('Error al enviar email de verificación:', error);
@@ -65,12 +80,12 @@ export const enviarEmailVerificacion = async (email, token, name) => {
 
 export const enviarEmailRecuperacion = async (email, token, name) => {
     const url = `${process.env.FRONTEND_URL}/restablecer-password?token=${token}`;
-    
-    const mailOptions = {
-        from: process.env.EMAIL_FROM,
-        to: email,
-        subject: 'Recuperación de Contraseña - Sistema de Soporte Técnico',
-        html: `
+
+    try {
+        await dispatchEmail({
+            to: email,
+            subject: 'Recuperación de Contraseña - Sistema de Soporte Técnico',
+            html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #2563eb;">Recuperación de Contraseña</h2>
                 <p>Hola ${name},</p>
@@ -86,15 +101,9 @@ export const enviarEmailRecuperacion = async (email, token, name) => {
                 <p>O copia y pega este enlace en tu navegador:</p>
                 <p style="color: #666; word-break: break-all;">${url}</p>
                 <p>Este enlace expirará en 1 hora.</p>
-                <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                    Si no solicitaste este cambio, puedes ignorar este email y tu contraseña permanecerá sin cambios.
-                </p>
             </div>
-        `
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
+        `,
+        });
         return true;
     } catch (error) {
         console.error('Error al enviar email de recuperación:', error);
@@ -104,12 +113,12 @@ export const enviarEmailRecuperacion = async (email, token, name) => {
 
 export const enviarEmailAsignacion = async (email, name, ticketTitulo, ticketId) => {
     const url = `${process.env.FRONTEND_URL}/tickets/${ticketId}`;
-    
-    const mailOptions = {
-        from: process.env.EMAIL_FROM,
-        to: email,
-        subject: 'Nuevo Ticket Asignado - Sistema de Soporte Técnico',
-        html: `
+
+    try {
+        await dispatchEmail({
+            to: email,
+            subject: 'Nuevo Ticket Asignado - Sistema de Soporte Técnico',
+            html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #2563eb;">Nuevo Ticket Asignado</h2>
                 <p>Hola ${name},</p>
@@ -125,17 +134,10 @@ export const enviarEmailAsignacion = async (email, name, ticketTitulo, ticketId)
                         Ver Ticket
                     </a>
                 </p>
-                <p>O copia y pega este enlace en tu navegador:</p>
                 <p style="color: #666; word-break: break-all;">${url}</p>
-                <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                    Por favor, revisa el ticket y actualiza su estado según corresponda.
-                </p>
             </div>
-        `
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
+        `,
+        });
         return true;
     } catch (error) {
         console.error('Error al enviar email de asignación:', error);
@@ -144,4 +146,3 @@ export const enviarEmailAsignacion = async (email, name, ticketTitulo, ticketId)
 };
 
 export default transporter;
-

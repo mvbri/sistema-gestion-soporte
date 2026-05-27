@@ -102,9 +102,12 @@ const pool = mariadb.createPool({
 
 **Archivo:** `src/config/email.js`
 
-- **Transporter**: Configurado con Gmail SMTP
-- **Verificación**: Valida conexión al iniciar el servidor
-- **Plantillas HTML**: Inline (mejorable con Handlebars)
+- **Desarrollo** (`EMAIL_PROVIDER` no definido): nodemailer + Gmail SMTP (`EMAIL_HOST`, `EMAIL_USER`, `EMAIL_PASS`)
+- **Producción** (`EMAIL_PROVIDER=sendgrid`): API HTTP vía [`src/lib/sendgridEmail.js`](../src/lib/sendgridEmail.js) (Render bloquea SMTP)
+- **Dispatch**: `dispatchEmail()` enruta a SendGrid o SMTP según el entorno
+- **Plantillas HTML**: Inline en `enviarEmailVerificacion`, `enviarEmailRecuperacion`, `enviarEmailAsignacion`
+
+Ver [`../../deploy/sendgrid.md`](../../deploy/sendgrid.md) y [`../../deploy/HOSTING.md`](../../deploy/HOSTING.md).
 
 ---
 
