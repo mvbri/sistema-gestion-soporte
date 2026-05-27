@@ -8,13 +8,30 @@
 
 | Campo | Valor |
 |-------|--------|
-| Root Directory | `server` |
+| Root Directory | `server` (**obligatorio**) |
 | Runtime | Node |
 | Build Command | `npm install --omit=dev` |
 | Start Command | `npm run deploy:start` |
 | Plan | Free |
 
 O usar Blueprint: [`render.yaml`](../render.yaml) en la raíz del repo.
+
+### Si Root Directory está vacío (raíz del repo)
+
+Si ves `Missing script: "deploy:start"`, Render está en la raíz del monorepo. Usa una de estas opciones:
+
+| Campo | Valor |
+|-------|--------|
+| Root Directory | `server` (recomendado) |
+
+**O** deja la raíz y usa:
+
+| Campo | Valor |
+|-------|--------|
+| Build Command | `npm run build:server` |
+| Start Command | `npm run deploy:start` |
+
+(Scripts definidos en el [`package.json`](../package.json) de la raíz.)
 
 ## Variables de entorno (Render)
 
