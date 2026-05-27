@@ -1,6 +1,6 @@
 node_modules/
 .env
-.env.produccion
+.env.production
 .env.*
 !.env.example
 !.env.production.example

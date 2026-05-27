@@ -36,24 +36,15 @@ export const getMaterialRequests = async (req, res) => {
         const { status, date_from, date_to, search, requester_user_id } = req.query;
         const { page, limit, offset } = parsePagination(req.query);
         const filters = { status, date_from, date_to, search, limit, offset };
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'630cc1'},body:JSON.stringify({sessionId:'630cc1',runId:'initial',hypothesisId:'H2',location:'materialRequestController.js:getMaterialRequests:entry',message:'Incoming request list query and user context',data:{query:req.query,userId:req.user?.id,userRole:req.user?.role},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         if (req.user.role === 'administrator') {
             if (requester_user_id) filters.requester_user_id = Number(requester_user_id);
         } else {
             filters.requester_user_id = req.user.id;
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'630cc1'},body:JSON.stringify({sessionId:'630cc1',runId:'initial',hypothesisId:'H3',location:'materialRequestController.js:getMaterialRequests:filters',message:'Effective filters after RBAC',data:{filters},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         const requests = await MaterialRequest.findAll(filters);
         const total = await MaterialRequest.count(filters);
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'630cc1'},body:JSON.stringify({sessionId:'630cc1',runId:'initial',hypothesisId:'H5',location:'materialRequestController.js:getMaterialRequests:result',message:'DB list result summary',data:{rows:requests.length,total,firstStatus:requests[0]?.status||null,firstRequesterId:requests[0]?.requester_user_id||null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         sendSuccess(res, 'Solicitudes obtenidas correctamente', {
             requests,
