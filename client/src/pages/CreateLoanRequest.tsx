@@ -148,13 +148,10 @@ export const CreateLoanRequest: React.FC = () => {
                 </p>
               )}
 
-              <section
-                aria-labelledby="loan-date-range-heading"
-                className="content-panel content-panel--sky !mb-0 space-y-4 !p-4 sm:!p-5"
-              >
+              <section aria-labelledby="loan-date-range-heading" className="space-y-4">
                 <h2
                   id="loan-date-range-heading"
-                  className="text-base font-semibold text-sky-50 sm:text-lg"
+                  className="text-base font-semibold text-white sm:text-lg"
                 >
                   Rango de préstamo
                 </h2>
@@ -211,21 +208,18 @@ export const CreateLoanRequest: React.FC = () => {
               </div>
             </section>
 
-            <section
-              aria-labelledby="loan-equipment-heading"
-              className="content-panel content-panel--violet !mb-0 space-y-4 !p-4 sm:!p-5"
-            >
+            <section aria-labelledby="loan-equipment-heading" className="space-y-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 id="loan-equipment-heading" className="text-base font-semibold text-violet-50 sm:text-lg">
+                <h2 id="loan-equipment-heading" className="text-base font-semibold text-white sm:text-lg">
                   Equipo solicitado
                 </h2>
-                <span className="text-xs font-medium text-violet-200/80">1 equipo por solicitud</span>
+                <span className="text-xs text-blue-100/60">1 equipo por solicitud</span>
               </div>
-              <p className="text-xs text-blue-100/70">
+              <p className="text-xs text-blue-100/60">
                 Cada solicitud incluye un solo equipo (nombre y número de serie).
               </p>
               {!isLoadingEquipment && availableEquipment.length === 0 ? (
-                <p className="rounded-lg border border-amber-400/35 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100/90">
+                <p className="text-sm text-amber-200/90">
                   No hay equipos disponibles para préstamo en este momento.
                 </p>
               ) : null}
@@ -262,15 +256,18 @@ export const CreateLoanRequest: React.FC = () => {
               </div>
 
               {equipmentId !== '' && selectedEquipment ? (
-                <div className="info-tile">
-                  <p className="truncate text-sm font-medium text-white">{selectedEquipment.name}</p>
+                <div className="rounded-lg border border-white/10 bg-[#1f262e] p-4 space-y-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-[#8a94a6]">
+                    Equipo seleccionado
+                  </p>
+                  <p className="text-sm font-semibold text-white truncate">{selectedEquipment.name}</p>
                   {selectedEquipment.serial_number ? (
-                    <p className="mt-0.5 text-xs text-blue-100/65">
+                    <p className="text-xs font-mono text-blue-100/75">
                       SN: {selectedEquipment.serial_number}
                     </p>
                   ) : null}
                   <span
-                    className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                       equipmentStatusBadgeStyles[selectedStatus] ||
                       'bg-slate-500/25 text-slate-200 border border-slate-400/30'
                     }`}
@@ -281,7 +278,7 @@ export const CreateLoanRequest: React.FC = () => {
               ) : null}
             </section>
 
-            <footer className="flex flex-col-reverse gap-3 border-t border-sky-400/20 pt-5 sm:flex-row sm:justify-end sm:gap-3">
+            <footer className="flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end sm:gap-3">
               {!canSubmitLoan && (
                 <p className="w-full text-xs text-blue-100/70 sm:mr-auto sm:w-auto sm:self-center">
                   Completa área, fechas válidas y selecciona un equipo para enviar.

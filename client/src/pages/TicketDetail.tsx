@@ -670,7 +670,7 @@ export const TicketDetail: React.FC = () => {
                   </svg>
                   Información del ticket
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="ticket-info-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="stat-card stat-card--sky">
                     <p className="stat-card-title">Área del incidente</p>
                     <p className="stat-card-value text-lg sm:text-xl mt-1">{ticket.incident_area_name || 'N/A'}</p>

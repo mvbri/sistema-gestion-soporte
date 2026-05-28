@@ -1,6 +1,15 @@
 import type { PrioridadTicket } from '../../types';
 import { normalizeBadgeClassName } from '../../utils/badgeContrast';
 
+const RED_PRIORITY_BADGE_STYLE =
+  'border border-red-500 bg-red-500/10 text-red-500 ring-1 ring-inset ring-red-500/35';
+
+/** Estilos fijos por nombre (evitan overrides de .app-shell en text-gray-900). */
+const PRIORITY_NAME_STYLES: Record<string, string> = {
+  alta: RED_PRIORITY_BADGE_STYLE,
+  urgente: RED_PRIORITY_BADGE_STYLE,
+};
+
 interface PriorityBadgeProps {
   prioridad: PrioridadTicket | string;
   /**
@@ -23,13 +32,17 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
       ? 'bg-gray-100'
       : prioridad.color || 'bg-gray-100';
 
-  const prioridadColor = normalizeBadgeClassName(
-    (colorOverride && colorOverride.trim()) || baseColor
-  );
+  const namedStyle = PRIORITY_NAME_STYLES[prioridadNombre.trim().toLowerCase()];
+
+  const prioridadColor =
+    namedStyle ??
+    normalizeBadgeClassName((colorOverride && colorOverride.trim()) || baseColor);
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/20 shadow-sm ${prioridadColor} ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${
+        namedStyle ? prioridadColor : `ring-1 ring-inset ring-black/20 ${prioridadColor}`
+      } ${className}`}
     >
       {prioridadNombre}
     </span>

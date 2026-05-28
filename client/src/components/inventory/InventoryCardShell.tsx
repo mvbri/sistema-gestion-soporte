@@ -16,9 +16,19 @@ interface InventoryCardShellProps {
   canDelete?: boolean;
   itemLabel?: string;
   children: React.ReactNode;
+  /** `airy`: card minimalista para inventario de equipos */
+  variant?: 'default' | 'airy';
 }
 
-/** Contenedor común para cards de inventario en grid. */
+export const inventoryPanelClass =
+  'rounded-2xl border border-white/10 bg-[#12181f] p-4 sm:p-5';
+
+export const inventoryCardClass =
+  'rounded-2xl border border-white/10 bg-[#1f262e] p-5 transition-colors duration-150 hover:border-white/[0.14]';
+
+const airyActionButton =
+  'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400/35 focus:ring-offset-0 focus:ring-offset-[#1f262e]';
+
 export const InventoryCardShell: React.FC<InventoryCardShellProps> = ({
   title,
   badges,
@@ -28,48 +38,79 @@ export const InventoryCardShell: React.FC<InventoryCardShellProps> = ({
   canDelete = false,
   itemLabel = 'ítem',
   children,
-}) => (
-  <article className="card flex flex-col h-full !p-4 sm:!p-5 hover:ring-sky-400/40 transition-shadow duration-200">
-    <header className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-sky-400/20">
-      <div className="min-w-0 flex-1">
-        <h3 className="text-base sm:text-lg font-semibold text-white truncate">{title}</h3>
-        {badges ? <div className="mt-2 flex flex-wrap gap-1.5">{badges}</div> : null}
-      </div>
-      <div className="flex shrink-0 gap-1.5">
-        {canEdit && onView ? (
-          <button
-            type="button"
-            onClick={onView}
-            className={viewButtonClass}
-            title={`Ver ${itemLabel}`}
-            aria-label={`Ver ${title}`}
-          >
-            <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
-          </button>
-        ) : null}
-        {canDelete && onDelete ? (
-          <button
-            type="button"
-            onClick={onDelete}
-            className={deleteButtonClass}
-            title={`Eliminar ${itemLabel}`}
-            aria-label={`Eliminar ${title}`}
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
-          </button>
-        ) : null}
-      </div>
-    </header>
-    <div className="flex flex-col gap-2 flex-1">{children}</div>
-  </article>
-);
+  variant = 'default',
+}) => {
+  const isAiry = variant === 'airy';
 
-/** Alerta destacada (préstamo activo, stock bajo, etc.). */
+  return (
+    <article
+      className={
+        isAiry
+          ? `flex flex-col h-full ${inventoryCardClass}`
+          : 'card flex flex-col h-full !p-4 sm:!p-5 hover:ring-sky-400/40 transition-shadow duration-200'
+      }
+    >
+      <header
+        className={
+          isAiry
+            ? 'flex items-start justify-between gap-3 mb-0 pb-4 border-b border-white/10'
+            : 'flex items-start justify-between gap-3 mb-4 pb-4 border-b border-sky-400/20'
+        }
+      >
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-semibold text-white truncate tracking-tight">{title}</h3>
+          {badges ? <div className="mt-2 flex flex-wrap gap-1.5">{badges}</div> : null}
+        </div>
+        <div className="flex shrink-0 gap-1">
+          {canEdit && onView ? (
+            <button
+              type="button"
+              onClick={onView}
+              className={isAiry ? airyActionButton : viewButtonClass}
+              title={`Ver ${itemLabel}`}
+              aria-label={`Ver ${title}`}
+            >
+              <Eye className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
+          ) : null}
+          {canDelete && onDelete ? (
+            <button
+              type="button"
+              onClick={onDelete}
+              className={
+                isAiry
+                  ? `${airyActionButton} hover:text-rose-200 hover:border-rose-400/25 hover:bg-rose-500/10`
+                  : deleteButtonClass
+              }
+              title={`Eliminar ${itemLabel}`}
+              aria-label={`Eliminar ${title}`}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
+          ) : null}
+        </div>
+      </header>
+      <div className={isAiry ? 'flex flex-col flex-1' : 'flex flex-col gap-2 flex-1'}>{children}</div>
+    </article>
+  );
+};
+
 export const InventoryCardAlert: React.FC<{
   label: string;
   value: React.ReactNode;
-  variant?: 'rose' | 'amber';
+  variant?: 'rose' | 'amber' | 'soft';
 }> = ({ label, value, variant = 'rose' }) => {
+  if (variant === 'soft') {
+    return (
+      <div className="flex items-center justify-between gap-3 py-3 border-b border-white/10">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-950">
+          {label}
+        </span>
+        <span className="text-sm font-semibold text-white truncate text-right">{value}</span>
+      </div>
+    );
+  }
+
   const isAmber = variant === 'amber';
 
   return (

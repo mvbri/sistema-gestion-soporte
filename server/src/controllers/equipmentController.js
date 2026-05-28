@@ -117,6 +117,10 @@ export const getEquipment = async (req, res) => {
         filters.limit = parseInt(limit);
         filters.offset = offset;
 
+        if (!forLoans) {
+            await Equipment.syncActiveLoanAssignments();
+        }
+
         const equipment = await Equipment.findAll(filters);
         const total = await Equipment.count(filters);
 
@@ -139,6 +143,8 @@ export const getEquipmentById = async (req, res) => {
     try {
         const { id } = req.params;
         const { role, id: userId } = req.user;
+
+        await Equipment.syncActiveLoanAssignments();
 
         const equipment = await Equipment.findById(id);
 
@@ -217,6 +223,13 @@ export const updateEquipment = async (req, res) => {
         if (purchase_date !== undefined) updateData.purchase_date = purchase_date;
         if (warranty_expires_at !== undefined) updateData.warranty_expires_at = warranty_expires_at;
 
+        const activeLoan = await Equipment.getActiveLoanForEquipment(id);
+        try {
+            Equipment.assertUpdateAllowedWithActiveLoan(activeLoan, updateData);
+        } catch (guardError) {
+            return sendError(res, guardError.message, null, 400);
+        }
+
         const updatedEquipment = await Equipment.update(id, updateData);
 
         sendSuccess(res, 'Equipo actualizado exitosamente', updatedEquipment);
@@ -289,6 +302,9 @@ export const assignEquipment = async (req, res) => {
         sendSuccess(res, 'Equipo asignado exitosamente', assignedEquipment);
     } catch (error) {
         console.error('Error al asignar equipo:', error);
+        if (error.message?.includes('préstamo activo')) {
+            return sendError(res, error.message, null, 400);
+        }
         sendError(res, 'Error al asignar equipo', null, 500);
     }
 };
@@ -312,6 +328,9 @@ export const unassignEquipment = async (req, res) => {
         sendSuccess(res, 'Equipo desasignado exitosamente', unassignedEquipment);
     } catch (error) {
         console.error('Error al desasignar equipo:', error);
+        if (error.message?.includes('préstamo activo')) {
+            return sendError(res, error.message, null, 400);
+        }
         sendError(res, 'Error al desasignar equipo', null, 500);
     }
 };

@@ -18,6 +18,7 @@ import { ConfirmCancelMaterialRequestModal } from '../components/materialRequest
 import { MaterialRequestStatusBadge } from '../components/materialRequests/MaterialRequestStatusBadge';
 import { translateRole } from '../utils/roleTranslations';
 import { materialRequestItemTypeLabel } from '../utils/materialRequestDisplay';
+import type { MaterialRequestStatus, Role } from '../types';
 import formStyles from '../styles/modules/forms.module.css';
 
 /** Misma ruta que en reportes PDF (`ReportsPage`). */
@@ -51,6 +52,53 @@ async function loadPublicImageAsDataUrl(path: string): Promise<string | null> {
 
 const formatDate = (value?: string | null) =>
   value ? new Date(value).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+
+const historyStatusVisual: Record<
+  MaterialRequestStatus,
+  { border: string; panel: string; dot: string }
+> = {
+  pending: {
+    border: 'border-l-amber-400',
+    panel: 'bg-gradient-to-br from-amber-500/20 via-slate-900/75 to-slate-950/90',
+    dot: 'bg-gradient-to-br from-amber-400 to-orange-500 ring-amber-200/60',
+  },
+  approved: {
+    border: 'border-l-emerald-400',
+    panel: 'bg-gradient-to-br from-emerald-500/20 via-slate-900/75 to-slate-950/90',
+    dot: 'bg-gradient-to-br from-emerald-400 to-teal-500 ring-emerald-200/60',
+  },
+  rejected: {
+    border: 'border-l-rose-400',
+    panel: 'bg-gradient-to-br from-rose-500/20 via-slate-900/75 to-slate-950/90',
+    dot: 'bg-gradient-to-br from-rose-400 to-pink-500 ring-rose-200/60',
+  },
+  cancelled: {
+    border: 'border-l-slate-400',
+    panel: 'bg-gradient-to-br from-slate-500/15 via-slate-900/75 to-slate-950/90',
+    dot: 'bg-gradient-to-br from-slate-400 to-slate-600 ring-slate-300/50',
+  },
+};
+
+const requestFieldCardClass = 'overflow-hidden rounded-2xl p-4 sm:p-5';
+
+const roleBadgeStyles: Record<Role, string> = {
+  administrator: 'bg-violet-500/30 text-violet-100 ring-violet-400/45',
+  technician: 'bg-sky-500/30 text-sky-100 ring-sky-400/45',
+  end_user: 'bg-emerald-500/30 text-emerald-100 ring-emerald-400/45',
+};
+
+const roleAvatarStyles: Record<Role, string> = {
+  administrator: 'bg-gradient-to-br from-violet-500 to-fuchsia-600 ring-violet-300/50 text-white',
+  technician: 'bg-gradient-to-br from-sky-500 to-cyan-600 ring-sky-300/50 text-white',
+  end_user: 'bg-gradient-to-br from-emerald-500 to-teal-600 ring-emerald-300/50 text-white',
+};
+
+const commentAccentByIndex = [
+  'border-l-fuchsia-400 bg-gradient-to-br from-fuchsia-500/15 via-slate-900/75 to-slate-950/90',
+  'border-l-cyan-400 bg-gradient-to-br from-cyan-500/15 via-slate-900/75 to-slate-950/90',
+  'border-l-indigo-400 bg-gradient-to-br from-indigo-500/15 via-slate-900/75 to-slate-950/90',
+  'border-l-pink-400 bg-gradient-to-br from-pink-500/15 via-slate-900/75 to-slate-950/90',
+];
 
 export const MaterialRequestDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -479,54 +527,109 @@ export const MaterialRequestDetail: React.FC = () => {
               </div>
             </header>
 
-            <div className="card space-y-5">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+            <div className="card space-y-5 ring-1 ring-sky-400/15 bg-gradient-to-br from-sky-500/[0.07] via-transparent to-cyan-500/[0.05]">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400/35 to-cyan-500/25 ring-1 ring-sky-300/30">
+                  <svg className="w-5 h-5 text-sky-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </span>
                 Datos de la solicitud
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="info-tile">
-                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
-                    Nombre del destinatario
-                  </p>
-                  <p className="text-sm font-medium text-blue-50 break-words">
-                    {materialRequest.addressee_name?.trim() || '—'}
-                  </p>
+                <div
+                  className={`${requestFieldCardClass} bg-gradient-to-br from-cyan-500/20 via-slate-900/75 to-slate-950/90`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-200">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-cyan-200/80 mb-1">
+                        Nombre del destinatario
+                      </p>
+                      <p className="text-sm font-semibold text-white break-words">
+                        {materialRequest.addressee_name?.trim() || '—'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="info-tile">
-                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
-                    Cargo al que se dirige
-                  </p>
-                  <p className="text-sm font-medium text-blue-50 break-words">
-                    {materialRequest.addressee_title?.trim() || '—'}
-                  </p>
+
+                <div
+                  className={`${requestFieldCardClass} bg-gradient-to-br from-violet-500/20 via-slate-900/75 to-slate-950/90`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-200/80 mb-1">
+                        Cargo al que se dirige
+                      </p>
+                      <p className="text-sm font-semibold text-white break-words">
+                        {materialRequest.addressee_title?.trim() || '—'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="info-tile sm:col-span-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
-                    Funcionario que aprueba la solicitud
-                  </p>
-                  <p className="text-sm font-medium text-blue-50 break-words">
-                    {materialRequest.approved_by_user_name?.trim() || '—'}
-                  </p>
+
+                <div
+                  className={`${requestFieldCardClass} bg-gradient-to-br from-emerald-500/20 via-slate-900/75 to-slate-950/90 sm:col-span-2`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-200">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/80 mb-1">
+                        Funcionario que aprueba la solicitud
+                      </p>
+                      <p className="text-sm font-semibold text-white break-words">
+                        {materialRequest.approved_by_user_name?.trim() || '—'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="content-panel content-panel--sky !mb-0 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60">Motivo</p>
-                <p className="text-sm text-blue-100/90 leading-relaxed break-words">
+              <div
+                className={`${requestFieldCardClass} bg-gradient-to-br from-amber-500/20 via-slate-900/75 to-slate-950/90 space-y-2`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                  </span>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-200/85">Motivo</p>
+                </div>
+                <p className="text-sm text-slate-200 leading-relaxed break-words rounded-lg bg-black/20 px-3 py-2.5">
                   {materialRequest.request_notes?.trim() || 'Sin notas'}
                 </p>
               </div>
 
               {materialRequest.addressee_addressing_text?.trim() ? (
-                <div className="content-panel content-panel--violet !mb-0 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60">
-                    Texto al destinatario
-                  </p>
-                  <p className="text-sm text-blue-100/90 leading-relaxed whitespace-pre-wrap break-words">
+                <div
+                  className={`${requestFieldCardClass} bg-gradient-to-br from-fuchsia-500/20 via-slate-900/75 to-slate-950/90 space-y-2`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500/20 text-fuchsia-200">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </span>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-fuchsia-200/85">
+                      Texto al destinatario
+                    </p>
+                  </div>
+                  <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap break-words rounded-lg bg-black/20 px-3 py-2.5">
                     {materialRequest.addressee_addressing_text.trim()}
                   </p>
                 </div>
@@ -587,89 +690,149 @@ export const MaterialRequestDetail: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="card space-y-5">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <div className="card space-y-5 ring-1 ring-amber-400/15 bg-gradient-to-br from-amber-500/[0.06] via-transparent to-orange-500/[0.04]">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400/35 to-orange-500/25 ring-1 ring-amber-300/30 shadow-lg shadow-amber-500/10">
+                    <svg className="w-5 h-5 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </span>
                   Historial
+                  {materialRequest.history.length > 0 && (
+                    <span className="ml-auto text-xs font-medium tabular-nums px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/35">
+                      {materialRequest.history.length}
+                    </span>
+                  )}
                 </h2>
                 {materialRequest.history.length === 0 ? (
-                  <div className="text-center py-8 content-panel !mb-0">
-                    <p className="text-blue-100/80">Sin cambios registrados aún.</p>
+                  <div className="text-center py-10 content-panel !mb-0">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/20 ring-1 ring-amber-400/30 mb-3">
+                      <svg className="w-7 h-7 text-amber-300/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-amber-100/90 font-medium">Sin cambios registrados aún</p>
+                    <p className="text-blue-100/60 text-sm mt-1">Las actualizaciones de estado aparecerán aquí</p>
                   </div>
                 ) : (
-                  <ul className="space-y-3">
-                    {materialRequest.history.map((entry) => (
-                      <li
-                        key={entry.id}
-                        className="content-panel content-panel--sky !mb-0 !p-4 border-l-4 border-l-sky-400/80"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                          <p className="text-sm font-semibold text-blue-50 truncate">
-                            {entry.changed_by_user_name}
-                          </p>
-                          <MaterialRequestStatusBadge status={entry.new_status} />
-                        </div>
-                        <time className="text-xs text-blue-100/70">{formatDate(entry.created_at)}</time>
-                        {entry.notes?.trim() ? (
-                          <p className="mt-2 text-sm text-blue-100/85 leading-relaxed rounded-lg bg-slate-900/40 px-3 py-2 ring-1 ring-white/5 break-words">
-                            {entry.notes}
-                          </p>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="relative pl-8 sm:pl-10">
+                    <div
+                      className="absolute left-3 sm:left-4 top-2 bottom-2 w-0.5 bg-gradient-to-b from-amber-400/60 via-emerald-400/40 to-violet-400/30 rounded-full"
+                      aria-hidden
+                    />
+                    <ul className="space-y-4">
+                      {materialRequest.history.map((entry) => {
+                        const visual = historyStatusVisual[entry.new_status];
+                        return (
+                          <li key={entry.id} className="relative pl-2">
+                            <div
+                              className={`absolute -left-[1.35rem] sm:-left-6 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-white text-xs font-bold ring-2 ${visual.dot}`}
+                              aria-hidden
+                            >
+                              {(entry.changed_by_user_name || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <article
+                              className={`overflow-hidden rounded-2xl border-l-4 p-4 ${visual.border} ${visual.panel}`}
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <p className="text-sm font-semibold text-white truncate">
+                                  {entry.changed_by_user_name}
+                                </p>
+                                <MaterialRequestStatusBadge status={entry.new_status} />
+                              </div>
+                              <time className="text-xs text-blue-100/75">{formatDate(entry.created_at)}</time>
+                              {entry.notes?.trim() ? (
+                                <p className="mt-2 text-sm text-blue-50/90 leading-relaxed rounded-lg bg-black/25 px-3 py-2 ring-1 ring-white/10 break-words">
+                                  {entry.notes}
+                                </p>
+                              ) : null}
+                            </article>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
               </div>
 
-              <div className="card space-y-5">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Comentarios ({materialRequest.comments.length})
+              <div className="card space-y-5 ring-1 ring-fuchsia-400/15 bg-gradient-to-br from-fuchsia-500/[0.06] via-transparent to-violet-500/[0.05]">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-400/35 to-violet-500/25 ring-1 ring-fuchsia-300/30 shadow-lg shadow-fuchsia-500/10">
+                    <svg className="w-5 h-5 text-fuchsia-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </span>
+                  Comentarios
+                  <span className="ml-auto text-xs font-medium tabular-nums px-2.5 py-1 rounded-full bg-fuchsia-500/20 text-fuchsia-100 ring-1 ring-fuchsia-400/35">
+                    {materialRequest.comments.length}
+                  </span>
                 </h2>
 
                 {materialRequest.comments.length === 0 ? (
-                  <div className="text-center py-8 content-panel !mb-0">
-                    <p className="text-blue-100/80">Aún no hay comentarios.</p>
+                  <div className="text-center py-10 content-panel content-panel--violet !mb-0">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-fuchsia-500/20 ring-1 ring-fuchsia-400/30 mb-3">
+                      <svg className="w-7 h-7 text-fuchsia-300/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="text-fuchsia-100/90 font-medium">Aún no hay comentarios</p>
+                    <p className="text-blue-100/60 text-sm mt-1">Sé el primero en escribir un mensaje</p>
                   </div>
                 ) : (
                   <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                    {materialRequest.comments.map((comment) => (
-                      <li
-                        key={comment.id}
-                        className="content-panel content-panel--violet !mb-0 !p-4 border-l-4 border-l-violet-400/80"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 shrink-0 rounded-full bg-violet-500/25 ring-1 ring-violet-400/40 flex items-center justify-center text-violet-200 font-semibold text-sm">
-                              {(comment.created_by_user_name || '?').charAt(0).toUpperCase()}
+                    {materialRequest.comments.map((comment, index) => {
+                      const role = comment.created_by_user_role;
+                      const avatarClass =
+                        role && role in roleAvatarStyles
+                          ? roleAvatarStyles[role]
+                          : 'bg-gradient-to-br from-fuchsia-500 to-violet-600 ring-fuchsia-300/50 text-white';
+                      const badgeClass =
+                        role && role in roleBadgeStyles
+                          ? roleBadgeStyles[role]
+                          : 'bg-fuchsia-500/30 text-fuchsia-100 ring-fuchsia-400/45';
+                      const cardAccent =
+                        commentAccentByIndex[index % commentAccentByIndex.length];
+
+                      return (
+                        <li
+                          key={comment.id}
+                          className={`overflow-hidden rounded-2xl border-l-4 p-4 ${cardAccent}`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div
+                                className={`w-10 h-10 shrink-0 rounded-full ring-2 flex items-center justify-center font-bold text-sm shadow-md ${avatarClass}`}
+                              >
+                                {(comment.created_by_user_name || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-white truncate">
+                                  {comment.created_by_user_name}
+                                </p>
+                                <time className="text-xs text-blue-100/75">
+                                  {formatDate(comment.created_at)}
+                                </time>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-blue-50 truncate">
-                                {comment.created_by_user_name}
-                              </p>
-                              <time className="text-xs text-blue-100/70">
-                                {formatDate(comment.created_at)}
-                              </time>
-                            </div>
+                            {comment.created_by_user_role ? (
+                              <span
+                                className={`text-xs shrink-0 self-start px-2.5 py-1 rounded-full ring-1 font-semibold ${badgeClass}`}
+                              >
+                                {translateRole(comment.created_by_user_role)}
+                              </span>
+                            ) : null}
                           </div>
-                          <span className="text-xs shrink-0 self-start px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/30 font-medium">
-                            {translateRole(comment.created_by_user_role)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-blue-100/90 leading-relaxed whitespace-pre-wrap break-words">
-                          {comment.comment_text}
-                        </p>
-                      </li>
-                    ))}
+                          <p className="text-sm text-blue-50/95 leading-relaxed whitespace-pre-wrap break-words">
+                            {comment.comment_text}
+                          </p>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
 
                 <form
-                  className="border-t border-sky-400/20 pt-5 space-y-3"
+                  className="rounded-2xl border border-fuchsia-400/25 bg-gradient-to-br from-fuchsia-500/10 via-violet-500/5 to-slate-900/50 p-4 sm:p-5 space-y-3 ring-1 ring-fuchsia-400/15"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!commentText.trim()) return;
@@ -681,7 +844,13 @@ export const MaterialRequestDetail: React.FC = () => {
                     refetch();
                   }}
                 >
-                  <label htmlFor="material-request-comment" className="label-field">
+                  <label
+                    htmlFor="material-request-comment"
+                    className="label-field flex items-center gap-2 text-fuchsia-100/95"
+                  >
+                    <svg className="w-4 h-4 text-fuchsia-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
                     Nuevo comentario
                   </label>
                   <textarea
@@ -689,7 +858,7 @@ export const MaterialRequestDetail: React.FC = () => {
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     rows={3}
-                    className="input-dark resize-y min-h-[5.5rem]"
+                    className="input-dark resize-y min-h-[5.5rem] focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/40"
                     placeholder="Escribe un comentario para comunicarte con la otra parte..."
                   />
                   <div className="flex justify-end">

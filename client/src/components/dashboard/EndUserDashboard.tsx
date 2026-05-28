@@ -1,32 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Laptop, PlusCircle, Ticket } from 'lucide-react';
+import { DashboardActionCard } from './DashboardActionCard';
 
 export const EndUserDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <button
+    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+      <DashboardActionCard
+        accent="sky"
+        icon={Ticket}
+        title="Ver Tickets"
+        description="Visualiza solo tus tickets"
         onClick={() => navigate('/tickets')}
-        className="p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        <h3 className="font-bold text-lg mb-2">Ver Tickets</h3>
-        <p className="text-sm">Visualiza solo tus tickets</p>
-      </button>
-      <button
+      />
+      <DashboardActionCard
+        accent="emerald"
+        icon={PlusCircle}
+        title="Crear Ticket"
+        description="Reporta un nuevo incidente"
         onClick={() => navigate('/tickets/crear')}
-        className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-      >
-        <h3 className="font-bold text-lg mb-2">Crear Ticket</h3>
-        <p className="text-sm">Reporta un nuevo incidente</p>
-      </button>
-      <button
+      />
+      <DashboardActionCard
+        accent="violet"
+        icon={Laptop}
+        title="Solicitar Equipo"
+        description="Registra una nueva solicitud de préstamo"
         onClick={() => navigate('/loans/create')}
-        className="p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-      >
-        <h3 className="font-bold text-lg mb-2">Solicitar Equipo</h3>
-        <p className="text-sm">Registra una nueva solicitud de préstamo</p>
-      </button>
+      />
     </div>
   );
 };

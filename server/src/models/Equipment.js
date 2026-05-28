@@ -1,6 +1,9 @@
 import { query } from '../config/database.js';
 
 class Equipment {
+    /** Loan statuses that reserve concrete equipment units (matches EquipmentLoan validation). */
+    static ACTIVE_LOAN_STATUSES = ['approved', 'delivered', 'overdue'];
+
     /** Excludes equipment reserved in an active loan (matches EquipmentLoan create validation). */
     static _sqlExcludeActiveLoans(equipmentIdExpr) {
         return ` AND NOT EXISTS (
@@ -12,6 +15,10 @@ class Equipment {
               AND el.active = TRUE
               AND el.status IN ('approved', 'delivered', 'overdue')
         )`;
+    }
+
+    static _activeLoanStatusesInSql() {
+        return Equipment.ACTIVE_LOAN_STATUSES.map((s) => `'${s}'`).join(', ');
     }
 
     static _sqlActiveLoanField(fieldExpr, equipmentIdExpr) {
@@ -97,7 +104,10 @@ class Equipment {
                 et.name as type_name,
                 et.description as type_description,
                 u.full_name as assigned_to_user_name,
-                u.email as assigned_to_user_email
+                u.email as assigned_to_user_email,
+                ${this._sqlActiveLoanField('el.id', 'e.id')} as active_loan_id,
+                ${this._sqlActiveLoanField('el.status', 'e.id')} as active_loan_status,
+                ${this._sqlActiveLoanField('requester.full_name', 'e.id')} as active_loan_requester_name
             FROM equipment e
             LEFT JOIN equipment_types et ON e.type_id = et.id
             LEFT JOIN users u ON e.assigned_to_user_id = u.id
@@ -383,7 +393,79 @@ class Equipment {
         return await query(sql);
     }
 
+    static async getActiveLoanForEquipment(equipmentId, conn = null) {
+        const runner = conn ? (sql, params) => conn.query(sql, params) : query;
+        const rows = await runner(
+            `SELECT el.id AS loan_id, el.status, el.requester_user_id, u.full_name AS requester_name
+             FROM equipment_loan_items eli
+             INNER JOIN equipment_loans el ON el.id = eli.loan_id
+             INNER JOIN users u ON u.id = el.requester_user_id
+             WHERE eli.equipment_id = ?
+               AND eli.active = TRUE
+               AND el.active = TRUE
+               AND el.status IN (${this._activeLoanStatusesInSql()})
+             ORDER BY el.created_at DESC, el.id DESC
+             LIMIT 1`,
+            [equipmentId]
+        );
+        return rows[0] ?? null;
+    }
+
+    /**
+     * Aligns equipment.status / assigned_to_user_id with active loan reservations.
+     * @returns {Promise<number>} rows updated
+     */
+    static async syncActiveLoanAssignments(conn = null) {
+        const runner = conn ? (sql, params) => conn.query(sql, params) : query;
+        const result = await runner(
+            `UPDATE equipment e
+             INNER JOIN (
+                 SELECT eli.equipment_id, el.requester_user_id
+                 FROM equipment_loan_items eli
+                 INNER JOIN equipment_loans el ON el.id = eli.loan_id
+                 WHERE eli.active = TRUE
+                   AND el.active = TRUE
+                   AND el.status IN (${this._activeLoanStatusesInSql()})
+                   AND eli.equipment_id IS NOT NULL
+             ) active ON active.equipment_id = e.id
+             SET e.status = 'assigned',
+                 e.assigned_to_user_id = active.requester_user_id
+             WHERE e.active = TRUE
+               AND (
+                   e.status <> 'assigned'
+                   OR e.assigned_to_user_id IS NULL
+                   OR e.assigned_to_user_id <> active.requester_user_id
+               )`
+        );
+        return Number(result?.affectedRows ?? result?.[0]?.affectedRows ?? 0);
+    }
+
+    /** Reserves all concrete equipment items on a loan for the requester. */
+    static async reserveForLoan(conn, loanId) {
+        await conn.query(
+            `UPDATE equipment e
+             INNER JOIN equipment_loan_items eli
+               ON eli.equipment_id = e.id
+              AND eli.loan_id = ?
+              AND eli.active = TRUE
+              AND eli.equipment_id IS NOT NULL
+             INNER JOIN equipment_loans el ON el.id = eli.loan_id AND el.active = TRUE
+             SET e.status = 'assigned',
+                 e.assigned_to_user_id = el.requester_user_id
+             WHERE e.active = TRUE`,
+            [loanId]
+        );
+    }
+
     static async assignToUser(equipmentId, userId) {
+        const activeLoan = await this.getActiveLoanForEquipment(equipmentId);
+        if (activeLoan) {
+            throw new Error(
+                'No se puede reasignar manualmente: el equipo tiene un préstamo activo. ' +
+                    'Cancele o devuelva el préstamo primero.'
+            );
+        }
+
         const sql = `
             UPDATE equipment 
             SET assigned_to_user_id = ?, status = 'assigned'
@@ -394,6 +476,14 @@ class Equipment {
     }
 
     static async unassign(equipmentId) {
+        const activeLoan = await this.getActiveLoanForEquipment(equipmentId);
+        if (activeLoan) {
+            throw new Error(
+                'No se puede desasignar: el equipo está reservado por un préstamo activo. ' +
+                    'Registre la devolución o cancele el préstamo.'
+            );
+        }
+
         const sql = `
             UPDATE equipment 
             SET assigned_to_user_id = NULL, status = 'available'
@@ -401,6 +491,29 @@ class Equipment {
         `;
         await query(sql, [equipmentId]);
         return await this.findById(equipmentId);
+    }
+
+    static assertUpdateAllowedWithActiveLoan(activeLoan, updateData) {
+        if (!activeLoan) {
+            return;
+        }
+
+        const clearsAssignee =
+            updateData.assigned_to_user_id === null ||
+            (updateData.assigned_to_user_id === undefined && updateData.status === 'available');
+
+        const changesAssignee =
+            updateData.assigned_to_user_id !== undefined &&
+            updateData.assigned_to_user_id !== null &&
+            Number(updateData.assigned_to_user_id) !== Number(activeLoan.requester_user_id);
+
+        const setsAvailable = updateData.status === 'available';
+
+        if (clearsAssignee || changesAssignee || setsAvailable) {
+            throw new Error(
+                'No se puede modificar la asignación ni dejar el equipo disponible mientras tenga un préstamo activo.'
+            );
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 import { getConnection, query } from '../config/database.js';
+import Equipment from './Equipment.js';
 
 class EquipmentLoan {
     static allowedEquipmentStatuses = ['available', 'assigned', 'maintenance', 'retired'];
@@ -385,27 +386,7 @@ class EquipmentLoan {
                     }
                 }
 
-                const requesterRows = await conn.query(
-                    'SELECT requester_user_id FROM equipment_loans WHERE id = ?',
-                    [loanId]
-                );
-                const requesterId = requesterRows[0]?.requester_user_id;
-                if (requesterId != null) {
-                    const eqItems = await conn.query(
-                        `SELECT equipment_id
-                         FROM equipment_loan_items
-                         WHERE loan_id = ? AND active = TRUE AND equipment_id IS NOT NULL`,
-                        [loanId]
-                    );
-                    for (const row of eqItems) {
-                        await conn.query(
-                            `UPDATE equipment
-                             SET status = 'assigned', assigned_to_user_id = ?
-                             WHERE id = ?`,
-                            [requesterId, row.equipment_id]
-                        );
-                    }
-                }
+                await Equipment.reserveForLoan(conn, loanId);
             }
         });
     }
@@ -506,24 +487,12 @@ class EquipmentLoan {
                     'UPDATE equipment_loans SET delivered_by_user_id = ?, delivered_at = NOW() WHERE id = ?',
                     [deliveredByUserId, loanId]
                 );
-                const reqRows = await conn.query(
-                    'SELECT requester_user_id FROM equipment_loans WHERE id = ?',
-                    [loanId]
-                );
-                const requesterUserId = reqRows[0]?.requester_user_id ?? null;
+                await Equipment.reserveForLoan(conn, loanId);
                 const loanItems = await conn.query(
                     'SELECT id, equipment_id FROM equipment_loan_items WHERE loan_id = ? AND active = TRUE',
                     [loanId]
                 );
                 for (const item of loanItems) {
-                    if (item.equipment_id) {
-                        await conn.query(
-                            `UPDATE equipment
-                             SET status = 'assigned', assigned_to_user_id = ?
-                             WHERE id = ?`,
-                            [requesterUserId, item.equipment_id]
-                        );
-                    }
                     await conn.query(
                         `INSERT INTO equipment_loan_checklists (
                             loan_item_id, checklist_type, battery_level, physical_condition, accessories, observations, created_by_user_id
