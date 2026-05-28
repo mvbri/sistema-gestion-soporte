@@ -1,4 +1,5 @@
 import type { PrioridadTicket } from '../../types';
+import { normalizeBadgeClassName } from '../../utils/badgeContrast';
 
 interface PriorityBadgeProps {
   prioridad: PrioridadTicket | string;
@@ -22,12 +23,13 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
       ? 'bg-gray-100'
       : prioridad.color || 'bg-gray-100';
 
-  const prioridadColor = (colorOverride && colorOverride.trim()) || baseColor;
-  const textColor = /\bbg-red-/.test(prioridadColor) ? 'text-red-900' : 'text-gray-900';
+  const prioridadColor = normalizeBadgeClassName(
+    (colorOverride && colorOverride.trim()) || baseColor
+  );
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/15 shadow-sm ${prioridadColor} ${textColor} ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/20 shadow-sm ${prioridadColor} ${className}`}
     >
       {prioridadNombre}
     </span>

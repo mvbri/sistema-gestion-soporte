@@ -135,9 +135,9 @@
   }
 
   .input-dark {
-    @apply w-full px-4 py-2 rounded-xl bg-slate-900/65 border border-sky-300/45
-           text-slate-50 placeholder-slate-100/80 shadow-sm
-           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400
+    @apply w-full px-4 py-2 rounded-xl bg-slate-950/70 border border-sky-400/45
+           text-slate-50 placeholder-slate-400/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-300
            transition-colors duration-150;
   }
 
@@ -171,6 +171,27 @@
 
   .page-subheading {
     @apply mt-1 text-xs sm:text-sm text-blue-100/85;
+  }
+
+  /* Bloques de lectura en detalle (título, descripción, etc.) */
+  .detail-field {
+    @apply space-y-2;
+  }
+
+  .detail-field__label {
+    @apply text-xs font-semibold uppercase tracking-wider text-sky-200/95;
+  }
+
+  .detail-field__value {
+    @apply rounded-xl px-4 py-3 text-sm sm:text-base font-medium text-slate-50 leading-relaxed
+           bg-slate-950/55 border border-sky-400/35 ring-1 ring-inset ring-white/10
+           shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]
+           whitespace-pre-wrap break-words;
+  }
+
+  .badge-group {
+    @apply flex flex-wrap items-center gap-2 rounded-xl border border-white/15
+           bg-slate-950/45 px-3 py-2 ring-1 ring-inset ring-white/10;
   }
 
   .content-panel {

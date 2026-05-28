@@ -5,7 +5,7 @@ USE sistema_soporte;
 
 CREATE TABLE IF NOT EXISTS ticket_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    ticket_id CHAR(36) NOT NULL,
+    ticket_id CHAR(36) NOT NULL COLLATE utf8mb4_bin,
     user_id INT NOT NULL,
     change_type VARCHAR(50) NOT NULL,
     previous_field VARCHAR(255) NULL,
@@ -17,5 +17,5 @@ CREATE TABLE IF NOT EXISTS ticket_history (
     INDEX idx_ticket (ticket_id),
     INDEX idx_user (user_id),
     INDEX idx_changed_at (changed_at)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 

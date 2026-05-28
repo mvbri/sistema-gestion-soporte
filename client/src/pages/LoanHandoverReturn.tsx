@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Check, FileDown, X } from 'lucide-react';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
+import formStyles from '../styles/modules/forms.module.css';
 import {
   useAddEquipmentLoanComment,
   useApproveLoan,
@@ -44,6 +46,7 @@ const conditionLabels: Record<'new' | 'good' | 'worn' | 'damaged', string> = {
 
 export const LoanHandoverReturn: React.FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const loanId = useMemo(() => Number(id), [id]);
   const {
@@ -348,126 +351,164 @@ export const LoanHandoverReturn: React.FC = () => {
     };
   };
 
+  const renderStatusBadge = (status: string) => (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+        statusBadgeStyles[status] || 'bg-slate-100 text-slate-800'
+      }`}
+    >
+      {statusLabels[status] || status}
+    </span>
+  );
+
   return (
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Entrega y Devolución
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">Registro operativo con checklist y acta.</p>
-          </div>
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 space-y-6">
+            <button
+              type="button"
+              onClick={() => navigate('/loans')}
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-200/90 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Volver a préstamos
+            </button>
+
+            <header>
+              <h1 className="page-heading">Entrega y Devolución</h1>
+              <p className="page-subheading mt-2">Registro operativo con checklist y acta.</p>
+            </header>
 
           {isLoading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center text-gray-600 shadow-sm">
-              Cargando préstamo...
+            <div className="flex items-center justify-center min-h-[40vh]">
+              <div className="text-center">
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400" />
+                <p className="mt-3 text-sm text-blue-100/80">Cargando préstamo…</p>
+              </div>
             </div>
           ) : isError || !loan ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center shadow-sm">
-              <p className="text-sm font-semibold text-rose-800">No se pudo cargar el préstamo.</p>
-              <p className="mt-1 text-xs text-rose-700">{loanLoadErrorMessage}</p>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="mt-4 rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
-              >
+            <div className="card text-center py-12">
+              <p className="text-rose-200/95 font-medium">No se pudo cargar el préstamo</p>
+              <p className="mt-2 text-sm text-blue-100/75">{loanLoadErrorMessage}</p>
+              <button type="button" onClick={() => refetch()} className="btn-primary mt-4">
                 Reintentar
               </button>
             </div>
           ) : (
             <>
-              <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Préstamo
-                    </p>
-                    <p className="text-xl font-semibold text-slate-900">{displayRequestCode}</p>
-                  </div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                      statusBadgeStyles[loan.status] || 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    {statusLabels[loan.status] || loan.status}
-                  </span>
-                </div>
-                <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Solicitante
-                    </p>
-                    <p className="text-sm font-medium text-slate-800">{loan.requester_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Estado técnico
-                    </p>
-                    <span
-                      className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                        statusBadgeStyles[loan.status] || 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {statusLabels[loan.status] || loan.status}
+              <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl font-semibold text-white sm:text-2xl">Préstamo</h2>
+                  <p className="mt-1 font-mono text-sm text-blue-100/85 break-all">{displayRequestCode}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-blue-100/85">
+                    <span>
+                      <span className="text-blue-50/90">Solicitante:</span> {loan.requester_name}
+                    </span>
+                    <span className="hidden sm:inline text-blue-300/40" aria-hidden>
+                      ·
+                    </span>
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      <span className="text-blue-50/90">Estado:</span>
+                      {renderStatusBadge(loan.status)}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                </div>
+              </header>
+
+              <div className="card space-y-5">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Datos del préstamo
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="info-tile">
+                    <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
                       Área destino
                     </p>
-                    <p className="text-sm font-medium text-slate-800">
+                    <p className="text-sm font-medium text-blue-50 break-words">
                       {loan.target_incident_area_name || 'No especificada'}
                     </p>
                   </div>
+                  <div className="info-tile">
+                    <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
+                      Fecha de inicio
+                    </p>
+                    <p className="text-sm font-medium text-blue-50">{formatDate(loan.start_date)}</p>
+                  </div>
+                  <div className="info-tile sm:col-span-2">
+                    <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
+                      Devolución esperada
+                    </p>
+                    <p className="text-sm font-medium text-blue-50">
+                      {formatDate(loan.expected_return_date)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="content-panel content-panel--sky !mb-0 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60">
+                    Motivo de la solicitud
+                  </p>
+                  <p className="text-sm text-blue-100/90 leading-relaxed break-words">
+                    {loan.request_notes?.trim() || 'El solicitante no registró un motivo adicional.'}
+                  </p>
                 </div>
               </div>
 
-              <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="mb-2 text-base font-semibold text-slate-900">
-                  Motivo de la solicitud
-                </h2>
-                <p className="text-sm leading-relaxed text-slate-700">
-                  {loan.request_notes?.trim() || 'El solicitante no registró un motivo adicional.'}
-                </p>
-              </div>
-
               {loan.status === 'rejected' && (
-                <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
-                  <h2 className="mb-2 text-base font-semibold text-rose-900">Motivo del rechazo</h2>
-                  <p className="text-sm leading-relaxed text-rose-800">
+                <div className="content-panel !mb-0 border-l-4 border-l-rose-400/90 bg-rose-950/30 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-rose-200/90">
+                    Motivo del rechazo
+                  </p>
+                  <p className="text-sm text-rose-100/95 leading-relaxed break-words">
                     {loan.rejection_reason?.trim() || 'No se registró un motivo de rechazo.'}
                   </p>
                 </div>
               )}
 
-              <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="mb-4 text-base font-semibold text-slate-900">Checklist</h2>
+              <div className="card space-y-5">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Checklist técnico
+                  {!isChecklistEditable && (
+                    <span className="text-xs font-normal text-blue-100/55">(solo lectura)</span>
+                  )}
+                </h2>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <div className={formStyles.formGroup}>
+                    <label htmlFor="loan-physical-condition" className="label-field">
                       Estado físico
-                    </span>
+                    </label>
                     <select
+                      id="loan-physical-condition"
                       value={physicalCondition}
                       onChange={(e) =>
                         setPhysicalCondition(e.target.value as 'new' | 'good' | 'worn' | 'damaged')
                       }
                       disabled={!isChecklistEditable}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+                      className={`input-dark ${formStyles.selectField} disabled:opacity-60 disabled:cursor-not-allowed`}
                     >
                       <option value="new">Nuevo</option>
                       <option value="good">Bueno</option>
                       <option value="worn">Desgastado</option>
                       <option value="damaged">Dañado</option>
                     </select>
-                  </label>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  </div>
+                  <div className={formStyles.formGroup}>
+                    <label htmlFor="loan-battery-level" className="label-field">
                       Batería (%)
-                    </span>
+                    </label>
                     <input
+                      id="loan-battery-level"
                       type="number"
                       min={0}
                       max={100}
@@ -476,75 +517,85 @@ export const LoanHandoverReturn: React.FC = () => {
                         setBatteryLevel(e.target.value === '' ? '' : Number(e.target.value))
                       }
                       disabled={!isChecklistEditable}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+                      className="input-dark disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Ej: 85"
                     />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  </div>
+                  <div className={formStyles.formGroup}>
+                    <label htmlFor="loan-observations" className="label-field">
                       Observaciones
-                    </span>
+                    </label>
                     <input
+                      id="loan-observations"
                       value={observations}
                       onChange={(e) => setObservations(e.target.value)}
                       disabled={!isChecklistEditable}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+                      className="input-dark disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Anotaciones relevantes"
                     />
-                  </label>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="mb-2 text-base font-semibold text-slate-900">Items del préstamo</h2>
-                <ul className="mb-5 space-y-3 text-sm text-slate-700">
+              <div className="card space-y-5">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                  Equipos del préstamo
+                  <span className="text-sm font-normal text-blue-100/60 tabular-nums">
+                    ({loan.items.length})
+                  </span>
+                </h2>
+
+                <ul className="divide-y divide-sky-400/20 rounded-xl border border-sky-400/25 overflow-hidden">
                   {loan.items.map((item) => (
                     <li
                       key={item.id}
-                      className="relative overflow-hidden rounded-xl border border-blue-300 bg-white p-5 shadow-md"
+                      className="flex gap-3 px-3 py-3 sm:px-4 sm:py-3.5 bg-slate-900/30"
                     >
-                      <div className="pointer-events-none absolute -right-8 -top-8 h-16 w-16 rounded-full bg-blue-50 opacity-100" />
-                      <div className="relative z-10 flex w-full items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-bold text-blue-600">
-                            {item.equipment_name || item.pool_name}
-                          </p>
-                          <p className="text-xs text-gray-500">Equipo incluido en este préstamo</p>
-                        </div>
-                        <span className="inline-flex shrink-0 items-center rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
-                          Cantidad: {item.quantity}
-                        </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-white">
+                          {item.equipment_name || item.pool_name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-blue-100/65">Equipo incluido en este préstamo</p>
                       </div>
+                      <span className="shrink-0 self-center rounded-lg bg-sky-500/20 px-2.5 py-1 text-xs font-semibold text-sky-100 ring-1 ring-sky-400/30 tabular-nums">
+                        × {item.quantity}
+                      </span>
                     </li>
                   ))}
                 </ul>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 pt-1 border-t border-sky-400/20">
                   {loan.status === 'pending' && (
                     <button
                       type="button"
                       onClick={printSolicitud}
-                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                      className="btn-secondary inline-flex items-center gap-2"
                     >
-                      Imprimir solicitud (PDF)
+                      <FileDown className="h-4 w-4 shrink-0" aria-hidden />
+                      Imprimir solicitud
                     </button>
                   )}
                   {loan.status === 'approved' && canReviewLoans && (
                     <button
                       type="button"
                       onClick={() => printActa('ENTREGA')}
-                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                      className="btn-secondary inline-flex items-center gap-2"
                     >
-                      Imprimir acta de entrega (PDF)
+                      <FileDown className="h-4 w-4 shrink-0" aria-hidden />
+                      Acta de entrega
                     </button>
                   )}
                   {loan.status === 'delivered' && (
                     <button
                       type="button"
                       onClick={() => printActa('DEVOLUCION')}
-                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                      className="btn-secondary inline-flex items-center gap-2"
                     >
-                      Imprimir acta de devolución (PDF)
+                      <FileDown className="h-4 w-4 shrink-0" aria-hidden />
+                      Acta de devolución
                     </button>
                   )}
                   {loan.status === 'pending' && canReviewLoans && (
@@ -553,17 +604,19 @@ export const LoanHandoverReturn: React.FC = () => {
                         type="button"
                         onClick={() => approveLoan.mutate({ id: loan.id })}
                         disabled={approveLoan.isPending}
-                        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg hover:from-emerald-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                       >
-                        {approveLoan.isPending ? 'Aprobando...' : 'Aprobar préstamo'}
+                        <Check className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                        {approveLoan.isPending ? 'Aprobando…' : 'Aprobar préstamo'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsRejectModalOpen(true)}
                         disabled={rejectLoan.isPending}
-                        className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
+                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-600 shadow-lg hover:from-rose-600 hover:to-rose-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                       >
-                        {rejectLoan.isPending ? 'Rechazando...' : 'Rechazar préstamo'}
+                        <X className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                        {rejectLoan.isPending ? 'Rechazando…' : 'Rechazar préstamo'}
                       </button>
                     </>
                   )}
@@ -573,15 +626,15 @@ export const LoanHandoverReturn: React.FC = () => {
                         type="button"
                         onClick={() => deliverLoan.mutate({ id: loan.id, payload: checklistPayload })}
                         disabled={deliverLoan.isPending}
-                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        className="btn-primary inline-flex items-center gap-2 disabled:opacity-60"
                       >
-                        {deliverLoan.isPending ? 'Registrando entrega...' : 'Registrar entrega'}
+                        {deliverLoan.isPending ? 'Registrando entrega…' : 'Registrar entrega'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsRevokeModalOpen(true)}
                         disabled={revokeApproval.isPending}
-                        className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="btn-secondary"
                       >
                         Anular aprobación
                       </button>
@@ -600,9 +653,9 @@ export const LoanHandoverReturn: React.FC = () => {
                         })
                       }
                       disabled={returnLoan.isPending}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg hover:from-emerald-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                     >
-                      {returnLoan.isPending ? 'Registrando devolución...' : 'Registrar devolución'}
+                      {returnLoan.isPending ? 'Registrando devolución…' : 'Registrar devolución'}
                     </button>
                   )}
                   {loan.status === 'pending' && (
@@ -615,135 +668,180 @@ export const LoanHandoverReturn: React.FC = () => {
                         })
                       }
                       disabled={updatePendingChecklist.isPending}
-                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                      className="btn-secondary disabled:opacity-60"
                     >
                       {updatePendingChecklist.isPending
-                        ? 'Actualizando...'
+                        ? 'Actualizando…'
                         : 'Actualizar checklist'}
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h2 className="mb-3 text-lg font-semibold text-slate-900">Historial</h2>
-                  <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
-                    {(loan.history || []).map((entry) => (
-                      <div key={entry.id} className="rounded-lg border border-slate-200 p-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900">
-                            {entry.changed_by_user_name}
-                          </span>
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                              statusBadgeStyles[entry.new_status] || 'bg-slate-100 text-slate-700'
-                            }`}
-                          >
-                            {statusLabels[entry.new_status] || entry.new_status}
-                          </span>
-                        </div>
-                        {entry.previous_status && (
-                          <p className="mt-0.5 text-xs text-slate-500">
-                            Desde: {statusLabels[entry.previous_status] || entry.previous_status}
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-500">{formatDateTime(entry.created_at)}</p>
-                        {entry.notes && (
-                          <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">{entry.notes}</p>
-                        )}
-                      </div>
-                    ))}
-                    {(loan.history || []).length === 0 && (
-                      <p className="text-sm text-slate-500">Sin movimientos registrados.</p>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="card space-y-5">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Historial
+                  </h2>
+                  {(loan.history || []).length === 0 ? (
+                    <div className="text-center py-8 content-panel !mb-0">
+                      <p className="text-blue-100/80">Sin movimientos registrados.</p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                      {(loan.history || []).map((entry) => (
+                        <li
+                          key={entry.id}
+                          className="content-panel content-panel--sky !mb-0 !p-4 border-l-4 border-l-sky-400/80"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <p className="text-sm font-semibold text-blue-50 truncate">
+                              {entry.changed_by_user_name}
+                            </p>
+                            {renderStatusBadge(entry.new_status)}
+                          </div>
+                          {entry.previous_status && (
+                            <p className="text-xs text-blue-100/65 mb-1">
+                              Desde: {statusLabels[entry.previous_status] || entry.previous_status}
+                            </p>
+                          )}
+                          <time className="text-xs text-blue-100/70">{formatDateTime(entry.created_at)}</time>
+                          {entry.notes?.trim() ? (
+                            <p className="mt-2 text-sm text-blue-100/85 leading-relaxed rounded-lg bg-slate-900/40 px-3 py-2 ring-1 ring-white/5 whitespace-pre-wrap break-words">
+                              {entry.notes}
+                            </p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h2 className="mb-3 text-lg font-semibold text-slate-900">Comentarios</h2>
-                  <p className="mb-3 text-xs text-slate-500">
+                <div className="card space-y-5">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    Comentarios ({(loan.comments || []).length})
+                  </h2>
+                  <p className="text-xs text-blue-100/65 -mt-2">
                     Comunícate con {canReviewLoans ? 'el solicitante' : 'administración'} aquí.
                   </p>
-                  <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
-                    {(loan.comments || []).map((comment) => (
-                      <div key={comment.id} className="rounded-lg border border-slate-200 p-3">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {comment.created_by_user_name}{' '}
-                          {comment.created_by_user_role && (
-                            <span className="font-normal text-slate-600">
-                              ({translateRole(comment.created_by_user_role)})
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-slate-500">{formatDateTime(comment.created_at)}</p>
-                        <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
-                          {comment.comment_text}
-                        </p>
-                      </div>
-                    ))}
-                    {(loan.comments || []).length === 0 && (
-                      <p className="text-sm text-slate-500">Aún no hay comentarios.</p>
-                    )}
-                  </div>
-                  <div className="mt-3">
+                  {(loan.comments || []).length === 0 ? (
+                    <div className="text-center py-8 content-panel !mb-0">
+                      <p className="text-blue-100/80">Aún no hay comentarios.</p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                      {(loan.comments || []).map((comment) => (
+                        <li
+                          key={comment.id}
+                          className="content-panel content-panel--violet !mb-0 !p-4 border-l-4 border-l-violet-400/80"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 shrink-0 rounded-full bg-violet-500/25 ring-1 ring-violet-400/40 flex items-center justify-center text-violet-200 font-semibold text-sm">
+                                {(comment.created_by_user_name || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-blue-50 truncate">
+                                  {comment.created_by_user_name}
+                                </p>
+                                <time className="text-xs text-blue-100/70">
+                                  {formatDateTime(comment.created_at)}
+                                </time>
+                              </div>
+                            </div>
+                            {comment.created_by_user_role && (
+                              <span className="text-xs shrink-0 self-start px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/30 font-medium">
+                                {translateRole(comment.created_by_user_role)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-blue-100/90 leading-relaxed whitespace-pre-wrap break-words">
+                            {comment.comment_text}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <form
+                    className="border-t border-sky-400/20 pt-5 space-y-3"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!loanCommentText.trim()) return;
+                      await addLoanComment.mutateAsync({
+                        id: loan.id,
+                        commentText: loanCommentText.trim(),
+                      });
+                      setLoanCommentText('');
+                      refetch();
+                    }}
+                  >
+                    <label htmlFor="loan-comment" className="label-field">
+                      Nuevo comentario
+                    </label>
                     <textarea
+                      id="loan-comment"
                       value={loanCommentText}
                       onChange={(e) => setLoanCommentText(e.target.value)}
                       rows={3}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="input-dark resize-y min-h-[5.5rem]"
                       placeholder="Escribe un mensaje para la otra parte..."
                     />
-                    <div className="mt-2 flex justify-end">
+                    <div className="flex justify-end">
                       <button
-                        type="button"
-                        onClick={async () => {
-                          if (!loanCommentText.trim()) return;
-                          await addLoanComment.mutateAsync({
-                            id: loan.id,
-                            commentText: loanCommentText.trim(),
-                          });
-                          setLoanCommentText('');
-                          refetch();
-                        }}
-                        disabled={addLoanComment.isPending}
-                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        type="submit"
+                        disabled={addLoanComment.isPending || !loanCommentText.trim()}
+                        className="btn-primary inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        Enviar comentario
+                        {addLoanComment.isPending ? (
+                          <span className={formStyles.loadingSpinner} aria-hidden />
+                        ) : null}
+                        {addLoanComment.isPending ? 'Enviando…' : 'Enviar comentario'}
                       </button>
                     </div>
-                  </div>
+                  </form>
                 </div>
               </div>
             </>
           )}
+          </div>
         </div>
 
         {isRejectModalOpen && loan && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-              <h3 className="text-lg font-bold text-slate-900">Rechazar préstamo</h3>
-              <p className="mt-1 text-sm text-slate-600">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+            <div className="card w-full max-w-md space-y-4" role="dialog" aria-modal="true" aria-labelledby="reject-loan-title">
+              <h3 id="reject-loan-title" className="text-lg font-semibold text-white">
+                Rechazar préstamo
+              </h3>
+              <p className="text-sm text-blue-100/80">
                 Ingresa el motivo por el cual se rechaza la solicitud {displayRequestCode}.
               </p>
-              <label className="mt-4 block text-sm font-medium text-slate-700">
-                Motivo del rechazo
+              <div className={formStyles.formGroup}>
+                <label htmlFor="reject-reason" className="label-field">
+                  Motivo del rechazo
+                </label>
                 <textarea
+                  id="reject-reason"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                  className="input-dark resize-y min-h-[5rem]"
                   placeholder="Ej: El equipo se encuentra reservado para una operación crítica."
                 />
-              </label>
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsRejectModalOpen(false);
                     setRejectReason('');
                   }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="btn-secondary w-full sm:w-auto"
                 >
                   Cancelar
                 </button>
@@ -764,9 +862,9 @@ export const LoanHandoverReturn: React.FC = () => {
                       }
                     );
                   }}
-                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 disabled:opacity-60 w-full sm:w-auto"
                 >
-                  {rejectLoan.isPending ? 'Rechazando...' : 'Confirmar rechazo'}
+                  {rejectLoan.isPending ? 'Rechazando…' : 'Confirmar rechazo'}
                 </button>
               </div>
             </div>
@@ -774,31 +872,36 @@ export const LoanHandoverReturn: React.FC = () => {
         )}
 
         {isRevokeModalOpen && loan && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-              <h3 className="text-lg font-bold text-slate-900">Anular aprobación</h3>
-              <p className="mt-1 text-sm text-slate-600">
-                El préstamo {displayRequestCode} volverá a estado pendiente. Podrás aprobarlo de nuevo
-                cuando corresponda.
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+            <div className="card w-full max-w-md space-y-4" role="dialog" aria-modal="true" aria-labelledby="revoke-loan-title">
+              <h3 id="revoke-loan-title" className="text-lg font-semibold text-white">
+                Anular aprobación
+              </h3>
+              <p className="text-sm text-blue-100/80">
+                El préstamo {displayRequestCode} volverá a estado pendiente. Podrás aprobarlo de nuevo cuando
+                corresponda.
               </p>
-              <label className="mt-4 block text-sm font-medium text-slate-700">
-                Nota interna (opcional)
+              <div className={formStyles.formGroup}>
+                <label htmlFor="revoke-notes" className="label-field">
+                  Nota interna <span className="font-normal text-blue-100/50">(opcional)</span>
+                </label>
                 <textarea
+                  id="revoke-notes"
                   value={revokeNotes}
                   onChange={(e) => setRevokeNotes(e.target.value)}
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+                  className="input-dark resize-y min-h-[5rem]"
                   placeholder="Ej: Se revierte para cambiar el equipo asignado."
                 />
-              </label>
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsRevokeModalOpen(false);
                     setRevokeNotes('');
                   }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="btn-secondary w-full sm:w-auto"
                 >
                   Cerrar
                 </button>
@@ -820,9 +923,9 @@ export const LoanHandoverReturn: React.FC = () => {
                       }
                     );
                   }}
-                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 w-full sm:w-auto"
                 >
-                  {revokeApproval.isPending ? 'Anulando...' : 'Confirmar anulación'}
+                  {revokeApproval.isPending ? 'Anulando…' : 'Confirmar anulación'}
                 </button>
               </div>
             </div>

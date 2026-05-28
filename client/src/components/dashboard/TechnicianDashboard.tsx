@@ -14,6 +14,13 @@ export const TechnicianDashboard: React.FC = () => {
         <p className="text-sm">Visualiza todos los tickets del sistema</p>
       </button>
       <button
+        onClick={() => navigate('/tickets/crear')}
+        className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+      >
+        <h3 className="font-bold text-lg mb-2">Crear Ticket</h3>
+        <p className="text-sm">Reporta un incidente como solicitante</p>
+      </button>
+      <button
         onClick={() => navigate('/tecnico/dashboard')}
         className="p-4 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
       >

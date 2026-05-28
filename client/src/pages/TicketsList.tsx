@@ -34,6 +34,10 @@ export const TicketsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const isTechnician = user?.role === 'technician';
+  const canCreateTicket =
+    user?.role === 'end_user' ||
+    user?.role === 'technician' ||
+    user?.role === 'administrator';
 
   const { data: ticketsData, isLoading: loadingTickets } = useTickets(filters);
   const { data: createdByMeData, isLoading: loadingCreatedByMe } = useTickets(
@@ -126,7 +130,7 @@ export const TicketsList: React.FC = () => {
                 </p>
               )}
             </div>
-            {user?.role === 'end_user' && (
+            {canCreateTicket && (
               <button
                 type="button"
                 onClick={() => navigate('/tickets/crear')}

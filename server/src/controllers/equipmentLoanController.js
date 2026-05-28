@@ -54,16 +54,8 @@ export const getEquipmentLoans = async (req, res) => {
             filters.requester_user_id = userId;
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'L1',location:'equipmentLoanController.js:getEquipmentLoans:filters',message:'loan list filters resolved',data:{role,userId,status:status||null,date_from:date_from||null,date_to:date_to||null,queryRequesterUserId:requester_user_id?Number(requester_user_id):null,appliedRequesterUserId:filters.requester_user_id??null,search:search?String(search).slice(0,100):null,page,limit,offset},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         const loans = await EquipmentLoan.findAll(filters);
         const total = await EquipmentLoan.count(filters);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'L2',location:'equipmentLoanController.js:getEquipmentLoans:result',message:'loan list loaded',data:{returnedCount:Array.isArray(loans)?loans.length:null,total},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         sendSuccess(res, 'Préstamos obtenidos correctamente', {
             loans,
@@ -76,10 +68,6 @@ export const getEquipmentLoans = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al listar préstamos:', error);
-        const root = error?.cause ?? error;
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'L3',location:'equipmentLoanController.js:getEquipmentLoans:catch',message:'loan list failed',data:{code:root?.code??error?.code,errno:root?.errno??error?.errno,sqlState:root?.sqlState??error?.sqlState,message:(root?.message||error?.message||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         sendError(res, 'Error al listar préstamos', null, 500);
     }
 };

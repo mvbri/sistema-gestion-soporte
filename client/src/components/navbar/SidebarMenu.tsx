@@ -179,7 +179,10 @@ export const SidebarMenu: React.FC = () => {
       path: '/tickets/crear',
       label: 'Crear Ticket',
       icon: CreateTicketIcon,
-      show: user?.role === 'end_user',
+      show:
+        user?.role === 'end_user' ||
+        user?.role === 'technician' ||
+        user?.role === 'administrator',
     },
     {
       path: '/admin/users',
@@ -313,7 +316,7 @@ export const SidebarMenu: React.FC = () => {
               <div className="mt-1 space-y-1 ml-6">
                 <NavLink
                   path="/loans/create"
-                  label="Solicitar Préstamo"
+                  label="Solicitar equipos"
                   variant="subitem"
                   isActive={isActive('/loans/create')}
                   onClick={() => setMenuOpen(false)}

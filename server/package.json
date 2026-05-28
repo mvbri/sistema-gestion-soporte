@@ -10,6 +10,7 @@
     "migrate": "node scripts/migrate.js",
     "migrate:baseline": "node scripts/migrate.js --baseline",
     "schema:check": "node scripts/check-db-schema.js",
+    "schema:repair": "node scripts/repair-schema-gaps.js",
     "deploy:prepare": "npm run migrate && npm run schema:check",
     "deploy:start": "npm run deploy:prepare && npm run start"
   },

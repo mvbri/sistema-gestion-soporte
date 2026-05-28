@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Check, FileDown, X } from 'lucide-react';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { useAuth } from '../hooks/useAuth';
@@ -17,6 +18,7 @@ import { ConfirmCancelMaterialRequestModal } from '../components/materialRequest
 import { MaterialRequestStatusBadge } from '../components/materialRequests/MaterialRequestStatusBadge';
 import { translateRole } from '../utils/roleTranslations';
 import { materialRequestItemTypeLabel } from '../utils/materialRequestDisplay';
+import formStyles from '../styles/modules/forms.module.css';
 
 /** Misma ruta que en reportes PDF (`ReportsPage`). */
 const INSTITUTION_LOGO_PATH = '/alcado.png';
@@ -346,7 +348,14 @@ export const MaterialRequestDetail: React.FC = () => {
       <>
         <MainNavbar />
         <PageWrapper>
-          <div className="py-20 text-center text-gray-600">Cargando solicitud...</div>
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center min-h-[40vh]">
+              <div className="text-center">
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400" />
+                <p className="mt-3 text-sm text-blue-100/80">Cargando solicitud...</p>
+              </div>
+            </div>
+          </div>
         </PageWrapper>
       </>
     );
@@ -357,57 +366,64 @@ export const MaterialRequestDetail: React.FC = () => {
       <>
         <MainNavbar />
         <PageWrapper>
-          <div className="py-20 text-center text-gray-600">Solicitud no encontrada.</div>
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="card text-center py-12">
+              <p className="text-blue-100/90">Solicitud no encontrada</p>
+              <button
+                type="button"
+                onClick={() => navigate('/material-requests')}
+                className="btn-primary mt-4"
+              >
+                Volver a solicitudes
+              </button>
+            </div>
+          </div>
         </PageWrapper>
       </>
     );
   }
 
+  const requestCode = materialRequest.request_code || `#${materialRequest.id}`;
+
   return (
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Solicitud{' '}
-                  <span className="rounded-md bg-slate-50 px-2 py-0.5 font-semibold text-slate-700">
-                    {materialRequest.request_code || `#${materialRequest.id}`}
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 space-y-6">
+            <button
+              type="button"
+              onClick={() => navigate('/material-requests')}
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-200/90 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Volver a solicitudes
+            </button>
+
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <h1 className="page-heading">Solicitud de materiales</h1>
+                <p className="page-subheading mt-2 font-mono text-xs break-all opacity-90">
+                  {requestCode}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-blue-100/85">
+                  <span>
+                    <span className="text-blue-50/90">Solicitante:</span>{' '}
+                    {materialRequest.requester_name}
                   </span>
-                </h1>
-                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
-                  <span>Solicitante: {materialRequest.requester_name}</span>
-                  <span className="hidden sm:inline text-gray-300" aria-hidden>
+                  <span className="hidden sm:inline text-blue-300/40" aria-hidden>
                     ·
                   </span>
                   <span className="inline-flex flex-wrap items-center gap-2">
-                    <span>Estado:</span>
+                    <span className="text-blue-50/90">Estado:</span>
                     <MaterialRequestStatusBadge status={materialRequest.status} />
                   </span>
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold text-gray-800">Nombre del destinatario:</span>{' '}
-                  {materialRequest.addressee_name?.trim() || '—'}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold text-gray-800">Cargo al que se dirige la solicitud:</span>{' '}
-                  {materialRequest.addressee_title?.trim() || '—'}
-                </p>
-                <p className="mt-2 text-sm text-gray-700">
-                  <span className="font-semibold text-gray-800">Funcionario que aprueba la solicitud:</span>{' '}
-                  {materialRequest.approved_by_user_name?.trim() || '—'}
-                </p>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate('/material-requests')}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                >
-                  Volver
-                </button>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 {canAdminReview && (
                   <>
                     <button
@@ -416,9 +432,11 @@ export const MaterialRequestDetail: React.FC = () => {
                         await approveRequest.mutateAsync({ id: materialRequest.id });
                         refetch();
                       }}
-                      className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white"
+                      disabled={approveRequest.isPending}
+                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg hover:from-emerald-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                     >
-                      Aprobar
+                      <Check className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                      {approveRequest.isPending ? 'Aprobando…' : 'Aprobar'}
                     </button>
                     <button
                       type="button"
@@ -429,9 +447,11 @@ export const MaterialRequestDetail: React.FC = () => {
                         });
                         refetch();
                       }}
-                      className="rounded-lg bg-rose-600 px-3 py-2 text-sm text-white"
+                      disabled={rejectRequest.isPending}
+                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-600 shadow-lg hover:from-rose-600 hover:to-rose-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                     >
-                      Rechazar
+                      <X className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                      {rejectRequest.isPending ? 'Rechazando…' : 'Rechazar'}
                     </button>
                   </>
                 )}
@@ -439,131 +459,256 @@ export const MaterialRequestDetail: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowCancelConfirm(true)}
-                    className="group inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white p-2 text-rose-600 shadow-sm transition hover:border-transparent hover:bg-gradient-to-r hover:from-rose-600 hover:to-red-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+                    className="btn-secondary inline-flex items-center gap-2"
                     title="Cancelar solicitud"
-                    aria-label="Cancelar solicitud"
                   >
-                    <svg
-                      className="h-5 w-5 transition-transform group-hover:scale-105"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                      />
-                    </svg>
+                    <X className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                    Cancelar
                   </button>
                 )}
                 {isAdmin && materialRequest.status === 'approved' && (
                   <button
                     type="button"
                     onClick={handleExportPdf}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white"
+                    className="btn-primary inline-flex items-center gap-2"
                   >
+                    <FileDown className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
                     Imprimir PDF
                   </button>
                 )}
               </div>
-            </div>
-            <p className="mt-4 text-sm text-gray-700">
-              <strong>Motivo:</strong> {materialRequest.request_notes || 'Sin notas'}
-            </p>
-            {materialRequest.addressee_addressing_text?.trim() ? (
-              <p className="mt-3 text-sm text-gray-700 whitespace-pre-wrap">
-                <strong>Texto al destinatario:</strong> {materialRequest.addressee_addressing_text.trim()}
-              </p>
-            ) : null}
-          </div>
+            </header>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Materiales solicitados</h2>
-            <div className="overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Tipo</th>
-                    <th className="px-3 py-2 text-left">Material</th>
-                    <th className="px-3 py-2 text-left">Cantidad</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {materialRequest.items.map((item) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="px-3 py-2">{materialRequestItemTypeLabel(item.material_type)}</td>
-                      <td className="px-3 py-2">{item.material_name || `ID ${item.reference_id}`}</td>
-                      <td className="px-3 py-2">{item.quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <div className="card space-y-5">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Datos de la solicitud
+              </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Historial</h2>
-              <div className="space-y-3">
-                {materialRequest.history.map((entry) => (
-                  <div key={entry.id} className="rounded-lg border border-gray-200 p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900">
-                        {entry.changed_by_user_name}
-                      </span>
-                      <MaterialRequestStatusBadge status={entry.new_status} />
-                    </div>
-                    <p className="text-xs text-gray-500">{formatDate(entry.created_at)}</p>
-                    {entry.notes && <p className="text-sm text-gray-700 mt-1">{entry.notes}</p>}
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="info-tile">
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
+                    Nombre del destinatario
+                  </p>
+                  <p className="text-sm font-medium text-blue-50 break-words">
+                    {materialRequest.addressee_name?.trim() || '—'}
+                  </p>
+                </div>
+                <div className="info-tile">
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
+                    Cargo al que se dirige
+                  </p>
+                  <p className="text-sm font-medium text-blue-50 break-words">
+                    {materialRequest.addressee_title?.trim() || '—'}
+                  </p>
+                </div>
+                <div className="info-tile sm:col-span-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1">
+                    Funcionario que aprueba la solicitud
+                  </p>
+                  <p className="text-sm font-medium text-blue-50 break-words">
+                    {materialRequest.approved_by_user_name?.trim() || '—'}
+                  </p>
+                </div>
               </div>
+
+              <div className="content-panel content-panel--sky !mb-0 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60">Motivo</p>
+                <p className="text-sm text-blue-100/90 leading-relaxed break-words">
+                  {materialRequest.request_notes?.trim() || 'Sin notas'}
+                </p>
+              </div>
+
+              {materialRequest.addressee_addressing_text?.trim() ? (
+                <div className="content-panel content-panel--violet !mb-0 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60">
+                    Texto al destinatario
+                  </p>
+                  <p className="text-sm text-blue-100/90 leading-relaxed whitespace-pre-wrap break-words">
+                    {materialRequest.addressee_addressing_text.trim()}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Comentarios</h2>
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {materialRequest.comments.map((comment) => (
-                  <div key={comment.id} className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {comment.created_by_user_name} ({translateRole(comment.created_by_user_role)})
-                    </p>
-                    <p className="text-xs text-gray-500">{formatDate(comment.created_at)}</p>
-                    <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{comment.comment_text}</p>
+            <div className="card space-y-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Materiales solicitados
+                <span className="text-sm font-normal text-blue-100/60 tabular-nums">
+                  ({materialRequest.items.length})
+                </span>
+              </h2>
+
+              {materialRequest.items.length === 0 ? (
+                <div className="text-center py-8 content-panel !mb-0">
+                  <p className="text-blue-100/80">No hay materiales registrados en esta solicitud.</p>
+                </div>
+              ) : (
+                <div className="card !p-0 overflow-hidden !shadow-none !border-sky-400/20">
+                  <div className="tickets-list-light overflow-x-auto bg-white/95 rounded-xl">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <tr>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Tipo
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Material
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Cantidad
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {materialRequest.items.map((item) => (
+                          <tr key={item.id} className="hover:bg-sky-50/90 transition-colors">
+                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-900">
+                              {materialRequestItemTypeLabel(item.material_type)}
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-900 break-words max-w-md">
+                              {item.material_name || `ID ${item.reference_id}`}
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-900 text-right tabular-nums">
+                              {item.quantity}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-                {materialRequest.comments.length === 0 && (
-                  <p className="text-sm text-gray-500">Aún no hay comentarios.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="card space-y-5">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Historial
+                </h2>
+                {materialRequest.history.length === 0 ? (
+                  <div className="text-center py-8 content-panel !mb-0">
+                    <p className="text-blue-100/80">Sin cambios registrados aún.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-3">
+                    {materialRequest.history.map((entry) => (
+                      <li
+                        key={entry.id}
+                        className="content-panel content-panel--sky !mb-0 !p-4 border-l-4 border-l-sky-400/80"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                          <p className="text-sm font-semibold text-blue-50 truncate">
+                            {entry.changed_by_user_name}
+                          </p>
+                          <MaterialRequestStatusBadge status={entry.new_status} />
+                        </div>
+                        <time className="text-xs text-blue-100/70">{formatDate(entry.created_at)}</time>
+                        {entry.notes?.trim() ? (
+                          <p className="mt-2 text-sm text-blue-100/85 leading-relaxed rounded-lg bg-slate-900/40 px-3 py-2 ring-1 ring-white/5 break-words">
+                            {entry.notes}
+                          </p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
-              <div className="mt-3">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                  placeholder="Escribe un comentario para comunicarte con la otra parte..."
-                />
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!commentText.trim()) return;
-                      await addComment.mutateAsync({
-                        id: materialRequest.id,
-                        commentText: commentText.trim(),
-                      });
-                      setCommentText('');
-                      refetch();
-                    }}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Enviar comentario
-                  </button>
-                </div>
+
+              <div className="card space-y-5">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Comentarios ({materialRequest.comments.length})
+                </h2>
+
+                {materialRequest.comments.length === 0 ? (
+                  <div className="text-center py-8 content-panel !mb-0">
+                    <p className="text-blue-100/80">Aún no hay comentarios.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    {materialRequest.comments.map((comment) => (
+                      <li
+                        key={comment.id}
+                        className="content-panel content-panel--violet !mb-0 !p-4 border-l-4 border-l-violet-400/80"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-violet-500/25 ring-1 ring-violet-400/40 flex items-center justify-center text-violet-200 font-semibold text-sm">
+                              {(comment.created_by_user_name || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-blue-50 truncate">
+                                {comment.created_by_user_name}
+                              </p>
+                              <time className="text-xs text-blue-100/70">
+                                {formatDate(comment.created_at)}
+                              </time>
+                            </div>
+                          </div>
+                          <span className="text-xs shrink-0 self-start px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/30 font-medium">
+                            {translateRole(comment.created_by_user_role)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-100/90 leading-relaxed whitespace-pre-wrap break-words">
+                          {comment.comment_text}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <form
+                  className="border-t border-sky-400/20 pt-5 space-y-3"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!commentText.trim()) return;
+                    await addComment.mutateAsync({
+                      id: materialRequest.id,
+                      commentText: commentText.trim(),
+                    });
+                    setCommentText('');
+                    refetch();
+                  }}
+                >
+                  <label htmlFor="material-request-comment" className="label-field">
+                    Nuevo comentario
+                  </label>
+                  <textarea
+                    id="material-request-comment"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    rows={3}
+                    className="input-dark resize-y min-h-[5.5rem]"
+                    placeholder="Escribe un comentario para comunicarte con la otra parte..."
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={addComment.isPending || !commentText.trim()}
+                      className="btn-primary inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {addComment.isPending ? (
+                        <span className={formStyles.loadingSpinner} aria-hidden />
+                      ) : (
+                        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      )}
+                      {addComment.isPending ? 'Enviando…' : 'Enviar comentario'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

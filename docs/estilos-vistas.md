@@ -16,6 +16,7 @@ No todas las vistas necesitan todo. Elige según lo que tenga la pantalla:
 | Formulario de creación/edición de solicitudes | **Perfil Solicitudes** | `CreateMaterialRequest.tsx` |
 | Listado de solicitudes (materiales, etc.) | Filtros y contenedor **Solicitudes**; si quieres filas claras como tickets, ver nota al final | `MaterialRequestsList.tsx` |
 | Solo detalle, dashboard o modal sin lista ni filtros | Encabezado + `card` / `content-panel` según contenido | Secciones “Base” más abajo |
+| Grid de ítems de inventario (equipos, herramientas, consumibles) | **Perfil Inventario (cards)** | `EquipmentCard.tsx`, `ToolCard.tsx`, `ConsumableCard.tsx` |
 | `<table>` HTML clásica | Envolver con `tickets-list-light` | `AdminUsers.tsx` |
 
 ```
@@ -586,8 +587,109 @@ Al migrar vistas antiguas, reemplazar patrones como:
 | **Estilo tickets** / **formulario** | Perfil Formulario (Tickets) | `card !p-0`, `content-panel`, `input-field` |
 | **Estilo solicitudes** / **formulario** | Perfil Solicitudes | `card`, `input-dark`, `formStyles`, `content-panel` anidado |
 | **Solo layout** | Base | `page-heading`, `card` o `content-panel`, botones globales |
+| **Inventario** / **cards de ítem** | Perfil Inventario (cards) | `InventoryCardShell`, `InventoryMetaRow`, `info-tile` |
 
 Al implementar una vista nueva, indica en el PR o en comentarios: *“UI: estilo tickets (filtros + lista)”* o *“UI: estilo solicitudes (formulario)”* para alinear expectativas con esta guía.
+
+---
+
+## Perfil Inventario (cards de ítem)
+
+**Referencias:** `EquipmentList.tsx`, `ToolsList.tsx`, `ConsumablesList.tsx`  
+**Componentes compartidos:** `client/src/components/inventory/`
+
+Usar este perfil para grids de **equipos**, **herramientas** y **consumibles**. No uses tarjetas blancas (`bg-white`) sobre `PageWrapper`.
+
+### Cuándo aplicarlo
+
+- Listado en grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`)
+- Cada ítem es una card independiente con nombre, badges de estado/tipo, acciones Ver/Eliminar y filas de metadatos
+
+### Estructura de la card
+
+Envolver con `InventoryCardShell`:
+
+```tsx
+import { InventoryCardShell, InventoryCardAlert } from '../components/inventory/InventoryCardShell';
+import { InventoryMetaRow } from '../components/inventory/InventoryMetaRow';
+import { InventoryTypeBadge } from '../components/inventory/InventoryTypeBadge';
+
+<InventoryCardShell
+  title={item.name}
+  itemLabel="equipo" // o "herramienta" | "consumible"
+  canEdit={canEdit}
+  canDelete={canDelete}
+  onView={() => navigate(`/equipment/${item.id}`)}
+  onDelete={() => onDelete(item.id, item.name)}
+  badges={
+    <>
+      <StatusBadge status={item.status} />
+      {item.type_name ? <InventoryTypeBadge type={item.type_name} /> : null}
+    </>
+  }
+>
+  {/* filas y alertas */}
+</InventoryCardShell>
+```
+
+### Filas de metadatos (`InventoryMetaRow`)
+
+Patrón único para todas las propiedades (marca, código, cantidad, ubicación, etc.):
+
+```tsx
+<InventoryMetaRow label="Código" value={tool.code} mono />
+<InventoryMetaRow label="Cantidad" value={`${qty} ${unit}`} valueClassName="text-amber-300" />
+```
+
+- Usa `info-tile` por dentro (definido en `index.css`)
+- Etiqueta: mayúsculas, `text-blue-100/60`
+- Valor: `text-blue-50`, alineado a la derecha
+- `mono` para códigos y series
+
+### Alertas dentro de la card (`InventoryCardAlert`)
+
+Para estados que requieren atención (no mezclar con filas normales):
+
+| Caso | Variante | Ejemplo |
+|------|----------|---------|
+| Préstamo activo (equipo) | `rose` | En préstamo + solicitante |
+| Stock bajo (consumible) | `amber` | Mínimo vs cantidad actual |
+
+```tsx
+<InventoryCardAlert variant="rose" label="En préstamo" value={requesterName} />
+<InventoryCardAlert variant="amber" label="Stock bajo" value={`Mínimo: ${min} ${unit}`} />
+```
+
+### Acciones (iconos)
+
+- **Ver:** icono ojo, borde sky, `text-sky-300` → hover fondo sky
+- **Eliminar:** icono papelera, borde rose, `text-rose-300` → hover fondo rose  
+  (definidas en `InventoryCardShell`; no botones de texto azul/rojo sobre fondo oscuro)
+
+### Badges de estado y tipo
+
+- Estado: componentes `StatusBadge` / `ToolStatusBadge` / `ConsumableStatusBadge` con fondos claros (`bg-*-100`) y texto oscuro (`text-*-950`)
+- Tipo: `InventoryTypeBadge` (violeta) o `TypeBadge` en equipos (reexporta el mismo estilo)
+
+### Descripción larga (consumibles)
+
+Opcional al final de la card:
+
+```tsx
+<div className="content-panel content-panel--violet !mb-0 !p-3 mt-1">
+  <p className="text-xs font-medium uppercase tracking-wide text-blue-100/60 mb-1.5">Descripción</p>
+  <p className="text-sm text-blue-100/90 leading-relaxed break-words">{description}</p>
+</div>
+```
+
+### Checklist card de inventario
+
+- [ ] `InventoryCardShell` + `card` (no `bg-white`)
+- [ ] Header con borde inferior `border-sky-400/20`
+- [ ] Badges claros sobre fondo oscuro
+- [ ] Metadatos con `InventoryMetaRow` (mismo estilo en todas las filas)
+- [ ] Alertas con `InventoryCardAlert` (rose/amber), no filas rosas/blancas sueltas
+- [ ] Grid de página: `page-heading` + filtros en `content-panel` + `input-field`
 
 ---
 

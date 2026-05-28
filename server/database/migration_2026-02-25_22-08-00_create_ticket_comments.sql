@@ -5,7 +5,7 @@ USE sistema_soporte;
 
 CREATE TABLE IF NOT EXISTS ticket_comments (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    ticket_id CHAR(36) NOT NULL,
+    ticket_id CHAR(36) NOT NULL COLLATE utf8mb4_bin,
     user_id INT NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS ticket_comments (
     INDEX idx_ticket (ticket_id),
     INDEX idx_user (user_id),
     INDEX idx_created_at (created_at)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 

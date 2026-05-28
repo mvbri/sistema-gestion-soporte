@@ -17,7 +17,7 @@ SET @sql := IF(
     @ticket_equipment_exists = 0,
     'CREATE TABLE ticket_equipment (
         id INT PRIMARY KEY AUTO_INCREMENT,
-        ticket_id CHAR(36) NOT NULL,
+        ticket_id CHAR(36) NOT NULL COLLATE utf8mb4_bin,
         equipment_id INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
@@ -25,7 +25,7 @@ SET @sql := IF(
         UNIQUE KEY unique_ticket_equipment (ticket_id, equipment_id),
         INDEX idx_ticket (ticket_id),
         INDEX idx_equipment (equipment_id)
-    )',
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin',
     'SELECT 1 as skip'
 );
 PREPARE stmt FROM @sql;

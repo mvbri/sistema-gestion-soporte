@@ -1,4 +1,5 @@
 import type { EstadoTicket } from '../../types';
+import { normalizeBadgeClassName } from '../../utils/badgeContrast';
 
 interface StatusBadgeProps {
   estado: EstadoTicket | string;
@@ -22,11 +23,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       ? 'bg-gray-100'
       : estado.color || 'bg-gray-100';
 
-  const estadoColor = (colorOverride && colorOverride.trim()) || baseColor;
+  const estadoColor = normalizeBadgeClassName(
+    (colorOverride && colorOverride.trim()) || baseColor
+  );
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/15 shadow-sm ${estadoColor} text-gray-900 ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/20 shadow-sm ${estadoColor} ${className}`}
     >
       {estadoNombre}
     </span>

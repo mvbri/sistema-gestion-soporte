@@ -285,7 +285,19 @@ class EquipmentLoan {
             params.push(searchTerm, searchTerm, searchTerm, searchTerm);
         }
 
-        sql += ' GROUP BY el.id ORDER BY el.created_at DESC';
+        // Compatible con sql_mode=only_full_group_by (TiDB / MySQL 8+)
+        sql += `
+            GROUP BY
+                el.id,
+                el.created_at,
+                el.requester_user_id,
+                requester.full_name,
+                ia.name,
+                el.status,
+                el.start_date,
+                el.expected_return_date
+            ORDER BY el.created_at DESC
+        `;
 
         if (filters.limit) {
             sql += ' LIMIT ?';

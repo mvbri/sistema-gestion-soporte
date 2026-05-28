@@ -80,6 +80,7 @@ const technicianSections: ManualSection[] = [
     title: 'Tickets',
     paragraphs: [
       'En Tickets (/tickets) ves el listado; podés abrir un ticket (/tickets/:id) para ver detalle, comentar y actualizar estados o campos según tus permisos y si sos el técnico asignado.',
+      'En Crear ticket (/tickets/crear) podés registrar un incidente como solicitante (por ejemplo, para tu propia área). Esos tickets aparecen en la sección de tickets que creaste; los asignados a ti se gestionan en el listado principal.',
       'Las acciones de edición dependen de la asignación y de las reglas del ticket; revisá siempre los mensajes de la interfaz al guardar cambios.',
     ],
   },
@@ -137,6 +138,7 @@ const administratorSections: ManualSection[] = [
     title: 'Tickets y estadísticas',
     paragraphs: [
       'Tickets (/tickets) y el detalle de un ticket ofrecen visibilidad y edición ampliada (por ejemplo reasignación o ajustes que solo el administrador puede hacer).',
+      'En Crear ticket (/tickets/crear) podés registrar incidentes como cualquier usuario con dirección configurada en el perfil; el ticket quedará a tu nombre como solicitante.',
       'Estadísticas de tickets (/analytics) y las estadísticas de inventario en /equipment/analytics, /consumables/analytics y /tools/analytics permiten supervisar el uso del sistema.',
     ],
   },
