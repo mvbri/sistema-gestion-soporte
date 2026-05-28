@@ -17,6 +17,7 @@ DB_USER=xxxxx.root
 DB_PASSWORD=xxxxxxxx
 DB_NAME=sistema_soporte
 DB_SSL=true
+DB_BACKUP_COLLATION=utf8mb4_bin
 ```
 
 ## Migraciones
@@ -44,3 +45,4 @@ Si TiDB no permite `CREATE DATABASE`, crea la BD vacía desde la consola o conec
 | SSL handshake | Confirmar `DB_SSL=true` |
 | Access denied | Revisar usuario/contraseña del panel |
 | Unknown database | Crear `sistema_soporte` en TiDB o ajustar `DB_NAME` |
+| `Unknown collation: utf8mb4_uca1400_ai_ci` al restaurar respaldo | Backups viejos de MariaDB local. El API normaliza collations al generar/restaurar (`DB_BACKUP_COLLATION=utf8mb4_bin`). Tras desplegar el backend actualizado, restaurar de nuevo sin editar el `.sql`. Si persiste, regenerar respaldo desde producción (API conectado a TiDB). |

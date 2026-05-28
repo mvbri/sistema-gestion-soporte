@@ -89,6 +89,7 @@ npm run deploy:prepare
 - **Spin-down** tras 15 min sin tráfico; primer request ~1 min.
 - **SMTP bloqueado** → usar `EMAIL_PROVIDER=sendgrid`, no Gmail SMTP.
 - **Disco efímero** → usar `UPLOAD_PROVIDER=cloudinary`.
+- **Respaldos SQL** (`server/backups/`) también están en disco efímero: no usar Render como almacén permanente. Descargar dumps importantes desde `/admin/backup`. Los archivos generados en MariaDB local son compatibles con TiDB tras el deploy (normalización de collation); ver [`tidb.md`](tidb.md).
 
 ## Verificación
 

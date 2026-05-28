@@ -13,3 +13,6 @@ server/.env.*
 dist/
 build/
 
+# SQL dumps (generados en server/backups; no desplegar a Render)
+server/backups/*.sql
+

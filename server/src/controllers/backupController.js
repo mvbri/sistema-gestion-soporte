@@ -5,6 +5,10 @@ import dotenv from 'dotenv';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { backupsDirPath } from '../config/backup.js';
 import { query, getConnection } from '../config/database.js';
+import {
+    normalizeSqlForTarget,
+    formatCollationRestoreError,
+} from '../utils/sqlCompatibility.js';
 
 dotenv.config();
 
@@ -53,7 +57,7 @@ export const generateBackup = async (req, res) => {
                 
                 // Obtener CREATE TABLE statement
                 const createTableResult = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
-                const createTableSQL = createTableResult[0]['Create Table'];
+                const createTableSQL = normalizeSqlForTarget(createTableResult[0]['Create Table']);
                 
                 // Escribir DROP TABLE y CREATE TABLE
                 writeStream.write(`\n-- --------------------------------------------------------\n`);
@@ -175,9 +179,9 @@ export const generateBackup = async (req, res) => {
  */
 const executeSqlFile = async (filePath) => {
     const sqlContent = fs.readFileSync(filePath, 'utf8');
-    
-    // Procesar el contenido SQL
-    let processedContent = sqlContent;
+
+    // Procesar el contenido SQL (normalizar collations MariaDB → TiDB)
+    let processedContent = normalizeSqlForTarget(sqlContent);
     
     // Remover comandos USE DATABASE
     processedContent = processedContent.replace(/USE\s+[`'"]?[\w]+[`'"]?\s*;/gi, '');
@@ -361,6 +365,23 @@ const executeSqlFile = async (filePath) => {
     }
 };
 
+function resolveRestoreErrorResponse(error) {
+    const collationMessage = formatCollationRestoreError(error);
+    if (collationMessage) {
+        return { message: collationMessage, status: 400 };
+    }
+    if (error.message.includes('syntax error') || error.message.includes('SQL syntax')) {
+        return {
+            message: 'El archivo SQL contiene errores de sintaxis o no es válido',
+            status: 400,
+        };
+    }
+    return {
+        message: error.message || 'Error al restaurar la base de datos',
+        status: 500,
+    };
+}
+
 /**
  * Restaura la base de datos desde un archivo SQL subido
  */
@@ -404,15 +425,10 @@ export const restoreBackup = async (req, res) => {
             }
         }
 
-        if (error.message.includes('syntax error') || error.message.includes('SQL syntax')) {
-            return sendError(res, 'El archivo SQL contiene errores de sintaxis o no es válido', null, 400);
-        }
-
-        sendError(res, error.message || 'Error al restaurar la base de datos', null, 500);
+        const { message, status } = resolveRestoreErrorResponse(error);
+        sendError(res, message, null, status);
     }
 };
-
-
 
 /**
  * Lista todos los archivos de respaldo disponibles con paginación, búsqueda y ordenamiento
@@ -534,11 +550,8 @@ export const restoreBackupFromFile = async (req, res) => {
     } catch (error) {
         console.error('Error al restaurar respaldo:', error);
 
-        if (error.message.includes('syntax error') || error.message.includes('SQL syntax')) {
-            return sendError(res, 'El archivo SQL contiene errores de sintaxis o no es válido', null, 400);
-        }
-
-        sendError(res, error.message || 'Error al restaurar la base de datos', null, 500);
+        const { message, status } = resolveRestoreErrorResponse(error);
+        sendError(res, message, null, status);
     }
 };
 
