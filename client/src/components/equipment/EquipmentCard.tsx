@@ -18,6 +18,7 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({
   canDelete = false,
 }) => {
   const navigate = useNavigate();
+  const hasActiveLoan = Boolean(equipment.active_loan_id);
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return null;
@@ -65,6 +66,14 @@ export const EquipmentCard: React.FC<EquipmentCardProps> = ({
       </div>
 
       <div className="space-y-2 relative z-10">
+        {hasActiveLoan && (
+          <div className="flex justify-between items-center py-2 px-3 bg-rose-50 rounded-lg border border-rose-100">
+            <span className="text-sm font-medium text-rose-700">En préstamo</span>
+            <span className="text-sm font-semibold text-rose-900">
+              {equipment.active_loan_requester_name || 'Reservado'}
+            </span>
+          </div>
+        )}
         {equipment.brand && (
           <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
             <span className="text-sm font-medium text-gray-600">Marca</span>

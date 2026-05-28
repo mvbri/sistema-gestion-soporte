@@ -463,12 +463,14 @@ export const AdminConfig: React.FC = () => {
       <>
         <MainNavbar />
         <PageWrapper>
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Cargando...</p>
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-4 sm:py-6">
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando…</p>
+              </div>
+            </div>
           </div>
-        </div>
         </PageWrapper>
       </>
     );
@@ -478,90 +480,92 @@ export const AdminConfig: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Configuración de Administración</h1>
-          <p className="text-gray-600 mt-2">Gestiona categorías, prioridades, estados, direcciones, tipos de equipos, tipos de consumibles y tipos de herramientas del sistema</p>
-        </div>
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="mb-6">
+              <h1 className="page-heading">Configuración de administración</h1>
+              <p className="page-subheading">
+                Gestiona categorías, prioridades, estados, direcciones y tipos del inventario.
+              </p>
+            </header>
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+            <div className="card !p-0 overflow-hidden">
+              <div className="content-panel !mb-0 rounded-none border-0 ring-0 shadow-none border-b border-sky-400/15">
+                <nav className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setActiveTab('categorias')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'categorias'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Categorías
               </button>
               <button
                 onClick={() => setActiveTab('prioridades')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'prioridades'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Prioridades
               </button>
               <button
                 onClick={() => setActiveTab('estados')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'estados'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Estados
               </button>
               <button
                 onClick={() => setActiveTab('direcciones')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'direcciones'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Direcciones
               </button>
               <button
                 onClick={() => setActiveTab('equipment-types')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'equipment-types'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Tipos de Equipos
               </button>
               <button
                 onClick={() => setActiveTab('consumable-types')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'consumable-types'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Tipos de Consumibles
               </button>
               <button
                 onClick={() => setActiveTab('tool-types')}
-                className={`py-4 px-6 text-sm font-medium transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   activeTab === 'tool-types'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
                 }`}
               >
                 Tipos de Herramientas
               </button>
-            </nav>
-          </div>
+                </nav>
+              </div>
 
-          <div className="p-6">
+              <div className="p-5 sm:p-6">
             {activeTab === 'categorias' && (
               <div>
                 <div className="flex justify-between items-center mb-4">

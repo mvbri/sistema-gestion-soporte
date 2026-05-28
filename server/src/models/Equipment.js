@@ -1,6 +1,32 @@
 import { query } from '../config/database.js';
 
 class Equipment {
+    /** Excludes equipment reserved in an active loan (matches EquipmentLoan create validation). */
+    static _sqlExcludeActiveLoans(equipmentIdExpr) {
+        return ` AND NOT EXISTS (
+            SELECT 1
+            FROM equipment_loan_items eli
+            INNER JOIN equipment_loans el ON el.id = eli.loan_id
+            WHERE eli.equipment_id = ${equipmentIdExpr}
+              AND eli.active = TRUE
+              AND el.active = TRUE
+              AND el.status IN ('approved', 'delivered', 'overdue')
+        )`;
+    }
+
+    static _sqlActiveLoanField(fieldExpr, equipmentIdExpr) {
+        return `(SELECT ${fieldExpr}
+            FROM equipment_loan_items eli
+            INNER JOIN equipment_loans el ON el.id = eli.loan_id
+            INNER JOIN users requester ON requester.id = el.requester_user_id
+            WHERE eli.equipment_id = ${equipmentIdExpr}
+              AND eli.active = TRUE
+              AND el.active = TRUE
+              AND el.status IN ('approved', 'delivered', 'overdue')
+            ORDER BY el.created_at DESC, el.id DESC
+            LIMIT 1)`;
+    }
+
     static async create(data) {
         const {
             name,
@@ -99,7 +125,10 @@ class Equipment {
                 et.name as type_name,
                 et.description as type_description,
                 u.full_name as assigned_to_user_name,
-                u.email as assigned_to_user_email
+                u.email as assigned_to_user_email,
+                ${this._sqlActiveLoanField('el.id', 'e.id')} as active_loan_id,
+                ${this._sqlActiveLoanField('el.status', 'e.id')} as active_loan_status,
+                ${this._sqlActiveLoanField('requester.full_name', 'e.id')} as active_loan_requester_name
             FROM equipment e
             LEFT JOIN equipment_types et ON e.type_id = et.id
             LEFT JOIN users u ON e.assigned_to_user_id = u.id
@@ -129,6 +158,7 @@ class Equipment {
         } else if (loanSelection) {
             sql += ' AND e.status = ?';
             params.push(filters.status || 'available');
+            sql += this._sqlExcludeActiveLoans('e.id');
         } else {
             if (filters.status) {
                 sql += ' AND e.status = ?';
@@ -287,6 +317,7 @@ class Equipment {
             } else if (loanSelection) {
                 sql += ' AND status = ?';
                 params.push(filters.status || 'available');
+                sql += this._sqlExcludeActiveLoans('equipment.id');
             } else {
                 if (filters.status) {
                     sql += ' AND status = ?';

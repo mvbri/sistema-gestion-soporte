@@ -276,6 +276,10 @@ export interface Equipment {
   assigned_to_user_id?: number | null;
   assigned_to_user_name?: string | null;
   assigned_to_user_email?: string | null;
+  /** If present, this equipment is part of an active loan (approved/delivered/overdue). */
+  active_loan_id?: number | null;
+  active_loan_status?: 'approved' | 'delivered' | 'overdue' | null;
+  active_loan_requester_name?: string | null;
   description?: string | null;
   purchase_date?: string | null;
   warranty_expires_at?: string | null;

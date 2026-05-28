@@ -31,81 +31,207 @@ export const LoanReportsPage: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="py-6 max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900">Reporte de Préstamos</h1>
-          <p className="text-sm text-gray-600 mb-4">Métricas de solicitudes, devoluciones, vencidos e incidentes.</p>
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <div>
+                <h1 className="page-heading">Reporte de préstamos</h1>
+                <p className="page-subheading">Métricas de solicitudes, devoluciones, vencidos e incidentes.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="btn-primary text-sm sm:text-base whitespace-nowrap"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Actualizando…' : 'Actualizar'}
+              </button>
+            </header>
 
-          <div className="rounded-lg border bg-white p-4 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border px-3 py-2"
-            />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border px-3 py-2"
-            />
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
-            >
-              Actualizar
-            </button>
+            <div className="content-panel mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <div className="min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg
+                      className="w-4 h-4 text-amber-300 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span>Desde</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="input-field w-full py-2.5 [color-scheme:dark]"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg
+                      className="w-4 h-4 text-amber-300 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span>Hasta</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="input-field w-full py-2.5 [color-scheme:dark]"
+                  />
+                </div>
+
+                <div className="lg:col-span-2 rounded-xl border border-sky-400/20 bg-slate-900/25 px-4 py-3 text-xs sm:text-sm text-blue-100/80 flex items-center">
+                  Usa el rango de fechas para actualizar el resumen del periodo.
+                </div>
+              </div>
+            </div>
+
+            {isLoading || !report ? (
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Generando reporte…</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="stat-card stat-card--sky">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="stat-card-title">Solicitudes</p>
+                        <p className="stat-card-value">{report.totals.total_requests}</p>
+                      </div>
+                      <div className="stat-card-icon stat-card-icon--sky">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-card--violet">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="stat-card-title">Aprobadas</p>
+                        <p className="stat-card-value">{report.totals.approved_count}</p>
+                      </div>
+                      <div className="stat-card-icon stat-card-icon--violet">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-card--emerald">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="stat-card-title">Devueltas</p>
+                        <p className="stat-card-value">{report.totals.returned_count}</p>
+                      </div>
+                      <div className="stat-card-icon stat-card-icon--emerald">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8 8 0 104.582 9m0 0H9"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-card--amber">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="stat-card-title">Vencidas</p>
+                        <p className="stat-card-value">{report.totals.overdue_count}</p>
+                      </div>
+                      <div className="stat-card-icon stat-card-icon--amber">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <section className="card !p-0 overflow-hidden">
+                    <div className="px-5 sm:px-6 py-4 border-b border-sky-400/15">
+                      <h2 className="text-base font-semibold text-white sm:text-lg">Por estado</h2>
+                      <p className="mt-1 text-xs text-blue-100/70">Distribución del periodo seleccionado.</p>
+                    </div>
+                    <ul className="divide-y divide-sky-400/15">
+                      {report.byStatus.map((row) => (
+                        <li
+                          key={row.status}
+                          className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 bg-slate-900/20"
+                        >
+                          <span className="text-sm text-blue-50/90">
+                            {loanStatusLabels[row.status] || row.status}
+                          </span>
+                          <span className="text-sm font-semibold text-white tabular-nums">{row.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  <section className="card !p-0 overflow-hidden">
+                    <div className="px-5 sm:px-6 py-4 border-b border-sky-400/15">
+                      <h2 className="text-base font-semibold text-white sm:text-lg">Top solicitantes</h2>
+                      <p className="mt-1 text-xs text-blue-100/70">Usuarios con más solicitudes en el periodo.</p>
+                    </div>
+                    <ul className="divide-y divide-sky-400/15">
+                      {report.topRequesters.map((row) => (
+                        <li
+                          key={row.user_id}
+                          className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 bg-slate-900/20"
+                        >
+                          <span className="text-sm text-blue-50/90 truncate">{row.user_name}</span>
+                          <span className="text-sm font-semibold text-white tabular-nums">{row.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                </div>
+              </>
+            )}
           </div>
-
-          {isLoading || !report ? (
-            <div className="py-20 text-center text-gray-600">Generando reporte...</div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="rounded-lg border bg-white p-4">
-                  <p className="text-sm text-gray-600">Solicitudes</p>
-                  <p className="text-3xl font-bold text-gray-900">{report.totals.total_requests}</p>
-                </div>
-                <div className="rounded-lg border bg-white p-4">
-                  <p className="text-sm text-gray-600">Aprobadas</p>
-                  <p className="text-3xl font-bold text-blue-700">{report.totals.approved_count}</p>
-                </div>
-                <div className="rounded-lg border bg-white p-4">
-                  <p className="text-sm text-gray-600">Devueltas</p>
-                  <p className="text-3xl font-bold text-emerald-700">{report.totals.returned_count}</p>
-                </div>
-                <div className="rounded-lg border bg-white p-4">
-                  <p className="text-sm text-gray-600">Vencidas</p>
-                  <p className="text-3xl font-bold text-red-700">{report.totals.overdue_count}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-lg border bg-white p-4">
-                  <h2 className="font-semibold text-gray-900 mb-2">Por estado</h2>
-                  <ul className="space-y-1 text-sm">
-                    {report.byStatus.map((row) => (
-                      <li key={row.status} className="flex justify-between border-b pb-1">
-                        <span>{loanStatusLabels[row.status] || row.status}</span>
-                        <span>{row.count}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="rounded-lg border bg-white p-4">
-                  <h2 className="font-semibold text-gray-900 mb-2">Top solicitantes</h2>
-                  <ul className="space-y-1 text-sm">
-                    {report.topRequesters.map((row) => (
-                      <li key={row.user_id} className="flex justify-between border-b pb-1">
-                        <span>{row.user_name}</span>
-                        <span>{row.count}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </PageWrapper>
     </>

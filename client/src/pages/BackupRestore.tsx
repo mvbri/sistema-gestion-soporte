@@ -188,23 +188,20 @@ export const BackupRestore: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Respaldo y Restauración de Base de Datos
-            </h1>
-            <p className="text-gray-600">
-              Gestiona los respaldos de la base de datos del sistema
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="mb-6">
+              <h1 className="page-heading">Respaldo y restauración</h1>
+              <p className="page-subheading">Gestiona los respaldos de la base de datos del sistema.</p>
+            </header>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Sección: Generar Respaldo */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-100 rounded-full p-3 mr-4">
+            <div className="card relative overflow-hidden before:absolute before:inset-0 before:bg-slate-950/25 before:content-['']">
+              <div className="relative z-10 flex items-center mb-4">
+                <div className="rounded-2xl bg-sky-500/15 border border-sky-400/25 p-3 mr-4">
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className="w-6 h-6 text-sky-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -217,17 +214,17 @@ export const BackupRestore: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
                   Generar Respaldo
                 </h2>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="relative z-10 text-sm text-blue-100/80 mb-6">
                 Crea un respaldo completo de la base de datos. El archivo se descargará automáticamente.
               </p>
               <button
                 onClick={handleGenerateBackup}
                 disabled={generateBackupMutation.isPending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="relative z-10 btn-primary w-full"
               >
                 {generateBackupMutation.isPending ? (
                   <>
@@ -275,11 +272,11 @@ export const BackupRestore: React.FC = () => {
             </div>
 
             {/* Sección: Restaurar desde archivo */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-green-100 rounded-full p-3 mr-4">
+            <div className="card relative overflow-hidden before:absolute before:inset-0 before:bg-slate-950/25 before:content-['']">
+              <div className="relative z-10 flex items-center mb-4">
+                <div className="rounded-2xl bg-emerald-500/15 border border-emerald-400/25 p-3 mr-4">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-6 h-6 text-emerald-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -292,20 +289,20 @@ export const BackupRestore: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
                   Restaurar desde archivo
                 </h2>
               </div>
-              <p className="text-gray-600 mb-4">
+              <p className="relative z-10 text-sm text-blue-100/80 mb-4">
                 Restaura la base de datos desde un archivo de respaldo .sql.
               </p>
               
               {/* Advertencia mejorada */}
-              <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-r-lg p-4 shadow-sm">
+              <div className="relative z-10 mb-6 rounded-2xl border border-amber-400/35 bg-amber-500/10 p-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <svg
-                      className="h-6 w-6 text-amber-500"
+                      className="h-6 w-6 text-amber-200"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -317,10 +314,10 @@ export const BackupRestore: React.FC = () => {
                     </svg>
                   </div>
                   <div className="ml-3 flex-1">
-                    <h3 className="text-sm font-semibold text-amber-800 mb-2">
-                      ⚠️ Advertencia Importante
+                    <h3 className="text-sm font-semibold text-amber-100 mb-2">
+                      Advertencia importante
                     </h3>
-                    <div className="text-sm text-amber-700 space-y-1.5">
+                    <div className="text-xs sm:text-sm text-amber-100/80 space-y-1.5">
                       <p className="flex items-start">
                         <span className="font-semibold mr-2">•</span>
                         <span>Esta acción <strong>sobrescribirá todos los datos actuales</strong> de la base de datos.</span>
@@ -338,11 +335,11 @@ export const BackupRestore: React.FC = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleRestoreBackup}>
+              <form onSubmit={handleRestoreBackup} className="relative z-10">
                 <div className="mb-4">
                   <label
                     htmlFor="backupFile"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="label-field"
                   >
                     Seleccionar archivo de respaldo (.sql)
                   </label>
@@ -351,13 +348,13 @@ export const BackupRestore: React.FC = () => {
                     id="backupFile"
                     accept=".sql"
                     onChange={handleFileChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="input-field w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-800/80 file:text-slate-100 file:shadow-sm hover:file:bg-slate-700/90 cursor-pointer"
                   />
                   {selectedFile && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Archivo seleccionado: <span className="font-medium">{selectedFile.name}</span>
+                    <p className="mt-2 text-xs sm:text-sm text-blue-100/80">
+                      Archivo seleccionado: <span className="font-semibold text-white">{selectedFile.name}</span>
                       <br />
-                      <span className="text-gray-500">
+                      <span className="text-blue-100/60">
                         Tamaño: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </span>
                     </p>
@@ -366,7 +363,7 @@ export const BackupRestore: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!selectedFile || restoreBackupMutation.isPending}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="btn-danger w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {restoreBackupMutation.isPending ? (
                     <>
@@ -416,12 +413,12 @@ export const BackupRestore: React.FC = () => {
           </div>
 
           {/* Lista de Respaldos */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <div className="bg-purple-100 rounded-full p-3 mr-4">
+          <div className="card">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-violet-500/15 border border-violet-400/25 p-3">
                   <svg
-                    className="w-6 h-6 text-purple-600"
+                    className="w-6 h-6 text-violet-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -434,13 +431,14 @@ export const BackupRestore: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Respaldos Disponibles
-                </h2>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Respaldos disponibles</h2>
+                  <p className="text-xs text-blue-100/70">Busca, ordena y descarga/restaura desde la lista.</p>
+                </div>
               </div>
               <button
                 onClick={() => refetchBackups()}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="btn-secondary w-full sm:w-auto"
               >
                 Actualizar
               </button>
@@ -448,40 +446,33 @@ export const BackupRestore: React.FC = () => {
 
             {/* Filtros y Búsqueda */}
             <div className="mb-6 space-y-4">
-              <form onSubmit={handleSearch} className="flex gap-3">
-                <div className="flex-1 relative">
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg className="w-4 h-4 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Buscar</span>
+                  </label>
+                  <div className="flex min-w-0 shadow-sm">
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar por nombre de archivo..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field flex-1 min-w-0 rounded-l-xl rounded-r-none border-r-0"
                   />
-                  <svg
-                    className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+                  <button type="submit" className="btn-primary px-5 py-2.5 rounded-l-none rounded-r-xl flex-shrink-0">
+                    Buscar
+                  </button>
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Buscar
-                </button>
+
                 {(search || orderBy !== 'created_at' || orderDirection !== 'DESC') && (
                   <button
                     type="button"
                     onClick={handleClearFilters}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                    className="btn-secondary flex items-center justify-center gap-2"
                   >
                     <ClearFiltersIcon className="w-5 h-5" />
                     Limpiar
@@ -490,17 +481,15 @@ export const BackupRestore: React.FC = () => {
               </form>
 
               {/* Ordenamiento */}
-              <div className="flex items-center gap-4 text-sm">
-                <span className="text-gray-600 font-medium">Ordenar por:</span>
-                <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm">
+                <span className="text-blue-100/70 font-medium">Ordenar por:</span>
+                <div className="flex flex-wrap gap-2">
                   {(['filename', 'size', 'created_at'] as const).map((field) => (
                     <button
                       key={field}
                       onClick={() => handleSort(field)}
-                      className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${
-                        orderBy === field
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      className={`btn-secondary px-3 py-1.5 rounded-lg text-xs sm:text-sm ${
+                        orderBy === field ? 'border-sky-300/60' : 'border-sky-400/25'
                       }`}
                     >
                       {field === 'filename' && 'Nombre'}
@@ -528,47 +517,33 @@ export const BackupRestore: React.FC = () => {
             </div>
 
             {loadingBackups ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="mt-2 text-gray-600">Cargando respaldos...</p>
-                </div>
+              <div className="py-10 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando respaldos…</p>
               </div>
             ) : backups.length === 0 ? (
-              <div className="text-center py-12">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <p className="mt-4 text-gray-500">
-                  {search ? 'No se encontraron respaldos con ese criterio de búsqueda' : 'No hay respaldos disponibles'}
+              <div className="py-10 text-center">
+                <p className="text-blue-100/80">
+                  {search ? 'No se encontraron respaldos con ese criterio de búsqueda.' : 'No hay respaldos disponibles.'}
                 </p>
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="card !p-0 overflow-hidden">
+                  <div className="tickets-list-light overflow-x-auto bg-white/95">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Archivo
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Tamaño
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Fecha de Creación
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
@@ -582,8 +557,8 @@ export const BackupRestore: React.FC = () => {
                           modified_at: backup.modified_at || backup.created_at
                         };
                         return (
-                        <tr key={backup.filename} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
+                        <tr key={backup.filename} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <svg
                                 className="h-5 w-5 text-gray-400 mr-2"
@@ -603,17 +578,17 @@ export const BackupRestore: React.FC = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-600">
                             {formatFileSize(backup.size)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-600">
                             {formatDate(backup.created_at)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex items-center justify-end gap-3">
                               <button
                                 onClick={() => handleDownloadBackup(backup.filename)}
-                                className="text-blue-600 hover:text-blue-900 font-medium flex items-center"
+                                className="text-blue-600 hover:underline font-medium flex items-center"
                                 title="Descargar respaldo"
                               >
                                 <svg
@@ -634,7 +609,7 @@ export const BackupRestore: React.FC = () => {
                               <button
                                 onClick={() => handleRestoreFromList(backupFile)}
                                 disabled={restoreBackupFromFileMutation.isPending}
-                                className="text-green-600 hover:text-green-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                className="text-emerald-700 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                                 title="Restaurar desde este respaldo"
                               >
                                 <svg
@@ -659,12 +634,13 @@ export const BackupRestore: React.FC = () => {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </div>
 
                 {/* Paginación */}
                 {pagination.totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-                    <div className="flex items-center text-sm text-gray-700">
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-xs sm:text-sm text-blue-50/90">
                       <span>
                         Mostrando <span className="font-medium">{(page - 1) * limit + 1}</span> a{' '}
                         <span className="font-medium">{Math.min(page * limit, pagination.total)}</span> de{' '}
@@ -675,7 +651,7 @@ export const BackupRestore: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(page - 1)}
                         disabled={page === 1}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Anterior
                       </button>
@@ -694,11 +670,7 @@ export const BackupRestore: React.FC = () => {
                                   <span className="px-2 py-2 text-gray-500">...</span>
                                   <button
                                     onClick={() => handlePageChange(p)}
-                                    className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                                      page === p
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                    }`}
+                                    className={`btn-secondary px-3 py-1.5 text-xs sm:text-sm ${page === p ? 'border-sky-300/60' : ''}`}
                                   >
                                     {p}
                                   </button>
@@ -709,11 +681,7 @@ export const BackupRestore: React.FC = () => {
                               <button
                                 key={p}
                                 onClick={() => handlePageChange(p)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                                  page === p
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                }`}
+                                className={`btn-secondary px-3 py-1.5 text-xs sm:text-sm ${page === p ? 'border-sky-300/60' : ''}`}
                               >
                                 {p}
                               </button>
@@ -723,7 +691,7 @@ export const BackupRestore: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(page + 1)}
                         disabled={page === pagination.totalPages}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Siguiente
                       </button>
@@ -732,6 +700,7 @@ export const BackupRestore: React.FC = () => {
                 )}
               </>
             )}
+          </div>
           </div>
         </div>
       </PageWrapper>

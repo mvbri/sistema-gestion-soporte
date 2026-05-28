@@ -9,8 +9,10 @@ import { EditIcon } from '../components/icons/EditIcon';
 import { DeleteIcon } from '../components/icons/DeleteIcon';
 import { ToggleIcon } from '../components/icons/ToggleIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
+import { ClearFiltersIcon } from '../components/icons/ClearFiltersIcon';
 import type { User } from '../types';
 import type { UsersFilters, UpdateUserData, UsersResponse } from '../services/adminService';
+import formStyles from '../styles/modules/forms.module.css';
 
 export const AdminUsers: React.FC = () => {
   const { user } = useAuth();
@@ -71,13 +73,18 @@ export const AdminUsers: React.FC = () => {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearch(searchTerm || undefined);
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  const handleSearch = () => {
+    setSearch(searchTerm || undefined);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSearch(undefined);
+    setActiveFilter(undefined);
+    setRoleFilter(undefined);
+    setPage(1);
+  };
 
   const handleCreateUser = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -231,7 +238,8 @@ export const AdminUsers: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="page-heading">Gestión de Usuarios</h1>
@@ -250,52 +258,52 @@ export const AdminUsers: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="stat-card border-sky-400/35">
+            <div className="stat-card stat-card--sky">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-sky-200/85 mb-1">Total Usuarios</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{pagination.total}</p>
+                  <p className="stat-card-title">Total Usuarios</p>
+                  <p className="stat-card-value">{pagination.total}</p>
                 </div>
-                <div className="stat-card-icon bg-sky-500/25 border-sky-400/40 text-sky-300">
+                <div className="stat-card-icon stat-card-icon--sky">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
               </div>
             </div>
-            <div className="stat-card border-emerald-400/35">
+            <div className="stat-card stat-card--emerald">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-emerald-200/85 mb-1">Usuarios Activos</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{activeUsersCount}</p>
+                  <p className="stat-card-title">Usuarios Activos</p>
+                  <p className="stat-card-value">{activeUsersCount}</p>
                 </div>
-                <div className="stat-card-icon bg-emerald-500/25 border-emerald-400/40 text-emerald-300">
+                <div className="stat-card-icon stat-card-icon--emerald">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
             </div>
-            <div className="stat-card border-red-400/35">
+            <div className="stat-card stat-card--amber">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-red-200/85 mb-1">Usuarios Inactivos</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{inactiveUsersCount}</p>
+                  <p className="stat-card-title">Usuarios Inactivos</p>
+                  <p className="stat-card-value">{inactiveUsersCount}</p>
                 </div>
-                <div className="stat-card-icon bg-red-500/25 border-red-400/40 text-red-300">
+                <div className="stat-card-icon stat-card-icon--amber">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
             </div>
-            <div className="stat-card border-violet-400/35">
+            <div className="stat-card stat-card--violet">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-violet-200/85 mb-1">Emails Verificados</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{verifiedUsersCount}</p>
+                  <p className="stat-card-title">Emails Verificados</p>
+                  <p className="stat-card-value">{verifiedUsersCount}</p>
                 </div>
-                <div className="stat-card-icon bg-violet-500/25 border-violet-400/40 text-violet-300">
+                <div className="stat-card-icon stat-card-icon--violet">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -304,119 +312,223 @@ export const AdminUsers: React.FC = () => {
             </div>
           </div>
 
-          <div className="content-panel">
-            <h2 className="text-base sm:text-lg font-semibold text-white mb-4">Filtros de Búsqueda</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
+          <div className="content-panel mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-5">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  />
+                </svg>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Filtros de Búsqueda</h2>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm whitespace-nowrap"
+                aria-label="Limpiar todos los filtros"
+              >
+                <ClearFiltersIcon className="w-4 h-4" />
+                <span>Limpiar</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              <div className="min-w-0">
                 <label className="label-field flex items-center gap-2 !mb-2">
-                  <svg className="w-4 h-4 text-sky-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="w-4 h-4 text-sky-300 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
-                  Buscar
+                  <span>Buscar</span>
                 </label>
-                <div className="relative">
+                <div className="flex min-w-0 shadow-sm">
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      if (value === '') {
+                        setSearch(undefined);
+                        setPage(1);
+                      }
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Nombre o email..."
-                    className="input-field w-full pl-10"
+                    className="input-field flex-1 min-w-0 rounded-l-xl rounded-r-none border-r-0"
                   />
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    className="btn-primary px-5 py-2.5 rounded-l-none rounded-r-xl flex-shrink-0"
+                    aria-label="Buscar usuarios"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="label-field flex items-center gap-2 !mb-2">
-                  <svg className="w-4 h-4 text-emerald-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-4 h-4 text-emerald-300 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
-                  Estado
+                  <span>Estado</span>
                 </label>
-                <select
-                  value={activeFilter === undefined ? '' : activeFilter ? 'true' : 'false'}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setActiveFilter(value === '' ? undefined : value === 'true');
-                    setPage(1);
-                  }}
-                  className="input-field w-full"
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Activos</option>
-                  <option value="false">Inactivos</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={activeFilter === undefined ? '' : activeFilter ? 'true' : 'false'}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setActiveFilter(value === '' ? undefined : value === 'true');
+                      setPage(1);
+                    }}
+                    className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
+                  >
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="label-field flex items-center gap-2 !mb-2">
-                  <svg className="w-4 h-4 text-violet-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-4 h-4 text-violet-300 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
-                  Rol
+                  <span>Rol</span>
                 </label>
-                <select
-                  value={roleFilter || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setRoleFilter(value === '' ? undefined : Number(value));
-                    setPage(1);
-                  }}
-                  className="input-field w-full"
-                >
-                  <option value="">Todos</option>
-                  <option value="1">Administrador</option>
-                  <option value="2">Técnico</option>
-                  <option value="3">Usuario Final</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={roleFilter || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setRoleFilter(value === '' ? undefined : Number(value));
+                      setPage(1);
+                    }}
+                    className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
+                  >
+                    <option value="">Todos</option>
+                    <option value="1">Administrador</option>
+                    <option value="2">Técnico</option>
+                    <option value="3">Usuario Final</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {showCreateForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Crear Usuario</h2>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+              <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Crear usuario</h2>
                     <button
+                      type="button"
                       onClick={() => {
                         setShowCreateForm(false);
                         setShowCreatePassword(false);
                       }}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
+                      aria-label="Cerrar"
                     >
                       ✕
                     </button>
                   </div>
                   <form onSubmit={handleCreateUser} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre Completo *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Nombre completo
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
                       <input
                         type="text"
                         name="full_name"
                         required
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="Juan Pérez"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Email
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
                       <input
                         type="email"
                         name="email"
                         required
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="usuario@email.com"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Contraseña *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Contraseña
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
                       <div className="relative">
                         <input
@@ -424,13 +536,13 @@ export const AdminUsers: React.FC = () => {
                           name="password"
                           required
                           minLength={8}
-                          className="input-field w-full pr-10"
+                          className="input-dark w-full pr-10"
                           placeholder="Mínimo 8 caracteres"
                         />
                         <button
                           type="button"
                           onClick={() => setShowCreatePassword(!showCreatePassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-150"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-sky-200/70 transition-colors hover:text-white"
                           aria-label={showCreatePassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                         >
                           {showCreatePassword ? (
@@ -470,26 +582,35 @@ export const AdminUsers: React.FC = () => {
                           )}
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="mt-1.5 text-xs text-blue-100/70">
                         Mínimo 8 caracteres, una mayúscula, una minúscula y un número
                       </p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
                         Teléfono
+                        <span className="font-normal text-blue-100/50"> (opcional)</span>
                       </label>
                       <input
                         type="tel"
                         name="phone"
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="+1234567890"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dirección *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Dirección
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
-                      <select name="incident_area_id" required className="input-field w-full">
+                      <select
+                        name="incident_area_id"
+                        required
+                        className={`input-dark ${formStyles.selectField}`}
+                      >
                         <option value="">Selecciona una dirección</option>
                         {direcciones.map((dir) => (
                           <option key={dir.id} value={dir.id}>
@@ -498,75 +619,85 @@ export const AdminUsers: React.FC = () => {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Rol *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Rol
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
-                      <select name="role_id" required className="input-field w-full" defaultValue={3}>
+                      <select
+                        name="role_id"
+                        required
+                        className={`input-dark ${formStyles.selectField}`}
+                        defaultValue={3}
+                      >
                         <option value={1}>Administrador</option>
                         <option value={2}>Técnico</option>
                         <option value={3}>Usuario Final</option>
                       </select>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         name="active"
                         id="active"
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        className="rounded border-sky-400/40 bg-slate-900/50 text-sky-500 focus:ring-sky-400/50"
                       />
-                      <label htmlFor="active" className="ml-2 text-sm text-gray-700">
+                      <label htmlFor="active" className="text-sm text-blue-100/85">
                         Usuario activo
                       </label>
                     </div>
-                    <div className="flex justify-end gap-3 pt-4">
+                    <footer className="flex flex-col-reverse gap-3 border-t border-sky-400/20 pt-5 sm:flex-row sm:justify-end">
                       <button
                         type="button"
                         onClick={() => {
                           setShowCreateForm(false);
                           setShowCreatePassword(false);
                         }}
-                        className="btn-secondary"
+                        className="btn-secondary w-full sm:w-auto"
                       >
                         Cancelar
                       </button>
-                      <button type="submit" className="btn-primary" disabled={createUserMutation.isPending}>
-                        {createUserMutation.isPending ? 'Creando...' : 'Crear Usuario'}
+                      <button
+                        type="submit"
+                        className="btn-primary w-full sm:w-auto sm:min-w-[10rem]"
+                        disabled={createUserMutation.isPending}
+                      >
+                        {createUserMutation.isPending ? 'Creando…' : 'Crear usuario'}
                       </button>
-                    </div>
+                    </footer>
                   </form>
-                </div>
               </div>
             </div>
           )}
 
           {userToToggle && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  {userToToggle.active ? 'Desactivar Usuario' : 'Activar Usuario'}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+              <div className="card w-full max-w-md !p-6">
+                <h3 className="mb-4 text-lg font-semibold text-white">
+                  {userToToggle.active ? 'Desactivar usuario' : 'Activar usuario'}
                 </h3>
-                <p className="text-gray-700 mb-6">
+                <p className="mb-6 text-blue-100/85">
                   ¿Estás seguro de que deseas {userToToggle.active ? 'desactivar' : 'activar'} a{' '}
-                  <strong>{userToToggle.full_name}</strong> ({userToToggle.email})?
+                  <strong className="text-white">{userToToggle.full_name}</strong> ({userToToggle.email})?
                 </p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setUserToToggle(null)}
-                    className="btn-secondary"
-                  >
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={() => setUserToToggle(null)} className="btn-secondary w-full sm:w-auto">
                     Cancelar
                   </button>
                   <button
+                    type="button"
                     onClick={confirmToggleStatus}
-                    className={userToToggle.active ? 'btn-warning' : 'btn-primary'}
+                    className={userToToggle.active ? 'btn-warning w-full sm:w-auto' : 'btn-primary w-full sm:w-auto'}
                     disabled={updateUserStatusMutation.isPending}
                   >
                     {updateUserStatusMutation.isPending
-                      ? 'Procesando...'
+                      ? 'Procesando…'
                       : userToToggle.active
-                      ? 'Desactivar'
-                      : 'Activar'}
+                        ? 'Desactivar'
+                        : 'Activar'}
                   </button>
                 </div>
               </div>
@@ -574,64 +705,74 @@ export const AdminUsers: React.FC = () => {
           )}
 
           {showEditForm && userToEdit && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Editar Usuario</h2>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+              <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Editar usuario</h2>
                     <button
+                      type="button"
                       onClick={() => {
                         setShowEditForm(false);
                         setShowEditPassword(false);
                         setUserToEdit(null);
                       }}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
+                      aria-label="Cerrar"
                     >
                       ✕
                     </button>
                   </div>
                   <form onSubmit={handleUpdateUser} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre Completo *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Nombre completo
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
                       <input
                         type="text"
                         name="full_name"
                         required
                         defaultValue={userToEdit.full_name}
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="Juan Pérez"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Email
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
                       <input
                         type="email"
                         name="email"
                         required
                         defaultValue={userToEdit.email}
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="usuario@email.com"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Contraseña (dejar vacío para no cambiar)
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Contraseña
+                        <span className="font-normal text-blue-100/50"> (opcional)</span>
                       </label>
                       <div className="relative">
                         <input
                           type={showEditPassword ? 'text' : 'password'}
                           name="password"
-                          className="input-field w-full pr-10"
-                          placeholder="Nueva contraseña (opcional)"
+                          className="input-dark w-full pr-10"
+                          placeholder="Nueva contraseña"
                         />
                         <button
                           type="button"
                           onClick={() => setShowEditPassword(!showEditPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-150"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-sky-200/70 transition-colors hover:text-white"
                           aria-label={showEditPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                         >
                           {showEditPassword ? (
@@ -671,27 +812,37 @@ export const AdminUsers: React.FC = () => {
                           )}
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="mt-1.5 text-xs text-blue-100/70">
                         Mínimo 8 caracteres, una mayúscula, una minúscula y un número
                       </p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
                         Teléfono
+                        <span className="font-normal text-blue-100/50"> (opcional)</span>
                       </label>
                       <input
                         type="tel"
                         name="phone"
                         defaultValue={userToEdit.phone || ''}
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="+1234567890"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dirección *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Dirección
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
-                      <select name="incident_area_id" required className="input-field w-full" defaultValue={userToEdit.incident_area_id || ''}>
+                      <select
+                        name="incident_area_id"
+                        required
+                        className={`input-dark ${formStyles.selectField}`}
+                        defaultValue={userToEdit.incident_area_id || ''}
+                      >
                         <option value="">Selecciona una dirección</option>
                         {direcciones.map((dir) => (
                           <option key={dir.id} value={dir.id}>
@@ -700,29 +851,38 @@ export const AdminUsers: React.FC = () => {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Rol *
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Rol
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
                       </label>
-                      <select name="role_id" required className="input-field w-full" defaultValue={getRoleId(userToEdit.role)}>
+                      <select
+                        name="role_id"
+                        required
+                        className={`input-dark ${formStyles.selectField}`}
+                        defaultValue={getRoleId(userToEdit.role)}
+                      >
                         <option value={1}>Administrador</option>
                         <option value={2}>Técnico</option>
                         <option value={3}>Usuario Final</option>
                       </select>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         name="active"
                         id="edit-active"
                         defaultChecked={userToEdit.active}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        className="rounded border-sky-400/40 bg-slate-900/50 text-sky-500 focus:ring-sky-400/50"
                       />
-                      <label htmlFor="edit-active" className="ml-2 text-sm text-gray-700">
+                      <label htmlFor="edit-active" className="text-sm text-blue-100/85">
                         Usuario activo
                       </label>
                     </div>
-                    <div className="flex justify-end gap-3 pt-4">
+                    <footer className="flex flex-col-reverse gap-3 border-t border-sky-400/20 pt-5 sm:flex-row sm:justify-end">
                       <button
                         type="button"
                         onClick={() => {
@@ -730,87 +890,77 @@ export const AdminUsers: React.FC = () => {
                           setShowEditPassword(false);
                           setUserToEdit(null);
                         }}
-                        className="btn-secondary"
+                        className="btn-secondary w-full sm:w-auto"
                       >
                         Cancelar
                       </button>
-                      <button type="submit" className="btn-primary" disabled={updateUserMutation.isPending}>
-                        {updateUserMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
+                      <button
+                        type="submit"
+                        className="btn-primary w-full sm:w-auto sm:min-w-[10rem]"
+                        disabled={updateUserMutation.isPending}
+                      >
+                        {updateUserMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
                       </button>
-                    </div>
+                    </footer>
                   </form>
-                </div>
               </div>
             </div>
           )}
 
           {userToDelete && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Eliminar Usuario</h3>
-                <p className="text-gray-700 mb-6">
-                  ¿Estás seguro de que deseas eliminar a <strong>{userToDelete.full_name}</strong> ({userToDelete.email})?
-                  <br />
-                  <span className="text-sm text-red-600 mt-2 block">
-                    Esta acción no se puede deshacer.
-                  </span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+              <div className="card w-full max-w-md !p-6">
+                <h3 className="mb-4 text-lg font-semibold text-white">Eliminar usuario</h3>
+                <p className="mb-6 text-blue-100/85">
+                  ¿Estás seguro de que deseas eliminar a{' '}
+                  <strong className="text-white">{userToDelete.full_name}</strong> ({userToDelete.email})?
+                  <span className="mt-2 block text-sm text-red-300/90">Esta acción no se puede deshacer.</span>
                 </p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setUserToDelete(null)}
-                    className="btn-secondary"
-                  >
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={() => setUserToDelete(null)} className="btn-secondary w-full sm:w-auto">
                     Cancelar
                   </button>
                   <button
+                    type="button"
                     onClick={confirmDeleteUser}
-                    className="btn-danger"
+                    className="btn-danger w-full sm:w-auto"
                     disabled={deleteUserMutation.isPending}
                   >
-                    {deleteUserMutation.isPending ? 'Eliminando...' : 'Eliminar'}
+                    {deleteUserMutation.isPending ? 'Eliminando…' : 'Eliminar'}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="card !p-0 overflow-hidden">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-sky-400 border-t-transparent"></div>
-                <p className="mt-4 text-blue-100/85 font-medium">Cargando usuarios...</p>
-              </div>
-            ) : isError ? (
-              <div className="text-center py-12 px-4">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/20 border border-red-400/40 mb-4">
-                  <svg className="w-7 h-7 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <p className="text-red-200 font-semibold text-lg">Error al cargar usuarios</p>
-                <p className="text-blue-100/70 mt-2">Por favor, intenta de nuevo</p>
-                {error && typeof error === 'object' && 'response' in error && (
-                  <p className="text-sm text-gray-400 mt-2">
-                    {(error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error desconocido'}
-                  </p>
-                )}
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-800/60 border border-sky-400/30 mb-4">
-                  <svg className="w-7 h-7 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <p className="text-white font-semibold text-lg">No se encontraron usuarios</p>
-                <p className="text-sm text-blue-100/75 mt-2">
-                  {pagination.total === 0 
-                    ? 'No hay usuarios registrados en el sistema' 
-                    : 'Intenta ajustar los filtros de búsqueda'}
+          {loading ? (
+            <div className="card py-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+              <p className="mt-3 text-blue-100/85">Cargando usuarios…</p>
+            </div>
+          ) : isError ? (
+            <div className="card py-12 text-center px-4">
+              <p className="text-red-200 font-semibold">Error al cargar usuarios</p>
+              <p className="text-blue-100/80 mt-2">Por favor, intenta de nuevo.</p>
+              {error && typeof error === 'object' && 'response' in error && (
+                <p className="text-sm text-blue-100/60 mt-2">
+                  {(error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+                    'Error desconocido'}
                 </p>
-              </div>
-            ) : (
-              <>
+              )}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="card py-12 text-center px-4">
+              <p className="text-blue-100/80">No se encontraron usuarios.</p>
+              <p className="text-sm text-blue-100/60 mt-2">
+                {pagination.total === 0
+                  ? 'No hay usuarios registrados en el sistema.'
+                  : 'Intenta ajustar los filtros de búsqueda.'}
+              </p>
+            </div>
+          ) : (
+            <>
+          <div className="card !p-0 overflow-hidden">
                 <div className="tickets-list-light overflow-x-auto bg-white/95">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
@@ -913,43 +1063,48 @@ export const AdminUsers: React.FC = () => {
                               : '-'}
                           </td>
                           <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditUser(user)}
-                                className="flex items-center justify-center p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors"
-                                title="Editar usuario"
-                              >
-                                <EditIcon className="h-5 w-5" />
-                              </button>
+                            <div className="flex items-center justify-end flex-wrap gap-2">
                               {!user.email_verified && (
                                 <button
+                                  type="button"
                                   onClick={() => handleVerifyUserEmail(user)}
-                                  className="flex items-center gap-1 px-3 py-1.5 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md transition-colors"
+                                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:from-green-600 hover:to-green-700 disabled:opacity-50 whitespace-nowrap"
                                   title="Verificar email"
                                   disabled={verifyUserEmailMutation.isPending}
                                 >
-                                  <span className="text-sm">✓</span>
-                                  <span className="hidden lg:inline text-sm">Verificar</span>
+                                  {verifyUserEmailMutation.isPending ? '…' : 'Verificar'}
                                 </button>
                               )}
                               <button
+                                type="button"
                                 onClick={() => handleToggleUserStatus(user)}
-                                className={`flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors ${
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-md whitespace-nowrap ${
                                   user.active
-                                    ? 'text-orange-600 hover:text-orange-900 hover:bg-orange-50'
-                                    : 'text-green-600 hover:text-green-900 hover:bg-green-50'
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+                                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
                                 }`}
                                 title={user.active ? 'Desactivar usuario' : 'Activar usuario'}
                               >
-                                <ToggleIcon className="h-4 w-4" active={!user.active} />
-                                <span className="hidden lg:inline text-sm">{user.active ? 'Desactivar' : 'Activar'}</span>
+                                <span className="inline-flex items-center gap-1">
+                                  <ToggleIcon className="h-4 w-4" active={!user.active} />
+                                  <span className="hidden lg:inline">{user.active ? 'Desactivar' : 'Activar'}</span>
+                                </span>
                               </button>
                               <button
+                                type="button"
+                                onClick={() => handleEditUser(user)}
+                                className="group p-2 sm:p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 flex items-center justify-center"
+                                title="Editar usuario"
+                              >
+                                <EditIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => handleDeleteUser(user)}
-                                className="flex items-center justify-center p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                                className="group p-2 sm:p-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md hover:from-red-600 hover:to-red-700 flex items-center justify-center"
                                 title="Eliminar usuario"
                               >
-                                <DeleteIcon className="h-5 w-5" />
+                                <DeleteIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                               </button>
                             </div>
                           </td>
@@ -958,70 +1113,36 @@ export const AdminUsers: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-                {pagination.totalPages > 1 && (
-                  <div className="tickets-list-light bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3 sm:gap-0">
-                    <div className="flex-1 flex justify-between sm:hidden w-full">
-                      <button
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        disabled={page === 1}
-                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Anterior
-                      </button>
-                      <button
-                        onClick={() => setPage(Math.min(pagination.totalPages, page + 1))}
-                        disabled={page === pagination.totalPages}
-                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Siguiente
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-gray-700">
-                          Mostrando <span className="font-semibold">{(page - 1) * limit + 1}</span> a{' '}
-                          <span className="font-semibold">
-                            {Math.min(page * limit, pagination.total)}
-                          </span>{' '}
-                          de <span className="font-semibold">{pagination.total}</span> resultados
-                        </p>
-                      </div>
-                      <div>
-                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                          <button
-                            onClick={() => setPage(Math.max(1, page - 1))}
-                            disabled={page === 1}
-                            className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Anterior
-                          </button>
-                          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
-                            <button
-                              key={pageNum}
-                              onClick={() => setPage(pageNum)}
-                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
-                                pageNum === page
-                                  ? 'z-10 bg-gradient-to-r from-sky-500 to-blue-600 border-sky-500 text-white'
-                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          ))}
-                          <button
-                            onClick={() => setPage(Math.min(pagination.totalPages, page + 1))}
-                            disabled={page === pagination.totalPages}
-                            className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Siguiente
-                          </button>
-                        </nav>
-                      </div>
-                    </div>
+          </div>
+
+              {pagination.totalPages > 1 && (
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-xs sm:text-sm text-blue-50/90 text-center sm:text-left">
+                    Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, pagination.total)} de{' '}
+                    {pagination.total} usuarios
                   </div>
-                )}
-              </>
-            )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPage(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPage(Math.min(pagination.totalPages, page + 1))}
+                      disabled={page === pagination.totalPages}
+                      className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
           </div>
         </div>
       </PageWrapper>

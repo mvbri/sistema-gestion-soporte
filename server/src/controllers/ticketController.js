@@ -82,6 +82,10 @@ export const createTicket = async (req, res) => {
             equipment_ids
         } = req.body;
 
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'T1',location:'ticketController.js:createTicket:entry',message:'createTicket reached',data:{userId:req.user?.id,role:req.user?.role,hasTitle:Boolean(title),hasDescription:Boolean(description),categoryIdType:typeof category_id,priorityIdType:typeof priority_id,equipmentIdsType:typeof equipment_ids,hasFiles:Array.isArray(req.files)?req.files.length:0,hasCloudinary:Array.isArray(req.cloudinaryImageUrls)?req.cloudinaryImageUrls.length:0,hasImagenUrl:Boolean(req.body?.imagen_url)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
         // Obtener dirección del usuario que crea el ticket
         const currentUser = await Usuario.findById(req.user.id);
         if (!currentUser || !currentUser.incident_area_id) {
@@ -92,6 +96,10 @@ export const createTicket = async (req, res) => {
                 400
             );
         }
+
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'T2',location:'ticketController.js:createTicket:userLoaded',message:'current user loaded for createTicket',data:{userId:req.user?.id,incidentAreaId:currentUser?.incident_area_id},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
 
         const imagenes = buildTicketImagesFromRequest(req);
         const image_url = imagenes.length > 0 ? JSON.stringify(imagenes) : null;
@@ -120,6 +128,10 @@ export const createTicket = async (req, res) => {
             equipment_ids: parsedEquipmentIds
         });
 
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'T3',location:'ticketController.js:createTicket:created',message:'ticket created',data:{ticketId:ticket?.id,hasEquipment:Array.isArray(parsedEquipmentIds)?parsedEquipmentIds.length:0,hasImages:imagenes.length},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
         await TicketHistorial.create({
             ticket_id: ticket.id,
             user_id: req.user.id,
@@ -130,6 +142,10 @@ export const createTicket = async (req, res) => {
         sendSuccess(res, 'Ticket creado exitosamente', ticket, 201);
     } catch (error) {
         console.error('Error al crear ticket:', error);
+        const root = error?.cause ?? error;
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'T4',location:'ticketController.js:createTicket:catch',message:'createTicket failed',data:{code:root?.code??error?.code,errno:root?.errno??error?.errno,sqlState:root?.sqlState??error?.sqlState,message:(root?.message||error?.message||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         sendError(res, 'Error al crear ticket', null, 500);
     }
 };

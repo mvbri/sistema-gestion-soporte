@@ -81,26 +81,25 @@ export const ToolsList: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="flex justify-between items-center mb-6">
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Inventario de Herramientas</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="page-heading">Inventario de herramientas</h1>
+                <p className="page-subheading">
                   Gestiona herramientas como destornilladores, cables, probadores de red y otros insumos de trabajo.
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
-                {canCreate && (
-                  <button
-                    onClick={() => navigate('/tools/crear')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Crear Herramienta
-                  </button>
-                )}
-              </div>
-            </div>
+              {canCreate && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/tools/crear')}
+                  className="btn-primary w-full sm:w-auto whitespace-nowrap"
+                >
+                  Crear herramienta
+                </button>
+              )}
+            </header>
 
             {(canEdit || canDelete) && (
               <ToolFiltersComponent
@@ -117,15 +116,14 @@ export const ToolsList: React.FC = () => {
             )}
 
             {loadingTools ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="mt-2 text-gray-600">Cargando herramientas...</p>
-                </div>
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando herramientas…</p>
               </div>
             ) : tools.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No se encontraron herramientas</p>
+              <div className="card py-12 text-center px-4">
+                <p className="text-blue-100/80">No se encontraron herramientas.</p>
+                <p className="text-sm text-blue-100/60 mt-2">Intenta ajustar los filtros de búsqueda.</p>
               </div>
             ) : (
               <>
@@ -142,28 +140,37 @@ export const ToolsList: React.FC = () => {
                 </div>
 
                 {pagination.totalPages > 1 && (
-                  <div className="flex justify-center items-center space-x-2">
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-xs sm:text-sm text-blue-50/90">
+                      Mostrando {(pagination.page - 1) * pagination.limit + 1} a{' '}
+                      {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
+                      {pagination.total} herramientas
+                    </div>
+                    <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() =>
                         setFilters((prev: ToolFilters) => ({ ...prev, page: (prev.page || 1) - 1 }))
                       }
                       disabled={pagination.page === 1}
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </button>
-                    <span className="px-4 py-2 text-gray-700">
-                      Página {pagination.page} de {pagination.totalPages}
+                    <span className="flex items-center px-2 text-xs sm:text-sm text-blue-100/75 tabular-nums">
+                      {pagination.page} / {pagination.totalPages}
                     </span>
                     <button
+                      type="button"
                       onClick={() =>
                         setFilters((prev: ToolFilters) => ({ ...prev, page: (prev.page || 1) + 1 }))
                       }
                       disabled={pagination.page === pagination.totalPages}
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
                     </button>
+                    </div>
                   </div>
                 )}
               </>

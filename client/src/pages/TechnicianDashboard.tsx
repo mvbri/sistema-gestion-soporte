@@ -87,12 +87,14 @@ export const TechnicianDashboard: React.FC = () => {
       <>
         <MainNavbar />
         <PageWrapper>
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Cargando tickets...</p>
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-4 sm:py-6">
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando tickets…</p>
+              </div>
+            </div>
           </div>
-        </div>
         </PageWrapper>
       </>
     );
@@ -102,90 +104,103 @@ export const TechnicianDashboard: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Panel del Técnico</h1>
-          <p className="mt-2 text-gray-600">Gestiona tus tickets asignados</p>
-        </div>
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="mb-6">
+              <h1 className="page-heading">Panel del técnico</h1>
+              <p className="page-subheading">Gestiona tus tickets asignados.</p>
+            </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">Todos</div>
-            <div className="text-3xl font-bold text-gray-700">
-              {allTickets.length}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className="stat-card stat-card--sky">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">Todos</p>
+                    <p className="stat-card-value">{allTickets.length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--sky">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card stat-card--sky">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">Abiertos</p>
+                    <p className="stat-card-value">{allTickets.filter((t) => t.state_id === 1).length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--sky">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card stat-card--amber">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">Asignados</p>
+                    <p className="stat-card-value">{allTickets.filter((t) => t.state_id === 2).length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--amber">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card stat-card--amber">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">En proceso</p>
+                    <p className="stat-card-value">{allTickets.filter((t) => t.state_id === 3).length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--amber">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card stat-card--emerald">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">Resueltos</p>
+                    <p className="stat-card-value">{allTickets.filter((t) => t.state_id === 4).length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--emerald">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card stat-card--violet">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="stat-card-title">Cerrados</p>
+                    <p className="stat-card-value">{allTickets.filter((t) => t.state_id === 5).length}</p>
+                  </div>
+                  <div className="stat-card-icon stat-card-icon--violet">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">Abiertos</div>
-            <div className="text-3xl font-bold text-gray-700">
-              {allTickets.filter(t => t.state_id === 1).length}
-            </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">Asignados</div>
-            <div className="text-3xl font-bold text-gray-700">
-              {allTickets.filter(t => t.state_id === 2).length}
-            </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">En Proceso</div>
-            <div className="text-3xl font-bold text-gray-700">
-              {allTickets.filter(t => t.state_id === 3).length}
-            </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">Resueltos</div>
-            <div className="text-3xl font-bold text-green-600">
-              {allTickets.filter(t => t.state_id === 4).length}
-            </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-700 mb-4">Cerrados</div>
-            <div className="text-3xl font-bold text-gray-700">
-              {allTickets.filter(t => t.state_id === 5).length}
-            </div>
-            <div className="absolute top-1/2 right-6 -translate-y-1/2 flex items-center justify-center">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl p-6 mb-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
+            <div className="content-panel mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-5">
+                <div className="flex items-center gap-2">
               <svg
-                className="w-6 h-6 text-blue-600"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                    aria-hidden
               >
                 <path
                   strokeLinecap="round"
@@ -194,12 +209,12 @@ export const TechnicianDashboard: React.FC = () => {
                   d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                 />
               </svg>
-              <h2 className="text-xl font-semibold text-gray-800">Filtros de Búsqueda</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Filtros de Búsqueda</h2>
             </div>
             <button
               type="button"
               onClick={handleClearFilters}
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
+                  className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm whitespace-nowrap"
               aria-label="Limpiar todos los filtros"
               title="Limpiar filtros"
             >
@@ -208,14 +223,15 @@ export const TechnicianDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div className="min-w-0">
-              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                  <label className="label-field flex items-center gap-2 !mb-2">
                 <svg
-                  className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-sky-300 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                      aria-hidden
                 >
                   <path
                     strokeLinecap="round"
@@ -239,17 +255,18 @@ export const TechnicianDashboard: React.FC = () => {
                   }}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Título o descripción..."
-                  className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      className="input-field flex-1 min-w-0 rounded-l-xl rounded-r-none border-r-0"
                 />
                 <button
                   onClick={handleSearch}
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-r-lg hover:from-blue-700 hover:to-blue-800 flex-shrink-0 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                      className="btn-primary px-5 py-2.5 rounded-l-none rounded-r-xl flex-shrink-0"
                 >
                   <svg
                     className="w-5 h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                        aria-hidden
                   >
                     <path
                       strokeLinecap="round"
@@ -263,12 +280,13 @@ export const TechnicianDashboard: React.FC = () => {
             </div>
 
             <div className="min-w-0">
-              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                  <label className="label-field flex items-center gap-2 !mb-2">
                 <svg
-                  className="w-4 h-4 text-green-600"
+                      className="w-4 h-4 text-emerald-300 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                      aria-hidden
                 >
                   <path
                     strokeLinecap="round"
@@ -283,7 +301,7 @@ export const TechnicianDashboard: React.FC = () => {
                 <select
                   value={filters.estado_id || ''}
                   onChange={(e) => handleFilterChange('estado_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full min-w-0 px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                      className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
                 >
                   <option value="">Todos</option>
                   {estados.map((estado) => (
@@ -298,6 +316,7 @@ export const TechnicianDashboard: React.FC = () => {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                        aria-hidden
                   >
                     <path
                       strokeLinecap="round"
@@ -312,150 +331,138 @@ export const TechnicianDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ticket
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prioridad
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      No hay tickets disponibles
-                    </td>
-                  </tr>
-                ) : (
-                  tickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <button
-                            onClick={() => navigate(`/tickets/${ticket.id}`)}
-                            className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150 hover:underline"
-                          >
-                            {ticket.title}
-                          </button>
-                          <p className="text-sm text-gray-500">ID: {ticket.id.substring(0, 8)}...</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge
-                          estado={ticket.state_name || ''}
-                          colorOverride={ticket.state_color}
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <PriorityBadge
-                          prioridad={ticket.priority_name || ''}
-                          colorOverride={ticket.priority_color}
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <CategoryBadge categoria={ticket.category_name || ''} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(ticket.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          {(ticket.state_id || ticket.estado_id) === 2 && (
-                            <button
-                              onClick={() => handleStartProgress(ticket.id)}
-                              disabled={startProgressMutation.isPending}
-                              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md transition-all duration-200 ease-in-out"
-                            >
-                              Iniciar Progreso
-                            </button>
-                          )}
-                          {(ticket.state_id || ticket.estado_id) === 3 && (
-                            <button
-                              onClick={() => handleMarkAsResolved(ticket.id)}
-                              disabled={markAsResolvedMutation.isPending}
-                              className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium shadow-md hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md transition-all duration-200 ease-in-out"
-                            >
-                              Marcar Resuelto
-                            </button>
-                          )}
-                          <button
-                            onClick={() => navigate(`/tickets/${ticket.id}`)}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out"
-                          >
-                            Ver Detalle
-                          </button>
-                          <button
-                            onClick={() => navigate(`/tickets/${ticket.id}/editar`)}
-                            className="group p-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out flex items-center justify-center"
-                            title="Editar"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 transition-all duration-200 ease-in-out group-hover:scale-110 group-hover:rotate-12"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
+            <div className="card !p-0 overflow-hidden">
+              <div className="tickets-list-light overflow-x-auto bg-white/95">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Ticket
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Estado
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Prioridad
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Categoría
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Fecha
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Acciones
+                      </th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tickets.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 sm:px-6 py-8 text-center text-gray-500">
+                          No hay tickets disponibles
+                        </td>
+                      </tr>
+                    ) : (
+                      tickets.map((ticket) => (
+                        <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                            <div className="min-w-0">
+                              <button
+                                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                                className="text-blue-600 hover:underline font-semibold truncate"
+                              >
+                                {ticket.title}
+                              </button>
+                              <p className="text-xs text-gray-500">ID: {ticket.id.substring(0, 8)}...</p>
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                            <StatusBadge estado={ticket.state_name || ''} colorOverride={ticket.state_color} />
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                            <PriorityBadge prioridad={ticket.priority_name || ''} colorOverride={ticket.priority_color} />
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                            <CategoryBadge categoria={ticket.category_name || ''} />
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-600">
+                            {formatDate(ticket.created_at)}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex flex-wrap gap-2">
+                              {(ticket.state_id || ticket.estado_id) === 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartProgress(ticket.id)}
+                                  disabled={startProgressMutation.isPending}
+                                  className="btn-warning px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
+                                >
+                                  Iniciar progreso
+                                </button>
+                              )}
+                              {(ticket.state_id || ticket.estado_id) === 3 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkAsResolved(ticket.id)}
+                                  disabled={markAsResolvedMutation.isPending}
+                                  className="btn-primary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
+                                >
+                                  Marcar resuelto
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                                className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
+                              >
+                                Ver detalle
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
-              {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} tickets
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! - 1, assigned_technician_id: user?.id }))}
-                disabled={pagination.page === 1}
-                className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => setFilters((prev) => ({ ...prev, page: prev.page! + 1, assigned_technician_id: user?.id }))}
-                disabled={pagination.page >= pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
+            {pagination.totalPages > 1 && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs sm:text-sm text-blue-50/90">
+                  Mostrando {(pagination.page - 1) * pagination.limit + 1} a{' '}
+                  {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} tickets
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, page: prev.page! - 1, assigned_technician_id: user?.id }))
+                    }
+                    disabled={pagination.page === 1}
+                    className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <span className="flex items-center px-2 text-xs sm:text-sm text-blue-100/75 tabular-nums">
+                    {pagination.page} / {pagination.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, page: prev.page! + 1, assigned_technician_id: user?.id }))
+                    }
+                    disabled={pagination.page >= pagination.totalPages}
+                    className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        </div>
-      </div>
       </PageWrapper>
     </>
   );

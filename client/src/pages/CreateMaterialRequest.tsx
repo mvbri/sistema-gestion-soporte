@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { useCreateMaterialRequest } from '../hooks/useMaterialRequests';
 import type { MaterialType } from '../types';
 import { materialRequestItemTypeLabel } from '../utils/materialRequestDisplay';
+import formStyles from '../styles/modules/forms.module.css';
 
 interface MaterialRequestItemDraft {
   material_type: MaterialType;
@@ -21,6 +22,113 @@ const defaultItem = (): MaterialRequestItemDraft => ({
   quantity: 1,
 });
 
+const MIN_QUANTITY = 1;
+const MAX_QUANTITY = 9999;
+
+const clampQuantity = (value: number) =>
+  Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.floor(value) || MIN_QUANTITY));
+
+const parseQuantityDigits = (raw: string) => {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return null;
+  return clampQuantity(Number.parseInt(digits, 10));
+};
+
+interface QuantityStepperProps {
+  id: string;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+const QuantityStepper: React.FC<QuantityStepperProps> = ({ id, value, onChange }) => {
+  const [draft, setDraft] = useState<string | null>(null);
+  const displayValue = draft ?? String(value);
+
+  useEffect(() => {
+    setDraft(null);
+  }, [value]);
+
+  const commit = (next: number) => {
+    setDraft(null);
+    onChange(clampQuantity(next));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '');
+    setDraft(digits);
+    const parsed = parseQuantityDigits(digits);
+    if (parsed !== null) onChange(parsed);
+  };
+
+  const handleBlur = () => {
+    if (draft === '' || draft === null) {
+      commit(MIN_QUANTITY);
+      return;
+    }
+    const parsed = parseQuantityDigits(draft);
+    commit(parsed ?? MIN_QUANTITY);
+  };
+
+  const blockNonNumericKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const stepBtnClass =
+    'flex flex-1 items-center justify-center px-2 text-sky-200/80 transition-colors hover:bg-sky-500/20 hover:text-white focus:outline-none focus-visible:bg-sky-500/25 disabled:pointer-events-none disabled:opacity-35';
+
+  return (
+    <div className="quantity-stepper flex h-[42px] overflow-hidden rounded-xl border border-sky-300/45 bg-slate-900/65 shadow-sm focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/80">
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        value={displayValue}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
+        onKeyDown={blockNonNumericKey}
+        aria-valuemin={MIN_QUANTITY}
+        aria-valuemax={MAX_QUANTITY}
+        aria-valuenow={value}
+        className="min-w-0 flex-1 bg-transparent px-3 text-center text-sm tabular-nums text-slate-50 focus:outline-none"
+      />
+      <div
+        className="flex w-9 shrink-0 flex-col border-l border-sky-300/35 sm:w-10"
+        role="group"
+        aria-label="Ajustar cantidad"
+      >
+        <button
+          type="button"
+          onClick={() => commit(value + 1)}
+          disabled={value >= MAX_QUANTITY}
+          className={`${stepBtnClass} border-b border-sky-300/25`}
+          aria-label="Aumentar cantidad"
+        >
+          <ChevronUp className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => commit(value - 1)}
+          disabled={value <= MIN_QUANTITY}
+          className={stepBtnClass}
+          aria-label="Disminuir cantidad"
+        >
+          <ChevronDown className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const RequiredMark = () => (
+  <span className="text-red-300/90" aria-hidden>
+    {' '}
+    *
+  </span>
+);
+
 export const CreateMaterialRequest: React.FC = () => {
   const navigate = useNavigate();
   const createRequest = useCreateMaterialRequest();
@@ -30,6 +138,13 @@ export const CreateMaterialRequest: React.FC = () => {
   const [requestNotes, setRequestNotes] = useState('');
   const [items, setItems] = useState<MaterialRequestItemDraft[]>([]);
   const [newItem, setNewItem] = useState<MaterialRequestItemDraft>(defaultItem());
+
+  const addressingLength = addresseeAddressingText.trim().length;
+  const canSubmit =
+    items.length > 0 &&
+    addresseeName.trim().length >= 2 &&
+    addresseeTitle.trim().length >= 2 &&
+    addressingLength >= 20;
 
   const addItemToList = () => {
     if (!newItem.material_name.trim()) return;
@@ -48,14 +163,7 @@ export const CreateMaterialRequest: React.FC = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (items.length === 0) return;
-    if (
-      !addresseeName.trim() ||
-      !addresseeTitle.trim() ||
-      addresseeAddressingText.trim().length < 20
-    ) {
-      return;
-    }
+    if (!canSubmit) return;
 
     const payloadItems = items.map((item) => ({
       source_mode: 'manual' as const,
@@ -80,226 +188,248 @@ export const CreateMaterialRequest: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white px-6 py-5">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Nueva Solicitud de Materiales</h1>
-              <p className="text-sm text-gray-600">
-                Solicita equipos, consumibles y herramientas para revisión administrativa.
-              </p>
-            </div>
+        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+          <header className="mb-5 sm:mb-6">
+            <h1 className="page-heading">Nueva solicitud de materiales</h1>
+            <p className="page-subheading">
+              Equipos, consumibles y herramientas para revisión administrativa.
+            </p>
+          </header>
 
-            <form onSubmit={submit} className="space-y-6 p-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Nombre del destinatario <span className="text-red-600">*</span>
+          <form onSubmit={submit} className="card space-y-6 sm:space-y-8 !p-5 sm:!p-8">
+            <section aria-labelledby="addressee-heading">
+              <h2 id="addressee-heading" className="sr-only">
+                Destinatario
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+                <div className={formStyles.formGroup}>
+                  <label htmlFor="addressee-name" className="label-field">
+                    Nombre del destinatario
+                    <RequiredMark />
+                  </label>
                   <input
+                    id="addressee-name"
                     type="text"
                     value={addresseeName}
                     onChange={(e) => setAddresseeName(e.target.value)}
                     required
                     minLength={2}
                     maxLength={255}
-                    placeholder="Ej: María Pérez González"
-                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    placeholder="María Pérez González"
+                    className="input-dark"
+                    autoComplete="name"
                   />
-                </label>
-                <label className="block text-sm font-medium text-gray-700">
-                  Cargo al que se dirige <span className="text-red-600">*</span>
+                </div>
+                <div className={formStyles.formGroup}>
+                  <label htmlFor="addressee-title" className="label-field">
+                    Cargo al que se dirige
+                    <RequiredMark />
+                  </label>
                   <input
+                    id="addressee-title"
                     type="text"
                     value={addresseeTitle}
                     onChange={(e) => setAddresseeTitle(e.target.value)}
                     required
                     minLength={2}
                     maxLength={255}
-                    placeholder="Ej: Director general"
-                    className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    placeholder="Director general"
+                    className="input-dark"
                   />
-                </label>
+                </div>
               </div>
 
-              <label className="block text-sm font-medium text-gray-700">
-                Texto dirigido al destinatario <span className="text-red-600">*</span>
-                <span className="mt-0.5 block text-xs font-normal text-gray-600">
-                  Redacte un membrete hacia la persona y el cargo indicados: indique la dependencia o
-                  unidad de ese cargo y el motivo por el cual solicita los materiales (mín. 20
+              <div className={`${formStyles.formGroup} !mb-0`}>
+                <label htmlFor="addressing-text" className="label-field">
+                  Texto dirigido al destinatario
+                  <RequiredMark />
+                </label>
+                <p className="mb-2 text-xs text-blue-100/70">
+                  Membrete hacia la persona y cargo indicados: dependencia, motivo de la solicitud (mín. 20
                   caracteres).
-                </span>
+                </p>
                 <textarea
+                  id="addressing-text"
                   value={addresseeAddressingText}
                   onChange={(e) => setAddresseeAddressingText(e.target.value)}
                   required
                   minLength={20}
                   maxLength={4000}
-                  rows={5}
-                  placeholder={`Ej: Por medio del presente, y en atención a las funciones de su despacho como Director(a) de la Dirección de X, solicito respetuosamente...`}
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  rows={4}
+                  placeholder="Por medio del presente, y en atención a las funciones de su despacho..."
+                  className="input-dark resize-y min-h-[7rem] sm:min-h-[8rem]"
                 />
-              </label>
+                <p
+                  className={`mt-1.5 text-xs tabular-nums ${
+                    addressingLength >= 20 ? 'text-sky-200/60' : 'text-amber-200/80'
+                  }`}
+                >
+                  {addressingLength} / 20 caracteres mínimos
+                </p>
+              </div>
 
-              <label className="block text-sm font-medium text-gray-700">
-                Motivo / observaciones
+              <div className={`${formStyles.formGroup} !mb-0 mt-4 sm:mt-5`}>
+                <label htmlFor="request-notes" className="label-field">
+                  Motivo / observaciones
+                  <span className="font-normal text-blue-100/50"> (opcional)</span>
+                </label>
                 <textarea
+                  id="request-notes"
                   value={requestNotes}
                   onChange={(e) => setRequestNotes(e.target.value)}
-                  rows={3}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900"
+                  rows={2}
+                  className="input-dark resize-y"
                 />
-              </label>
+              </div>
+            </section>
 
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-gray-900">Materiales solicitados</h2>
+            <section
+              aria-labelledby="materials-heading"
+              className="content-panel !mb-0 space-y-4 !p-4 sm:!p-5"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="materials-heading" className="text-base font-semibold text-white sm:text-lg">
+                  Materiales solicitados
+                </h2>
+                <span className="text-xs text-sky-200/70 tabular-nums">{items.length} ítem(s)</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
+                <div className={`${formStyles.formGroup} lg:col-span-3 !mb-0`}>
+                  <label htmlFor="item-type" className="label-field text-xs sm:text-sm">
+                    Tipo
+                  </label>
+                  <select
+                    id="item-type"
+                    value={newItem.material_type}
+                    onChange={(e) => {
+                      const nextType = e.target.value as MaterialType;
+                      setNewItem((prev) => ({ ...prev, material_type: nextType }));
+                    }}
+                    className={`input-dark ${formStyles.selectField}`}
+                  >
+                    <option value="equipment">Equipo</option>
+                    <option value="consumable">Consumible</option>
+                    <option value="tool">Herramienta</option>
+                  </select>
                 </div>
+                <div className={`${formStyles.formGroup} sm:col-span-1 lg:col-span-4 !mb-0`}>
+                  <label htmlFor="item-name" className="label-field text-xs sm:text-sm">
+                    Nombre
+                  </label>
+                  <input
+                    id="item-name"
+                    type="text"
+                    value={newItem.material_name}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({ ...prev, material_name: e.target.value }))
+                    }
+                    placeholder="Toner HP 85A"
+                    className="input-dark"
+                  />
+                </div>
+                <div className={`${formStyles.formGroup} sm:col-span-1 lg:col-span-2 !mb-0`}>
+                  <label htmlFor="item-desc" className="label-field text-xs sm:text-sm">
+                    Descripción
+                  </label>
+                  <input
+                    id="item-desc"
+                    type="text"
+                    value={newItem.material_description}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({ ...prev, material_description: e.target.value }))
+                    }
+                    placeholder="Opcional"
+                    className="input-dark"
+                  />
+                </div>
+                <div className={`${formStyles.formGroup} sm:col-span-1 lg:col-span-2 !mb-0`}>
+                  <label htmlFor="item-qty" className="label-field text-xs sm:text-sm">
+                    Cant.
+                  </label>
+                  <QuantityStepper
+                    id="item-qty"
+                    value={newItem.quantity}
+                    onChange={(quantity) =>
+                      setNewItem((prev) => ({ ...prev, quantity }))
+                    }
+                  />
+                </div>
+                <div className="group/add relative sm:col-span-2 lg:col-span-1">
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-sky-400/35 bg-slate-950/95 px-2.5 py-1 text-xs font-medium text-sky-50 opacity-0 shadow-lg shadow-sky-950/50 transition-opacity duration-150 group-hover/add:opacity-100 group-focus-within/add:opacity-100 group-has-[:disabled]/add:opacity-0"
+                  >
+                    Agregar
+                  </span>
+                  <button
+                    type="button"
+                    onClick={addItemToList}
+                    disabled={!newItem.material_name.trim()}
+                    aria-label="Agregar"
+                    className="btn-primary flex h-[42px] w-full items-center justify-center px-3 text-sm disabled:opacity-50"
+                  >
+                    <Plus className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+                  </button>
+                </div>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-3">Agregar item</h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
-                      <label className="block min-w-0 text-sm text-gray-700 sm:col-span-1 lg:col-span-3">
-                        Tipo de material
-                        <select
-                          value={newItem.material_type}
-                          onChange={(e) => {
-                            const nextType = e.target.value as MaterialType;
-                            setNewItem((prev) => ({
-                              ...prev,
-                              material_type: nextType,
-                            }));
-                          }}
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        >
-                          <option value="equipment">Equipo</option>
-                          <option value="consumable">Consumible</option>
-                          <option value="tool">Herramienta</option>
-                        </select>
-                      </label>
-                      <label className="block min-w-0 text-sm text-gray-700 sm:col-span-1 lg:col-span-3">
-                        Nombre del material
-                        <input
-                          type="text"
-                          value={newItem.material_name}
-                          onChange={(e) =>
-                            setNewItem((prev) => ({ ...prev, material_name: e.target.value }))
-                          }
-                          placeholder="Ej: toner HP 85A"
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        />
-                      </label>
-                      <label className="block min-w-0 text-sm text-gray-700 sm:col-span-2 lg:col-span-3">
-                        Descripción (opcional)
-                        <input
-                          type="text"
-                          value={newItem.material_description}
-                          onChange={(e) =>
-                            setNewItem((prev) => ({ ...prev, material_description: e.target.value }))
-                          }
-                          placeholder="Marca, referencia o detalle"
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        />
-                      </label>
-                      <label className="block min-w-0 text-sm text-gray-700 sm:col-span-1 lg:col-span-1">
-                        Cant.
-                        <input
-                          type="number"
-                          min={1}
-                          step={1}
-                          value={newItem.quantity}
-                          onChange={(e) =>
-                            setNewItem((prev) => ({
-                              ...prev,
-                              quantity: Number(e.target.value || 1),
-                            }))
-                          }
-                          className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        />
-                      </label>
+              {items.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-sky-400/25 px-4 py-6 text-center text-sm text-blue-100/60">
+                  Aún no hay ítems. Completa el formulario y pulsa Agregar.
+                </p>
+              ) : (
+                <ul className="divide-y divide-sky-400/20 rounded-xl border border-sky-400/25 overflow-hidden">
+                  {items.map((item, index) => (
+                    <li
+                      key={`${item.material_type}-${item.material_name}-${index}`}
+                      className="flex gap-3 px-3 py-3 sm:px-4 sm:py-3.5 bg-slate-900/30"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-white">{item.material_name}</p>
+                        <p className="mt-0.5 text-xs text-blue-100/65">
+                          {materialRequestItemTypeLabel(item.material_type)} · Cant. {item.quantity}
+                          {item.material_description ? ` · ${item.material_description}` : ''}
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        onClick={addItemToList}
-                        disabled={!newItem.material_name.trim()}
-                        className="h-10 w-full min-w-0 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 sm:col-span-1 lg:col-span-2"
+                        onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
+                        className="shrink-0 self-center rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-red-500/15 hover:text-red-200 focus:outline-none focus:ring-2 focus:ring-red-400/40"
+                        aria-label={`Quitar ${item.material_name}`}
                       >
-                        Agregar
+                        <X className="h-4 w-4" strokeWidth={2} aria-hidden />
                       </button>
-                    </div>
-                  </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-                  <div className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
-                      Items agregados ({items.length})
-                    </div>
-                    {items.length === 0 ? (
-                      <p className="px-4 py-4 text-sm text-gray-500">
-                        Aun no has agregado items. Usa el formulario superior para agregarlos.
-                      </p>
-                    ) : (
-                      <ul className="divide-y divide-gray-100">
-                        {items.map((item, index) => (
-                          <li
-                            key={`${item.material_type}-${item.material_name}-${index}`}
-                            className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {item.material_name}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                Tipo: {materialRequestItemTypeLabel(item.material_type)} | Cantidad:{' '}
-                                {item.quantity}
-                                {item.material_description ? ` | ${item.material_description}` : ''}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
-                              className="inline-flex shrink-0 items-center justify-center self-start rounded-full p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/40 md:self-auto"
-                              aria-label="Quitar item de la lista"
-                            >
-                              <X className="h-4 w-4" strokeWidth={2} aria-hidden />
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
-                <button
-                  type="button"
-                  onClick={() => navigate('/material-requests')}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    createRequest.isPending ||
-                    items.length === 0 ||
-                    !addresseeName.trim() ||
-                    !addresseeTitle.trim() ||
-                    addresseeAddressingText.trim().length < 20
-                  }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
-                  title={
-                    items.length === 0
-                      ? 'Agrega al menos un item para enviar la solicitud'
-                      : !addresseeName.trim() ||
-                          !addresseeTitle.trim() ||
-                          addresseeAddressingText.trim().length < 20
-                        ? 'Completa destinatario, cargo y el texto dirigido al destinatario (mín. 20 caracteres)'
-                        : undefined
-                  }
-                >
-                  {createRequest.isPending ? 'Enviando...' : 'Enviar solicitud'}
-                </button>
-              </div>
-            </form>
-          </div>
+            <footer className="flex flex-col-reverse gap-3 border-t border-sky-400/20 pt-5 sm:flex-row sm:justify-end sm:gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/material-requests')}
+                className="btn-secondary w-full sm:w-auto"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={createRequest.isPending || !canSubmit}
+                className="btn-primary w-full sm:w-auto sm:min-w-[10rem]"
+                title={
+                  items.length === 0
+                    ? 'Agrega al menos un ítem'
+                    : !canSubmit
+                      ? 'Completa destinatario, cargo y texto (mín. 20 caracteres)'
+                      : undefined
+                }
+              >
+                {createRequest.isPending ? 'Enviando…' : 'Enviar solicitud'}
+              </button>
+            </footer>
+          </form>
         </div>
       </PageWrapper>
     </>

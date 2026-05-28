@@ -84,9 +84,13 @@ export const VerifySecurityQuestions: React.FC = () => {
   }
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center bg-slate-100 py-10 px-4 sm:px-6 lg:px-8"
+    <div
+      className="min-h-screen flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat relative"
+      style={{
+        backgroundImage: 'url(/alcaldiaheres.jpg.jpeg)',
+      }}
     >
+      <div className="absolute inset-0 bg-blue-900/40"></div>
       <div
         className={`${formStyles.formContainer} relative z-10 px-8 py-9 sm:px-10 sm:py-11 rounded-3xl bg-gradient-to-b from-slate-950/90 via-sky-950/80 to-slate-950/90 backdrop-blur-xl shadow-2xl shadow-sky-950/70 border border-sky-400/35`}
       >

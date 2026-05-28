@@ -298,7 +298,17 @@ class MaterialRequest {
             params.push(searchTerm, searchTerm, searchTerm, searchTerm);
         }
 
-        sql += ' GROUP BY mr.id ORDER BY mr.created_at DESC';
+        // Compatible con sql_mode=only_full_group_by (TiDB / MySQL 8+)
+        sql += `
+            GROUP BY
+                mr.id,
+                mr.created_at,
+                mr.requester_user_id,
+                requester.full_name,
+                mr.status,
+                mr.request_notes
+            ORDER BY mr.created_at DESC
+        `;
         if (filters.limit) {
             sql += ' LIMIT ?';
             params.push(Number(filters.limit));

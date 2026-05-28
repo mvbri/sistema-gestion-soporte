@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { useAuth } from '../hooks/useAuth';
@@ -26,6 +26,41 @@ export const UserManual: React.FC = () => {
   }, [user?.role]);
 
   const sections = manualSectionsByRole[selectedRole];
+  const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
+  const [activeSectionId, setActiveSectionId] = useState<string>(() => sections[0]?.id ?? '');
+
+  useEffect(() => {
+    setActiveSectionId(sectionIds[0] ?? '');
+  }, [selectedRole, sectionIds]);
+
+  useEffect(() => {
+    const roleSections = manualSectionsByRole[selectedRole];
+    const elements = roleSections
+      .map((s) => document.getElementById(sectionAnchorId(selectedRole, s.id)))
+      .filter((el): el is HTMLElement => el != null);
+
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        if (visible.length === 0) return;
+
+        const fullId = visible[0].target.id;
+        const prefix = `${selectedRole}-`;
+        if (fullId.startsWith(prefix)) {
+          setActiveSectionId(fullId.slice(prefix.length));
+        }
+      },
+      { rootMargin: '-96px 0px -52% 0px', threshold: 0 }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [selectedRole, sectionIds]);
 
   return (
     <>
@@ -66,23 +101,35 @@ export const UserManual: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <nav
               aria-label="Contenido del manual"
-              className="card lg:w-64 flex-shrink-0 lg:sticky lg:top-24 lg:self-start !p-5"
+              className="card manual-toc lg:w-72 flex-shrink-0 lg:sticky lg:top-24 lg:self-start !p-5"
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-sky-300/90 mb-4">
-                En esta guía
-              </p>
-              <ul className="space-y-0.5 border-l-2 border-sky-400/40 pl-4">
-                {sections.map((s) => {
+              <div className="manual-toc__header">
+                <span className="manual-toc__header-icon" aria-hidden="true">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 6h16M4 12h16M4 18h7"
+                    />
+                  </svg>
+                </span>
+                <span className="manual-toc__header-label">En esta guía</span>
+              </div>
+              <ul className="manual-toc__list">
+                {sections.map((s, index) => {
                   const href = `#${sectionAnchorId(selectedRole, s.id)}`;
+                  const isActive = activeSectionId === s.id;
                   return (
                     <li key={s.id}>
                       <a
                         href={href}
-                        className="group block py-2 pl-2 -ml-0.5 rounded-r-lg text-sm text-blue-50/90 hover:text-white hover:bg-sky-500/15 border-l-2 border-transparent hover:border-sky-400 transition-colors"
+                        aria-current={isActive ? 'location' : undefined}
+                        className={`manual-toc__link pl-7 ${isActive ? 'manual-toc__link--active' : ''}`}
                       >
-                        <span className="group-hover:underline underline-offset-2 decoration-sky-300/70">
-                          {s.title}
+                        <span className="manual-toc__index" aria-hidden="true">
+                          {String(index + 1).padStart(2, '0')}
                         </span>
+                        <span className="manual-toc__title">{s.title}</span>
                       </a>
                     </li>
                   );

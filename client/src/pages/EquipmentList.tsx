@@ -111,39 +111,38 @@ export const EquipmentList: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="flex justify-between items-center mb-6">
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Inventario de Equipos</h1>
-                {user?.role === 'end_user' && (
-                  <p className="mt-1 text-sm text-gray-600">Solo puedes ver equipos disponibles</p>
+                <h1 className="page-heading">Inventario de equipos</h1>
+                {user?.role === 'end_user' ? (
+                  <p className="page-subheading">Solo puedes ver equipos disponibles.</p>
+                ) : (
+                  <p className="page-subheading">Consulta, filtra y gestiona el inventario.</p>
                 )}
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                 {isAdministrator && (
                   <button
                     type="button"
                     onClick={handleToggleMyAssigned}
-                    className={`px-4 py-2 rounded-md text-sm font-medium border ${
-                      showMyAssigned
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
+                    className="btn-secondary w-full sm:w-auto whitespace-nowrap"
                   >
                     {showMyAssigned ? 'Ver todo el inventario' : 'Mis equipos asignados'}
                   </button>
                 )}
                 {canCreate && (
                   <button
+                    type="button"
                     onClick={() => navigate('/equipment/crear')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="btn-primary w-full sm:w-auto whitespace-nowrap"
                   >
-                    Crear Equipo
+                    Crear equipo
                   </button>
                 )}
               </div>
-            </div>
+            </header>
 
             {(canEdit || canDelete) && (
               <EquipmentFiltersComponent
@@ -160,15 +159,16 @@ export const EquipmentList: React.FC = () => {
             )}
 
             {loadingEquipment ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="mt-2 text-gray-600">Cargando equipos...</p>
-                </div>
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando equipos…</p>
               </div>
             ) : equipment.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No se encontraron equipos</p>
+              <div className="card py-12 text-center px-4">
+                <p className="text-blue-100/80">No se encontraron equipos.</p>
+                <p className="text-sm text-blue-100/60 mt-2">
+                  Intenta ajustar los filtros de búsqueda.
+                </p>
               </div>
             ) : (
               <>
@@ -185,25 +185,44 @@ export const EquipmentList: React.FC = () => {
                 </div>
 
                 {pagination.totalPages > 1 && (
-                  <div className="flex justify-center items-center space-x-2">
-                  <button
-                    onClick={() => setFilters((prev: EquipmentFilters) => ({ ...prev, page: (prev.page || 1) - 1 }))}
-                    disabled={pagination.page === 1}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Anterior
-                  </button>
-                  <span className="px-4 py-2 text-gray-700">
-                    Página {pagination.page} de {pagination.totalPages}
-                  </span>
-                  <button
-                    onClick={() => setFilters((prev: EquipmentFilters) => ({ ...prev, page: (prev.page || 1) + 1 }))}
-                    disabled={pagination.page === pagination.totalPages}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Siguiente
-                  </button>
-                </div>
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-xs sm:text-sm text-blue-50/90">
+                      Mostrando {(pagination.page - 1) * pagination.limit + 1} a{' '}
+                      {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
+                      {pagination.total} equipos
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFilters((prev: EquipmentFilters) => ({
+                            ...prev,
+                            page: Math.max((prev.page || 1) - 1, 1),
+                          }))
+                        }
+                        disabled={pagination.page === 1}
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Anterior
+                      </button>
+                      <span className="flex items-center px-2 text-xs sm:text-sm text-blue-100/75 tabular-nums">
+                        {pagination.page} / {pagination.totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFilters((prev: EquipmentFilters) => ({
+                            ...prev,
+                            page: (prev.page || 1) + 1,
+                          }))
+                        }
+                        disabled={pagination.page === pagination.totalPages}
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
                 )}
               </>
             )}

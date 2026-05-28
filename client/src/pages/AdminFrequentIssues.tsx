@@ -13,9 +13,9 @@ import {
 import { EditIcon } from '../components/icons/EditIcon';
 import { DeleteIcon } from '../components/icons/DeleteIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
-import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
 import { ClearFiltersIcon } from '../components/icons/ClearFiltersIcon';
 import type { FrequentIssue } from '../types';
+import formStyles from '../styles/modules/forms.module.css';
 
 /** Números de página con elipsis si hay muchas páginas. */
 function buildDesktopPageList(totalPages: number, current: number): Array<number | 'ellipsis'> {
@@ -56,8 +56,9 @@ export const AdminFrequentIssues: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<number | undefined>(undefined);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingIssue, setEditingIssue] = useState<FrequentIssue | null>(null);
   const [issueToDelete, setIssueToDelete] = useState<FrequentIssue | null>(null);
@@ -77,24 +78,20 @@ export const AdminFrequentIssues: React.FC = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchTerm.trim().toLowerCase()), 350);
-    return () => clearTimeout(t);
-  }, [searchTerm]);
-
-  useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, activeFilter]);
+  }, [appliedSearch, activeFilter, categoryFilter]);
 
   const filteredIssues = useMemo(() => {
     return issues.filter((issue) => {
       // MySQL BOOLEAN llega como 0/1; no usar === con true/false del filtro
       const issueActive = Boolean(issue.active);
       if (activeFilter !== undefined && issueActive !== activeFilter) return false;
-      if (!debouncedSearch) return true;
+      if (categoryFilter !== undefined && issue.category_id !== categoryFilter) return false;
+      if (!appliedSearch) return true;
       const hay = `${issue.title} ${issue.symptoms || ''} ${issue.possible_solution}`.toLowerCase();
-      return hay.includes(debouncedSearch);
+      return hay.includes(appliedSearch);
     });
-  }, [issues, activeFilter, debouncedSearch]);
+  }, [issues, activeFilter, categoryFilter, appliedSearch]);
 
   const tableTotal = filteredIssues.length;
   const tableTotalPages = Math.max(1, Math.ceil(tableTotal / itemsPerPage));
@@ -115,13 +112,16 @@ export const AdminFrequentIssues: React.FC = () => {
     [tableTotalPages, page]
   );
 
-  const filtersAreDefault =
-    !searchTerm.trim() && activeFilter === undefined && itemsPerPage === 10 && page === 1;
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm.trim().toLowerCase());
+    setPage(1);
+  };
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setDebouncedSearch('');
+    setAppliedSearch('');
     setActiveFilter(undefined);
+    setCategoryFilter(undefined);
     setItemsPerPage(10);
     setPage(1);
   };
@@ -191,73 +191,45 @@ export const AdminFrequentIssues: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="mb-2 flex flex-wrap items-center gap-2 text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl">
-                  <FrequentIssueIcon className="h-8 w-8 shrink-0 text-blue-600 sm:h-9 sm:w-9" />
-                  Fallas frecuentes
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600">
+                <h1 className="page-heading">Fallas frecuentes</h1>
+                <p className="page-subheading max-w-2xl">
                   Plantillas de problemas comunes y posibles soluciones para tickets y formularios.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCreateForm(true)}
-                className="btn-primary flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto"
+                className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span>Nueva falla</span>
               </button>
+            </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="stat-card stat-card--sky">
+                <p className="stat-card-title">Total</p>
+                <p className="stat-card-value">{issues.length}</p>
+              </div>
+              <div className="stat-card stat-card--emerald">
+                <p className="stat-card-title">Activas</p>
+                <p className="stat-card-value">{activeCount}</p>
+              </div>
+              <div className="stat-card stat-card--amber">
+                <p className="stat-card-title">Inactivas</p>
+                <p className="stat-card-value">{inactiveCount}</p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <p className="text-slate-200 text-xs sm:text-sm font-medium mb-1">Total</p>
-                <p className="text-2xl sm:text-3xl font-bold">{issues.length}</p>
-              </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Activas</p>
-                <p className="text-2xl sm:text-3xl font-bold">{activeCount}</p>
-              </div>
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
-                <p className="text-amber-100 text-xs sm:text-sm font-medium mb-1">Inactivas</p>
-                <p className="text-2xl sm:text-3xl font-bold">{inactiveCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-4 sm:mb-6 p-3 sm:p-4">
-            <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
-              <h2 className="text-sm font-semibold text-gray-800 sm:text-base">Filtros</h2>
-              <button
-                type="button"
-                onClick={handleClearFilters}
-                disabled={filtersAreDefault}
-                title="Limpiar filtros"
-                aria-label="Limpiar filtros"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
-              >
-                <ClearFiltersIcon />
-              </button>
-            </div>
-            <div className="flex flex-col gap-2 sm:gap-3 md:flex-row md:flex-wrap md:items-end md:gap-3">
-              <div className="min-w-0 w-full md:w-80 md:shrink-0">
-                <label className="mb-1 block text-xs font-medium text-gray-600 sm:text-sm sm:font-semibold sm:text-gray-700">
-                  Buscar
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Título, síntomas o solución..."
-                    className="input-field w-full py-1.5 pl-9 pr-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
+            <div className="content-panel mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-5">
+                <div className="flex items-center gap-2">
                   <svg
-                    className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -267,261 +239,400 @@ export const AdminFrequentIssues: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                     />
                   </svg>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Filtros de Búsqueda</h2>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm whitespace-nowrap"
+                  aria-label="Limpiar todos los filtros"
+                  title="Limpiar filtros"
+                >
+                  <ClearFiltersIcon className="w-4 h-4" />
+                  <span>Limpiar</span>
+                </button>
               </div>
-              <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 md:contents">
-                <div className="min-w-0 w-full md:w-48 md:shrink-0">
-                  <label className="mb-1 block text-xs font-medium text-gray-600 sm:text-sm sm:font-semibold sm:text-gray-700">
-                    Estado
-                  </label>
-                  <select
-                    value={activeFilter === undefined ? '' : activeFilter ? 'true' : 'false'}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setActiveFilter(v === '' ? undefined : v === 'true');
-                    }}
-                    className="input-field w-full px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Todas</option>
-                    <option value="true">Solo activas</option>
-                    <option value="false">Solo inactivas</option>
-                  </select>
-                </div>
-                <div className="min-w-0 w-full md:w-48 md:shrink-0">
-                  <label className="mb-1 block text-xs font-medium text-gray-600 sm:text-sm sm:font-semibold sm:text-gray-700">
-                    <span className="md:hidden">Filas por página</span>
-                    <span className="hidden md:inline">Por página</span>
-                  </label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setPage(1);
-                    }}
-                    className="input-field w-full px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      Título
-                    </th>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide hidden lg:table-cell min-w-[12rem] w-[28%]">
-                      Síntomas
-                    </th>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide hidden md:table-cell min-w-[14rem] w-[32%]">
-                      Solución
-                    </th>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide whitespace-nowrap">
-                      Categoría
-                    </th>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide whitespace-nowrap">
-                      Activa
-                    </th>
-                    <th className="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide whitespace-nowrap">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                        Cargando…
-                      </td>
-                    </tr>
-                  ) : filteredIssues.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                        No hay fallas que coincidan con los filtros.
-                      </td>
-                    </tr>
-                  ) : (
-                    pagedIssues.map((issue) => (
-                      <tr key={issue.id} className="hover:bg-slate-50/80 border-b border-gray-100 last:border-0 align-top">
-                        <td className="px-4 py-4 text-sm font-semibold text-gray-900 max-w-[220px]">
-                          {issue.title}
-                        </td>
-                        <td className="px-4 py-4 hidden lg:table-cell align-top">
-                          <IssueTableTextCell text={issue.symptoms} />
-                        </td>
-                        <td className="px-4 py-4 hidden md:table-cell align-top">
-                          <IssueTableTextCell text={issue.possible_solution} />
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap align-top">
-                          {getCategoryName(issue.category_id)}
-                        </td>
-                        <td className="px-4 py-4 text-sm align-top">
-                          <span
-                            className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              issue.active ? 'bg-emerald-100 text-emerald-900' : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {issue.active ? 'Sí' : 'No'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-right whitespace-nowrap align-top">
-                          <button
-                            type="button"
-                            onClick={() => setEditingIssue(issue)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg mr-1"
-                            aria-label="Editar"
-                          >
-                            <EditIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIssueToDelete(issue)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                            aria-label="Eliminar"
-                          >
-                            <DeleteIcon className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {tableTotalPages > 1 && (
-              <div className="bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-3 sm:gap-0">
-                <div className="flex-1 flex flex-col gap-2 sm:hidden w-full">
-                  <p className="text-center text-xs text-gray-600">
-                    Página {page} de {tableTotalPages}
-                  </p>
-                  <div className="flex justify-between w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-4 sm:mb-5">
+                <div className="min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg
+                      className="w-4 h-4 text-sky-300 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                    <span>Buscar</span>
+                  </label>
+                  <div className="flex min-w-0 shadow-sm">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchTerm(value);
+                        if (value === '') {
+                          setAppliedSearch('');
+                          setPage(1);
+                        }
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      placeholder="Título, síntomas o solución..."
+                      className="input-field flex-1 min-w-0 rounded-l-xl rounded-r-none border-r-0"
+                    />
                     <button
                       type="button"
-                      onClick={() => setPage(Math.max(1, page - 1))}
-                      disabled={page === 1}
-                      className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleSearch}
+                      className="btn-primary px-5 py-2.5 rounded-l-none rounded-r-xl flex-shrink-0"
+                      aria-label="Buscar fallas"
                     >
-                      Anterior
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPage(Math.min(tableTotalPages, page + 1))}
-                      disabled={page === tableTotalPages}
-                      className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Siguiente
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
                     </button>
                   </div>
                 </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-700">
-                      Mostrando <span className="font-semibold">{(page - 1) * itemsPerPage + 1}</span> a{' '}
-                      <span className="font-semibold">{Math.min(page * itemsPerPage, tableTotal)}</span> de{' '}
-                      <span className="font-semibold">{tableTotal}</span> resultados
-                    </p>
+                <div className="min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg
+                      className="w-4 h-4 text-emerald-300 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>Estado</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={activeFilter === undefined ? '' : activeFilter ? 'true' : 'false'}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setActiveFilter(v === '' ? undefined : v === 'true');
+                        setPage(1);
+                      }}
+                      className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
+                    >
+                      <option value="">Todas</option>
+                      <option value="true">Activas</option>
+                      <option value="false">Inactivas</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-slate-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Paginación">
+                </div>
+                <div className="min-w-0">
+                  <label className="label-field flex items-center gap-2 !mb-2">
+                    <svg
+                      className="w-4 h-4 text-violet-300 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    <span>Categoría</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={categoryFilter ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCategoryFilter(v === '' ? undefined : Number(v));
+                        setPage(1);
+                      }}
+                      className="input-field w-full min-w-0 py-2.5 pr-10 appearance-none cursor-pointer"
+                    >
+                      <option value="">Todas</option>
+                      {categorias.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                          {!c.active ? ' (inactiva)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-slate-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="card py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-sky-400 border-t-transparent" />
+                <p className="mt-3 text-blue-100/85">Cargando fallas…</p>
+              </div>
+            ) : issues.length === 0 ? (
+              <div className="card py-12 text-center px-4">
+                <p className="text-blue-100/80">No hay fallas frecuentes registradas.</p>
+                <p className="text-sm text-blue-100/60 mt-2">Crea la primera con el botón «Nueva falla».</p>
+              </div>
+            ) : filteredIssues.length === 0 ? (
+              <div className="card py-12 text-center px-4">
+                <p className="text-blue-100/80">No hay fallas que coincidan con los filtros.</p>
+                <p className="text-sm text-blue-100/60 mt-2">Prueba ajustar la búsqueda o el estado.</p>
+              </div>
+            ) : (
+              <>
+                <div className="card !p-0 overflow-hidden">
+                  <div className="tickets-list-light overflow-x-auto bg-white/95">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <tr>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Título
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell min-w-[12rem] w-[28%]">
+                            Síntomas
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell min-w-[14rem] w-[32%]">
+                            Solución
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                            Categoría
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                            Activa
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                            Acciones
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {pagedIssues.map((issue) => (
+                          <tr key={issue.id} className="hover:bg-gray-50 transition-colors align-top">
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-gray-900 max-w-[220px]">
+                              {issue.title}
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 hidden lg:table-cell align-top">
+                              <IssueTableTextCell text={issue.symptoms} />
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 hidden md:table-cell align-top">
+                              <IssueTableTextCell text={issue.possible_solution} />
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-700 whitespace-nowrap align-top">
+                              {getCategoryName(issue.category_id)}
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm align-top">
+                              <span
+                                className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                                  issue.active
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                }`}
+                              >
+                                {issue.active ? 'Sí' : 'No'}
+                              </span>
+                            </td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-right whitespace-nowrap align-top">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingIssue(issue)}
+                                  className="btn-warning p-2 sm:p-2.5 flex items-center justify-center"
+                                  aria-label="Editar"
+                                  title="Editar"
+                                >
+                                  <EditIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIssueToDelete(issue)}
+                                  className="btn-danger p-2 sm:p-2.5 flex items-center justify-center"
+                                  aria-label="Eliminar"
+                                  title="Eliminar"
+                                >
+                                  <DeleteIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3 sm:gap-4">
+                    <p className="text-xs sm:text-sm text-blue-50/90 text-center sm:text-left">
+                      Mostrando {(page - 1) * itemsPerPage + 1} a {Math.min(page * itemsPerPage, tableTotal)} de{' '}
+                      {tableTotal} resultados
+                    </p>
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-blue-50/90">
+                      <span className="whitespace-nowrap">Por página</span>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value));
+                          setPage(1);
+                        }}
+                        className="input-field w-auto min-w-[4.5rem] py-1.5 pl-3 pr-8 text-xs sm:text-sm appearance-none cursor-pointer"
+                        aria-label="Resultados por página"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </label>
+                  </div>
+                  {tableTotalPages > 1 && (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => setPage(Math.max(1, page - 1))}
                         disabled={page === 1}
-                        className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
                       >
                         Anterior
                       </button>
-                      {desktopPageList.map((item, idx) =>
-                        item === 'ellipsis' ? (
-                          <span
-                            key={`ellipsis-${idx}`}
-                            className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm text-gray-500"
-                          >
-                            …
-                          </span>
-                        ) : (
-                          <button
-                            key={item}
-                            type="button"
-                            onClick={() => setPage(item)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
-                              item === page
-                                ? 'z-10 bg-primary-600 border-primary-600 text-white'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            {item}
-                          </button>
-                        )
-                      )}
+                      <div className="hidden sm:flex items-center gap-1">
+                        {desktopPageList.map((item, idx) =>
+                          item === 'ellipsis' ? (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-blue-100/60 text-sm">
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => setPage(item)}
+                              className={`min-w-[2.25rem] px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                                item === page
+                                  ? 'bg-sky-500/30 text-white ring-1 ring-sky-400/50'
+                                  : 'text-blue-100/80 hover:bg-sky-500/15 hover:text-white'
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          )
+                        )}
+                      </div>
+                      <span className="sm:hidden text-xs text-blue-50/90">
+                        Pág. {page} / {tableTotalPages}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setPage(Math.min(tableTotalPages, page + 1))}
                         disabled={page === tableTotalPages}
-                        className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-secondary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm disabled:opacity-50"
                       >
                         Siguiente
                       </button>
-                    </nav>
-                  </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </>
             )}
-          </div>
 
-          {showCreateForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] overflow-y-auto">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">Nueva falla frecuente</h2>
+            {showCreateForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+                <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Nueva falla frecuente</h2>
                     <button
                       type="button"
                       onClick={() => setShowCreateForm(false)}
-                      className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
                       aria-label="Cerrar"
                     >
                       ✕
                     </button>
                   </div>
                   <form onSubmit={handleCreate} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                      <input name="title" required className="input-field w-full" placeholder="Ej. Sin conexión a internet" />
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Título
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
+                      </label>
+                      <input
+                        name="title"
+                        required
+                        className="input-dark"
+                        placeholder="Ej. Sin conexión a internet"
+                      />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Síntomas</label>
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">Síntomas</label>
                       <textarea
                         name="symptoms"
                         rows={3}
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="Descripción breve de lo que observa el usuario"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Posible solución *</label>
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Posible solución
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
+                      </label>
                       <textarea
                         name="possible_solution"
                         required
                         rows={4}
-                        className="input-field w-full"
+                        className="input-dark"
                         placeholder="Pasos sugeridos para resolver o escalar"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Categoría de ticket</label>
-                      <select name="category_id" className="input-field w-full" defaultValue="">
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">Categoría de ticket</label>
+                      <select name="category_id" className={`input-dark ${formStyles.selectField}`} defaultValue="">
                         <option value="">Sin categoría</option>
                         {categorias.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -532,19 +643,25 @@ export const AdminFrequentIssues: React.FC = () => {
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" name="active" id="create-active" defaultChecked className="rounded border-gray-300" />
-                      <label htmlFor="create-active" className="text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="active"
+                        id="create-active"
+                        defaultChecked
+                        className="rounded border-sky-400/40 bg-slate-900/80 text-sky-500"
+                      />
+                      <label htmlFor="create-active" className="text-sm text-blue-100/85">
                         Visible en formularios (activa)
                       </label>
                     </div>
                     <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                      <button type="button" onClick={() => setShowCreateForm(false)} className="btn-secondary px-4 py-2">
+                      <button type="button" onClick={() => setShowCreateForm(false)} className="btn-secondary w-full sm:w-auto">
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={createMutation.isPending}
-                        className="btn-primary px-4 py-2 disabled:opacity-50"
+                        className="btn-primary w-full sm:w-auto disabled:opacity-50"
                       >
                         {createMutation.isPending ? 'Guardando…' : 'Crear'}
                       </button>
@@ -552,58 +669,63 @@ export const AdminFrequentIssues: React.FC = () => {
                   </form>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {editingIssue && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] overflow-y-auto">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">Editar falla frecuente</h2>
+            {editingIssue && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+                <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Editar falla frecuente</h2>
                     <button
                       type="button"
                       onClick={() => setEditingIssue(null)}
-                      className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
                       aria-label="Cerrar"
                     >
                       ✕
                     </button>
                   </div>
                   <form onSubmit={handleUpdate} className="space-y-4" key={editingIssue.id}>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                      <input
-                        name="title"
-                        required
-                        defaultValue={editingIssue.title}
-                        className="input-field w-full"
-                      />
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Título
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
+                      </label>
+                      <input name="title" required defaultValue={editingIssue.title} className="input-dark" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Síntomas</label>
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">Síntomas</label>
                       <textarea
                         name="symptoms"
                         rows={3}
                         defaultValue={editingIssue.symptoms || ''}
-                        className="input-field w-full"
+                        className="input-dark"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Posible solución *</label>
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">
+                        Posible solución
+                        <span className="text-red-300/90" aria-hidden>
+                          {' '}
+                          *
+                        </span>
+                      </label>
                       <textarea
                         name="possible_solution"
                         required
                         rows={4}
                         defaultValue={editingIssue.possible_solution}
-                        className="input-field w-full"
+                        className="input-dark"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Categoría de ticket</label>
+                    <div className={formStyles.formGroup}>
+                      <label className="label-field">Categoría de ticket</label>
                       <select
                         name="category_id"
-                        className="input-field w-full"
+                        className={`input-dark ${formStyles.selectField}`}
                         defaultValue={editingIssue.category_id ?? ''}
                       >
                         <option value="">Sin categoría</option>
@@ -621,20 +743,20 @@ export const AdminFrequentIssues: React.FC = () => {
                         name="active"
                         id="edit-active"
                         defaultChecked={editingIssue.active}
-                        className="rounded border-gray-300"
+                        className="rounded border-sky-400/40 bg-slate-900/80 text-sky-500"
                       />
-                      <label htmlFor="edit-active" className="text-sm text-gray-700">
+                      <label htmlFor="edit-active" className="text-sm text-blue-100/85">
                         Visible en formularios (activa)
                       </label>
                     </div>
                     <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                      <button type="button" onClick={() => setEditingIssue(null)} className="btn-secondary px-4 py-2">
+                      <button type="button" onClick={() => setEditingIssue(null)} className="btn-secondary w-full sm:w-auto">
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={updateMutation.isPending}
-                        className="btn-primary px-4 py-2 disabled:opacity-50"
+                        className="btn-primary w-full sm:w-auto disabled:opacity-50"
                       >
                         {updateMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
                       </button>
@@ -642,32 +764,33 @@ export const AdminFrequentIssues: React.FC = () => {
                   </form>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {issueToDelete && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-2">Eliminar falla frecuente</h2>
-                <p className="text-gray-600 mb-6">
-                  ¿Seguro que deseas eliminar <span className="font-semibold">{issueToDelete.title}</span>? Esta acción no se puede deshacer.
-                </p>
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                  <button type="button" onClick={() => setIssueToDelete(null)} className="btn-secondary px-4 py-2">
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmDelete}
-                    disabled={deleteMutation.isPending}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                  >
-                    {deleteMutation.isPending ? 'Eliminando…' : 'Eliminar'}
-                  </button>
+            {issueToDelete && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                <div className="card w-full max-w-md !p-6">
+                  <h2 className="text-lg font-semibold text-white mb-2">Eliminar falla frecuente</h2>
+                  <p className="text-blue-100/85 mb-6">
+                    ¿Seguro que deseas eliminar <span className="font-semibold text-white">{issueToDelete.title}</span>?
+                    Esta acción no se puede deshacer.
+                  </p>
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                    <button type="button" onClick={() => setIssueToDelete(null)} className="btn-secondary w-full sm:w-auto">
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDelete}
+                      disabled={deleteMutation.isPending}
+                      className="btn-danger w-full sm:w-auto disabled:opacity-50"
+                    >
+                      {deleteMutation.isPending ? 'Eliminando…' : 'Eliminar'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </PageWrapper>
     </>

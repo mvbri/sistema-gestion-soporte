@@ -13,6 +13,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import equipmentLoanRoutes from './routes/equipmentLoanRoutes.js';
 import materialRequestRoutes from './routes/materialRequestRoutes.js';
 import { assertSchemaReady, evaluateSchemaStatus } from './lib/startupSchemaCheck.js';
+import { verifyDbConnection } from './lib/verifyDbConnection.js';
 import { getCorsOrigins, createCorsOriginValidator } from './lib/corsConfig.js';
 
 dotenv.config();
@@ -91,6 +92,7 @@ app.use((err, req, res, next) => {
 });
 
 async function startServer() {
+    await verifyDbConnection();
     await assertSchemaReady();
 
     const server = app.listen(PORT, () => {

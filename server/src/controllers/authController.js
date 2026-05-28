@@ -108,6 +108,9 @@ export const register = async (req, res) => {
 
 // Login de usuario
 export const login = async (req, res) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'969aed'},body:JSON.stringify({sessionId:'969aed',runId:'login-debug',hypothesisId:'A',location:'authController.js:login:entry',message:'login handler reached',data:{hasEmail:Boolean(req.body?.email),hasPassword:Boolean(req.body?.password)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     try {
         const { email, password } = req.body;
 
@@ -167,12 +170,21 @@ export const login = async (req, res) => {
             sqlMessage: error.sqlMessage
         });
         
-        // Mensaje de error más específico
+        const root = error?.cause ?? error;
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'969aed'},body:JSON.stringify({sessionId:'969aed',runId:'login-debug',hypothesisId:'B',location:'authController.js:login:catch',message:'login failed',data:{code:root?.code??error?.code,errno:root?.errno??error?.errno,sqlState:root?.sqlState??error?.sqlState},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         let errorMessage = 'Error al iniciar sesión';
         if (error.code === 'ER_NO_SUCH_TABLE') {
             errorMessage = 'Error en la base de datos. La tabla requerida no existe.';
         } else if (error.code === 'ER_BAD_FIELD_ERROR') {
             errorMessage = 'Error en la base de datos. Columna no encontrada.';
+        } else if (
+            root?.code === 'ER_ACCESS_DENIED_ERROR' ||
+            error.code === 'ER_GET_CONNECTION_TIMEOUT'
+        ) {
+            errorMessage =
+                'No se pudo conectar a la base de datos. Revisa DB_USER y DB_PASSWORD en server/.env.';
         } else if (error.message && error.message.includes('ECONNREFUSED')) {
             errorMessage = 'Error de conexión con la base de datos.';
         }
@@ -295,6 +307,10 @@ export const requestRecovery = async (req, res) => {
     try {
         const { email } = req.body;
 
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R1',location:'authController.js:requestRecovery:entry',message:'requestRecovery reached',data:{hasEmail:Boolean(email),emailProvider:process.env.EMAIL_PROVIDER||'smtp',hasFrontendUrl:Boolean(process.env.FRONTEND_URL),hasEmailFrom:Boolean(process.env.EMAIL_FROM),hasSendgridKey:Boolean(process.env.SENDGRID_API_KEY),hasEmailUser:Boolean(process.env.EMAIL_USER),hasEmailPass:Boolean(process.env.EMAIL_PASS)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
         if (!email) {
             return sendError(res, 'Email requerido');
         }
@@ -303,6 +319,10 @@ export const requestRecovery = async (req, res) => {
         if (!user) {
             return sendSuccess(res, 'Si el email existe, se enviará un enlace de recuperación');
         }
+
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R2',location:'authController.js:requestRecovery:userFound',message:'user found for password recovery',data:{userId:user?.id,emailVerified:Boolean(user?.email_verified),active:Boolean(user?.active)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
 
         try {
             await Token.deleteByUser(user.id, 'password_recovery');
@@ -316,6 +336,9 @@ export const requestRecovery = async (req, res) => {
             await Token.create(user.id, recoveryToken, 'password_recovery', 1);
         } catch (error) {
             console.error('Error al crear token de recuperación:', error);
+            // #region agent log
+            fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R3',location:'authController.js:requestRecovery:tokenCreateFail',message:'failed creating password recovery token',data:{code:error?.code,errno:error?.errno,sqlState:error?.sqlState,message:(error?.message||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             return sendError(res, 'Error al generar token de recuperación', null, 500);
         }
 
@@ -328,6 +351,10 @@ export const requestRecovery = async (req, res) => {
                 code: error.code,
                 response: error.response
             });
+
+            // #region agent log
+            fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R4',location:'authController.js:requestRecovery:emailFail',message:'failed sending recovery email',data:{emailProvider:process.env.EMAIL_PROVIDER||'smtp',hasFrontendUrl:Boolean(process.env.FRONTEND_URL),hasEmailFrom:Boolean(process.env.EMAIL_FROM),hasSendgridKey:Boolean(process.env.SENDGRID_API_KEY),hasEmailUser:Boolean(process.env.EMAIL_USER),hasEmailPass:Boolean(process.env.EMAIL_PASS),errCode:error?.code,errMsg:(error?.message||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             
             if (process.env.EMAIL_PROVIDER === 'sendgrid') {
                 if (!process.env.SENDGRID_API_KEY || !process.env.EMAIL_FROM) {
@@ -344,10 +371,18 @@ export const requestRecovery = async (req, res) => {
             return sendError(res, 'Error al enviar email de recuperación. Por favor intenta más tarde.', null, 500);
         }
 
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R5',location:'authController.js:requestRecovery:success',message:'password recovery email dispatched',data:{userId:user?.id,emailProvider:process.env.EMAIL_PROVIDER||'smtp'},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
         sendSuccess(res, 'Si el email existe, se enviará un enlace de recuperación');
     } catch (error) {
         console.error('Error en solicitud de recuperación:', error);
         console.error('Stack trace:', error.stack);
+        const root = error?.cause ?? error;
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25e11f'},body:JSON.stringify({sessionId:'25e11f',runId:'prod-debug',hypothesisId:'R6',location:'authController.js:requestRecovery:catch',message:'requestRecovery failed',data:{code:root?.code??error?.code,errno:root?.errno??error?.errno,sqlState:root?.sqlState??error?.sqlState,message:(root?.message||error?.message||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         sendError(res, 'Error al procesar solicitud de recuperación', null, 500);
     }
 };

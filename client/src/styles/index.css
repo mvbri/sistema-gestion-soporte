@@ -151,10 +151,18 @@
 
   /* Tarjeta principal (glassmorphism como login) */
   .card {
-    @apply rounded-2xl p-6
-           bg-gradient-to-b from-slate-950/90 via-sky-950/80 to-slate-950/90
-           backdrop-blur-xl shadow-2xl shadow-sky-950/50
-           border border-sky-400/35;
+    @apply rounded-2xl p-6 border border-white/10 ring-1 ring-inset ring-white/10;
+    background: linear-gradient(
+      165deg,
+      rgba(15, 23, 42, 0.92) 0%,
+      rgba(12, 74, 110, 0.12) 40%,
+      rgba(30, 27, 75, 0.1) 100%
+    );
+    backdrop-filter: blur(12px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 8px 32px -10px rgba(0, 0, 0, 0.45),
+      0 12px 40px -16px rgba(14, 165, 233, 0.15);
   }
 
   .page-heading {
@@ -166,19 +174,298 @@
   }
 
   .content-panel {
-    @apply rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6
-           bg-gradient-to-br from-slate-950/85 via-sky-950/70 to-slate-950/85
-           backdrop-blur-lg shadow-xl shadow-sky-950/40
-           border border-sky-400/30;
+    @apply rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-white/10 ring-1 ring-inset ring-white/[0.06];
+    background: linear-gradient(
+      160deg,
+      rgba(15, 23, 42, 0.88) 0%,
+      rgba(12, 74, 110, 0.15) 45%,
+      rgba(15, 23, 42, 0.9) 100%
+    );
+    backdrop-filter: blur(10px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 4px 24px -8px rgba(0, 0, 0, 0.4),
+      0 8px 32px -12px rgba(14, 165, 233, 0.12);
   }
 
+  /* Subsecciones de formulario con acento de color */
+  .content-panel--sky {
+    @apply border-l-4 border-l-sky-400/70 border-sky-400/25;
+    background: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.1) 0%,
+      rgba(15, 23, 42, 0.82) 50%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 4px 20px -6px rgba(14, 165, 233, 0.2);
+  }
+
+  .content-panel--violet {
+    @apply border-l-4 border-l-violet-400/70 border-violet-400/25;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.1) 0%,
+      rgba(15, 23, 42, 0.82) 50%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 4px 20px -6px rgba(139, 92, 246, 0.18);
+  }
+
+  .info-tile {
+    @apply rounded-xl px-3 py-3 sm:px-4 sm:py-3.5 ring-1 ring-inset ring-white/10;
+    background: linear-gradient(
+      120deg,
+      rgba(16, 185, 129, 0.12) 0%,
+      rgba(14, 165, 233, 0.08) 50%,
+      rgba(15, 23, 42, 0.75) 100%
+    );
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Índice lateral del manual de usuario */
+  .manual-toc {
+    @apply lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto;
+    scrollbar-gutter: stable;
+  }
+
+  .manual-toc__header {
+    @apply flex items-center gap-2.5 pb-3.5 mb-3 border-b border-sky-400/25;
+  }
+
+  .manual-toc__header-icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+           bg-sky-500/20 text-sky-300 ring-1 ring-sky-400/30;
+  }
+
+  .manual-toc__header-label {
+    @apply text-[0.7rem] font-bold uppercase tracking-[0.14em] text-sky-200;
+  }
+
+  .manual-toc__list {
+    @apply relative m-0 list-none space-y-1 p-0;
+  }
+
+  .manual-toc__list::before {
+    content: '';
+    @apply pointer-events-none absolute left-[0.65rem] top-2 bottom-2 w-px
+           bg-gradient-to-b from-sky-400/50 via-sky-400/25 to-transparent;
+  }
+
+  .manual-toc__link {
+    @apply relative flex items-start gap-2.5 rounded-xl px-2.5 py-2.5
+           text-sm leading-snug text-blue-100/75 no-underline
+           transition-all duration-200 ease-out
+           hover:bg-sky-500/10 hover:text-white;
+  }
+
+  .manual-toc__link::before {
+    content: '';
+    @apply absolute left-[0.4rem] top-1/2 z-10 h-2 w-2 -translate-y-1/2 rounded-full
+           border-2 border-slate-700/90 bg-slate-900/90
+           transition-all duration-200;
+  }
+
+  .manual-toc__link:hover::before {
+    @apply border-sky-400/70 bg-sky-500/40;
+  }
+
+  .manual-toc__link--active {
+    @apply bg-gradient-to-r from-sky-500/20 via-sky-500/10 to-transparent
+           font-medium text-white shadow-sm shadow-sky-950/30
+           ring-1 ring-inset ring-sky-400/25;
+  }
+
+  .manual-toc__link--active::before {
+    @apply h-2.5 w-2.5 border-sky-300 bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.55)];
+  }
+
+  .manual-toc__index {
+    @apply mt-0.5 w-5 shrink-0 text-right text-[0.65rem] font-semibold tabular-nums
+           text-sky-400/40 transition-colors duration-200;
+  }
+
+  .manual-toc__link--active .manual-toc__index {
+    @apply text-sky-300/90;
+  }
+
+  .manual-toc__title {
+    @apply min-w-0 flex-1;
+  }
+
+  /* Métricas / KPIs — color vivo, poco difuminado, texto encima */
   .stat-card {
-    @apply rounded-2xl p-4 sm:p-5 border backdrop-blur-md shadow-lg
-           bg-gradient-to-br from-slate-900/75 via-sky-950/55 to-slate-900/75;
+    @apply relative isolate overflow-hidden rounded-2xl p-4 sm:p-5 border
+           transition-all duration-200 ease-out
+           hover:-translate-y-0.5;
+  }
+
+  .stat-card > * {
+    @apply relative z-10;
+  }
+
+  .stat-card-title {
+    @apply relative z-10 mb-1 text-xs sm:text-sm font-semibold text-white
+           drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)];
+  }
+
+  .stat-card-value {
+    @apply relative z-10 text-2xl sm:text-3xl font-bold text-white tabular-nums
+           drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)];
+  }
+
+  .stat-card-hint {
+    @apply relative z-10 mt-1.5 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)];
+  }
+
+  .stat-card--sky {
+    @apply border-sky-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.28) 0%,
+      rgba(6, 78, 115, 0.55) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(56, 189, 248, 0.15);
+  }
+
+  .stat-card--sky:hover {
+    box-shadow:
+      0 6px 16px -2px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(56, 189, 248, 0.25);
+  }
+
+  .stat-card--sky .stat-card-title {
+    @apply text-sky-100;
+  }
+
+  .stat-card--sky .stat-card-hint {
+    @apply text-sky-100/70;
+  }
+
+  .stat-card--emerald {
+    @apply border-emerald-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(16, 185, 129, 0.28) 0%,
+      rgba(6, 95, 70, 0.5) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(52, 211, 153, 0.15);
+  }
+
+  .stat-card--emerald:hover {
+    box-shadow:
+      0 6px 16px -2px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(52, 211, 153, 0.25);
+  }
+
+  .stat-card--emerald .stat-card-title {
+    @apply text-emerald-100;
+  }
+
+  .stat-card--emerald .stat-card-hint {
+    @apply text-emerald-100/70;
+  }
+
+  .stat-card--amber {
+    @apply border-amber-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(245, 158, 11, 0.26) 0%,
+      rgba(120, 83, 14, 0.45) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(251, 191, 36, 0.15);
+  }
+
+  .stat-card--amber:hover {
+    box-shadow:
+      0 6px 16px -2px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(251, 191, 36, 0.25);
+  }
+
+  .stat-card--amber .stat-card-title {
+    @apply text-amber-100;
+  }
+
+  .stat-card--amber .stat-card-hint {
+    @apply text-amber-100/70;
+  }
+
+  .stat-card--rose {
+    @apply border-rose-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(244, 63, 94, 0.24) 0%,
+      rgba(100, 30, 50, 0.45) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(251, 113, 133, 0.15);
+  }
+
+  .stat-card--violet {
+    @apply border-violet-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.28) 0%,
+      rgba(76, 45, 130, 0.5) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(167, 139, 250, 0.15);
+  }
+
+  .stat-card--violet:hover {
+    box-shadow:
+      0 6px 16px -2px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(167, 139, 250, 0.25);
+  }
+
+  .stat-card--violet .stat-card-title {
+    @apply text-violet-100;
+  }
+
+  .stat-card--violet .stat-card-hint {
+    @apply text-violet-100/70;
   }
 
   .stat-card-icon {
-    @apply flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center border;
+    @apply relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-xl
+           flex items-center justify-center border shadow-sm;
+  }
+
+  .stat-card-icon--sky {
+    @apply bg-gradient-to-br from-sky-400/55 to-cyan-500/40 border-sky-300/50 text-sky-50;
+  }
+
+  .stat-card-icon--emerald {
+    @apply bg-gradient-to-br from-emerald-400/55 to-teal-500/40 border-emerald-300/50 text-emerald-50;
+  }
+
+  .stat-card-icon--amber {
+    @apply bg-gradient-to-br from-amber-400/55 to-orange-500/40 border-amber-300/50 text-amber-50;
+  }
+
+  .stat-card-icon--rose {
+    @apply bg-gradient-to-br from-rose-400/50 to-pink-500/35 border-rose-300/50 text-rose-50;
+  }
+
+  .stat-card-icon--violet {
+    @apply bg-gradient-to-br from-violet-400/55 to-purple-500/40 border-violet-300/50 text-violet-50;
   }
 }
 

@@ -210,6 +210,17 @@ const CHART_PALETTE = [
   '#0891b2',
 ];
 
+const CHART_AXIS_TICK = { fill: '#cbd5e1', fontSize: 11 };
+const CHART_AXIS_TICK_Y = { fill: '#cbd5e1', fontSize: 12 };
+const CHART_GRID_STROKE = 'rgba(56, 189, 248, 0.22)';
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: 'rgba(15, 23, 42, 0.95)',
+  border: '1px solid rgba(56, 189, 248, 0.35)',
+  borderRadius: '8px',
+  color: '#f1f5f9',
+};
+const CHART_LEGEND_STYLE = { color: '#e2e8f0', fontSize: 12 };
+
 function normalizeHex7(c: string): string | null {
   let s = c.trim();
   if (!s.startsWith('#')) return null;
@@ -324,156 +335,205 @@ export const ReportsPage: React.FC = () => {
     <>
       <MainNavbar />
       <PageWrapper>
-        <div className="py-4 sm:py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reportes</h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1">
-                  Tickets creados en el período seleccionado, cierres y tiempos de resolución
-                </p>
-              </div>
-              {report && (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={handleExportPdf}
-                    disabled={isExportingPdf}
-                    className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isExportingPdf ? 'Generando PDF...' : 'Exportar PDF'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => downloadTicketsReportCsv(report)}
-                    className="inline-flex items-center justify-center rounded-lg bg-[#4A6FA5] px-4 py-2.5 text-sm font-medium text-white shadow hover:bg-[#3d5d8c] transition-colors"
-                  >
-                    Exportar CSV
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-medium text-gray-700 mb-3">Rango de fechas</p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <label className="flex flex-col text-xs text-gray-600 sm:flex-1">
-                  Desde
-                  <input
-                    type="date"
-                    value={draftFrom}
-                    onChange={(e) => setDraftFrom(e.target.value)}
-                    className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
-                  />
-                </label>
-                <label className="flex flex-col text-xs text-gray-600 sm:flex-1">
-                  Hasta
-                  <input
-                    type="date"
-                    value={draftTo}
-                    onChange={(e) => setDraftTo(e.target.value)}
-                    className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={applyRange}
-                  disabled={!draftFrom || !draftTo || draftFrom > draftTo}
-                  className="mt-0 sm:mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Actualizar
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Máximo 366 días. Por defecto: últimos 30 días.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="page-heading">Reportes</h1>
+              <p className="page-subheading">
+                Tickets creados en el período seleccionado, cierres y tiempos de resolución
               </p>
             </div>
-
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-24 text-gray-600">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
-                <p className="mt-2">Generando reporte...</p>
-              </div>
-            )}
-
-            {isError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                {(error as Error)?.message || 'No se pudo cargar el reporte'}
-                <button type="button" className="ml-3 underline" onClick={() => refetch()}>
-                  Reintentar
+            {report && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:shrink-0">
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  disabled={isExportingPdf}
+                  className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isExportingPdf ? 'Generando PDF...' : 'Exportar PDF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadTicketsReportCsv(report)}
+                  className="btn-secondary text-sm"
+                >
+                  Exportar CSV
                 </button>
               </div>
             )}
+          </div>
 
-            {!isLoading && !isError && report && (
-              <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                  <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-md">
-                    <p className="text-sm font-semibold text-gray-700">Tickets creados</p>
-                    <p className="mt-2 text-3xl font-bold text-blue-700">
-                      {report.tickets_creados}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600">En el período (fecha de creación)</p>
-                  </div>
-                  <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-5 shadow-md">
-                    <p className="text-sm font-semibold text-gray-700">Tickets cerrados</p>
-                    <p className="mt-2 text-3xl font-bold text-green-700">
-                      {report.tickets_cerrados}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600">
-                      Cerrados en el período (fecha de cierre)
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100 p-5 shadow-md">
-                    <p className="text-sm font-semibold text-gray-700">
-                      Tiempo medio de resolución
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-amber-800">
-                      {report.promedio_horas_resolucion === null
-                        ? '—'
-                        : `${report.promedio_horas_resolucion} h`}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600">
-                      Solo tickets cerrados en el período
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-md">
-                    <p className="text-sm font-semibold text-gray-700">Período</p>
-                    <p className="mt-2 text-lg font-semibold text-gray-900">
-                      {report.period.date_from}
-                      <span className="mx-1 text-gray-500">→</span>
-                      {report.period.date_to}
-                    </p>
+          <div className="content-panel mb-6">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-4">Rango de fechas</h2>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <div className="flex-1 min-w-0">
+                <label htmlFor="report-date-from" className="label-field">
+                  Desde
+                </label>
+                <input
+                  id="report-date-from"
+                  type="date"
+                  value={draftFrom}
+                  onChange={(e) => setDraftFrom(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label htmlFor="report-date-to" className="label-field">
+                  Hasta
+                </label>
+                <input
+                  id="report-date-to"
+                  type="date"
+                  value={draftTo}
+                  onChange={(e) => setDraftTo(e.target.value)}
+                  className="input-field w-full"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={applyRange}
+                disabled={!draftFrom || !draftTo || draftFrom > draftTo}
+                className="btn-primary w-full sm:w-auto shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Actualizar
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-blue-100/70">
+              Máximo 366 días. Por defecto: últimos 30 días.
+            </p>
+          </div>
+
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400" />
+              <p className="mt-3 text-sm text-blue-100/85">Generando reporte...</p>
+            </div>
+          )}
+
+          {isError && (
+            <div className="rounded-xl border border-red-400/40 bg-red-950/40 px-4 py-3 text-sm text-red-200 backdrop-blur-sm">
+              {(error as Error)?.message || 'No se pudo cargar el reporte'}
+              <button
+                type="button"
+                className="ml-3 font-medium text-red-100 underline hover:text-white"
+                onClick={() => refetch()}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !isError && report && (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                <div className="stat-card stat-card--sky">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="stat-card-title">Tickets creados</p>
+                      <p className="stat-card-value">{report.tickets_creados}</p>
+                      <p className="stat-card-hint">En el período (fecha de creación)</p>
+                    </div>
+                    <div className="stat-card-icon stat-card-icon--sky">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
+                <div className="stat-card stat-card--emerald">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="stat-card-title">Tickets cerrados</p>
+                      <p className="stat-card-value">{report.tickets_cerrados}</p>
+                      <p className="stat-card-hint">Cerrados en el período (fecha de cierre)</p>
+                    </div>
+                    <div className="stat-card-icon stat-card-icon--emerald">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div className="stat-card stat-card--amber">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="stat-card-title">Tiempo medio de resolución</p>
+                      <p className="stat-card-value">
+                        {report.promedio_horas_resolucion === null
+                          ? '—'
+                          : `${report.promedio_horas_resolucion} h`}
+                      </p>
+                      <p className="stat-card-hint">Solo tickets cerrados en el período</p>
+                    </div>
+                    <div className="stat-card-icon stat-card-icon--amber">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div className="stat-card stat-card--violet">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="stat-card-title">Período</p>
+                      <p className="stat-card-value text-base sm:text-lg font-semibold leading-snug">
+                        {report.period.date_from}
+                        <span className="mx-1.5 opacity-60">→</span>
+                        {report.period.date_to}
+                      </p>
+                    </div>
+                    <div className="stat-card-icon stat-card-icon--violet">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 mb-6">
-                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-900">Creados por estado</h2>
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 mb-6">
+                <div className="content-panel">
+                  <h2 className="mb-4 text-lg font-semibold text-white">Creados por estado</h2>
                     {report.porEstado.length === 0 || totalPorEstado === 0 ? (
-                      <p className="py-16 text-center text-gray-400">Sin datos en este período</p>
+                      <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
                     ) : (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart
                           data={report.porEstado}
                           margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                           <XAxis
                             dataKey="estado_nombre"
-                            tick={{ fontSize: 11 }}
+                            tick={CHART_AXIS_TICK}
                             angle={-35}
                             textAnchor="end"
                             height={70}
                           />
-                          <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'white',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                            }}
-                          />
+                          <YAxis tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
+                          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                           <Bar
                             dataKey="cantidad"
                             fill={estadoBarFallbackFill}
@@ -491,12 +551,12 @@ export const ReportsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  <div className="content-panel">
+                    <h2 className="mb-4 text-lg font-semibold text-white">
                       Creados por prioridad
                     </h2>
                     {report.porPrioridad.every((p) => !p.cantidad) ? (
-                      <p className="py-16 text-center text-gray-400">Sin datos en este período</p>
+                      <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
                     ) : (
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
@@ -508,7 +568,7 @@ export const ReportsPage: React.FC = () => {
                             nameKey="nombre"
                             outerRadius={100}
                             fill={CHART_PALETTE[0]}
-                            stroke="#f3f4f6"
+                            stroke="rgba(15, 23, 42, 0.5)"
                             strokeWidth={1}
                             labelLine={false}
                             label={({ payload }) =>
@@ -528,42 +588,36 @@ export const ReportsPage: React.FC = () => {
                                 />
                               ))}
                           </Pie>
-                          <Tooltip />
-                          <Legend />
+                          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                          <Legend wrapperStyle={CHART_LEGEND_STYLE} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
                   </div>
                 </div>
 
-                <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6">
-                  <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                <div className="content-panel mb-6">
+                  <h2 className="mb-4 text-lg font-semibold text-white">
                     Creados por categoría
                   </h2>
                   {report.porCategoria.length === 0 || totalPorCategoria === 0 ? (
-                    <p className="py-16 text-center text-gray-400">Sin datos en este período</p>
+                    <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
                   ) : (
                     <ResponsiveContainer width="100%" height={320}>
                       <BarChart
                         data={report.porCategoria}
                         margin={{ top: 8, right: 8, left: 0, bottom: 56 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                         <XAxis
                           dataKey="nombre"
-                          tick={{ fontSize: 11 }}
+                          tick={CHART_AXIS_TICK}
                           angle={-35}
                           textAnchor="end"
                           height={80}
                         />
-                        <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                          }}
-                        />
+                        <YAxis tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
+                        <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                         <Bar dataKey="cantidad" radius={[8, 8, 0, 0]}>
                           {report.porCategoria.map((c, index) => (
                             <Cell key={c.id} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
@@ -574,35 +628,29 @@ export const ReportsPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="content-panel">
+                    <h2 className="mb-4 text-lg font-semibold text-white">
                       Creados por área de incidente
                     </h2>
                     {report.porArea.every((a) => !a.cantidad) ? (
-                      <p className="py-16 text-center text-gray-400">Sin datos en este período</p>
+                      <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
                     ) : (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart
                           data={report.porArea}
                           margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                           <XAxis
                             dataKey="nombre"
-                            tick={{ fontSize: 11 }}
+                            tick={CHART_AXIS_TICK}
                             angle={-35}
                             textAnchor="end"
                             height={70}
                           />
-                          <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'white',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                            }}
-                          />
+                          <YAxis tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
+                          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                           <Bar dataKey="cantidad" radius={[8, 8, 0, 0]}>
                             {report.porArea.map((a, index) => (
                               <Cell
@@ -616,12 +664,12 @@ export const ReportsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  <div className="content-panel">
+                    <h2 className="mb-4 text-lg font-semibold text-white">
                       Cierres por técnico
                     </h2>
                     {report.cierresPorTecnico.length === 0 ? (
-                      <p className="py-16 text-center text-gray-400">Sin cierres en este período</p>
+                      <p className="py-16 text-center text-blue-200/50">Sin cierres en este período</p>
                     ) : (
                       <ResponsiveContainer
                         width="100%"
@@ -632,21 +680,15 @@ export const ReportsPage: React.FC = () => {
                           data={report.cierresPorTecnico}
                           margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                          <XAxis type="number" tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
                           <YAxis
                             type="category"
                             dataKey="tecnico_nombre"
                             width={120}
-                            tick={{ fontSize: 11 }}
+                            tick={CHART_AXIS_TICK}
                           />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'white',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                            }}
-                          />
+                          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                           <Bar dataKey="cantidad" radius={[0, 8, 8, 0]}>
                             {report.cierresPorTecnico.map((t, index) => (
                               <Cell
@@ -662,7 +704,6 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </>
             )}
-          </div>
         </div>
       </PageWrapper>
     </>
