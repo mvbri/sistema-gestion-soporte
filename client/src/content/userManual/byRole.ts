@@ -63,24 +63,24 @@ const technicianSections: ManualSection[] = [
     id: 'intro',
     title: 'Introducción',
     paragraphs: [
-      'Como técnico gestionás tickets asignados, inventario y préstamos en la medida en que la aplicación te lo permita. El menú lateral agrupa Dashboard, Panel del técnico, Tickets, Solicitudes de materiales, Préstamos e Inventario.',
+      'Como técnico gestionás tickets asignados, inventario y préstamos en la medida en que la aplicación te lo permita. El menú lateral agrupa Dashboard, Panel de tickets, Solicitudes de materiales, Préstamos e Inventario.',
       'Las opciones exactas dependen de tu usuario; este manual describe las pantallas habituales del rol técnico.',
     ],
   },
   {
     id: 'dashboard',
-    title: 'Dashboard y panel del técnico',
+    title: 'Dashboard y panel de tickets',
     paragraphs: [
-      'Dashboard (/dashboard) ofrece una vista general de accesos y resúmenes.',
-      'Panel del técnico (/tecnico/dashboard) concentra la información operativa para priorizar y atender el trabajo diario de soporte.',
+      'Dashboard (/dashboard) ofrece accesos rápidos al panel de tickets, crear ticket y préstamos.',
+      'Panel de tickets (/tickets) concentra la información operativa con pestañas: Asignados a mí, Creados por mí. Incluye contadores, filtros y acciones como Iniciar progreso y Marcar resuelto en tus tickets asignados.',
     ],
   },
   {
     id: 'tickets',
     title: 'Tickets',
     paragraphs: [
-      'En Tickets (/tickets) ves el listado; podés abrir un ticket (/tickets/:id) para ver detalle, comentar y actualizar estados o campos según tus permisos y si sos el técnico asignado.',
-      'En Crear ticket (/tickets/crear) podés registrar un incidente como solicitante (por ejemplo, para tu propia área). Esos tickets aparecen en la sección de tickets que creaste; los asignados a ti se gestionan en el listado principal.',
+      'En Panel de tickets (/tickets) ves el listado con pestañas según tu rol. Podés abrir un ticket (/tickets/:id) para ver detalle, comentar y actualizar estados o campos según tus permisos y si sos el técnico asignado.',
+      'En Crear ticket (/tickets/crear) podés registrar un incidente como solicitante. Esos tickets aparecen en la pestaña Creados por mí; los asignados a ti se gestionan en Asignados a mí.',
       'Las acciones de edición dependen de la asignación y de las reglas del ticket; revisá siempre los mensajes de la interfaz al guardar cambios.',
     ],
   },

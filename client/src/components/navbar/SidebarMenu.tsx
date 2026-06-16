@@ -110,10 +110,6 @@ export const SidebarMenu: React.FC = () => {
       return isRouteActive('/manual', true);
     }
 
-    if (path === '/tecnico/dashboard') {
-      return isRouteActive('/tecnico/dashboard', true);
-    }
-
     if (path === '/analytics') {
       return isRouteActive('/analytics', true);
     }
@@ -169,12 +165,14 @@ export const SidebarMenu: React.FC = () => {
       show: true,
     },
     {
-      path: '/tecnico/dashboard',
-      label: 'Panel del Técnico',
-      icon: DashboardIcon,
-      show: user?.role === 'technician',
+      path: '/tickets',
+      label:
+        user?.role === 'technician' || user?.role === 'administrator'
+          ? 'Panel de tickets'
+          : 'Tickets',
+      icon: TicketsIcon,
+      show: true,
     },
-    { path: '/tickets', label: 'Tickets', icon: TicketsIcon, show: true },
     {
       path: '/tickets/crear',
       label: 'Crear Ticket',

@@ -19,7 +19,6 @@ import { TicketsList } from './pages/TicketsList';
 import { CreateTicket } from './pages/CreateTicket';
 import { TicketDetail } from './pages/TicketDetail';
 import { TicketsDashboard } from './pages/TicketsDashboard';
-import { TechnicianDashboard } from './pages/TechnicianDashboard';
 import { AdminConfig } from './pages/AdminConfig';
 import { AdminUsers } from './pages/AdminUsers';
 import { AdminFrequentIssues } from './pages/AdminFrequentIssues';
@@ -119,11 +118,7 @@ function App() {
           />
           <Route
             path="/tecnico/dashboard"
-            element={
-              <ProtectedRoute>
-                <TechnicianDashboard />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/tickets?tab=assigned" replace />}
           />
           <Route
             path="/admin/config"

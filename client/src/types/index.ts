@@ -215,12 +215,14 @@ export interface TicketsPeriodReport {
 
 export type TicketListScope = 'created_by_me';
 
+export type TicketListTab = 'assigned' | 'created' | 'all';
+
 export interface TicketFilters {
   estado_id?: number;
   categoria_id?: number;
   prioridad_id?: number;
   assigned_technician_id?: number;
-  /** Solo técnicos: lista compacta de tickets creados por el usuario actual (el backend ignora otros filtros de alcance). */
+  /** Técnicos y administradores: filtra tickets creados por el usuario actual. */
   scope?: TicketListScope;
   busqueda?: string;
   fecha_desde?: string;

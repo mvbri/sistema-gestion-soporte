@@ -4,7 +4,7 @@ import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { UserInfo } from '../components/dashboard/UserInfo';
 import { EndUserDashboard } from '../components/dashboard/EndUserDashboard';
-import { TechnicianDashboard } from '../components/dashboard/TechnicianDashboard';
+import { TechnicianDashboardActions } from '../components/dashboard/TechnicianDashboard';
 import { AdministratorDashboard } from '../components/dashboard/AdministratorDashboard';
 
 export const Dashboard: React.FC = () => {
@@ -15,7 +15,7 @@ export const Dashboard: React.FC = () => {
       case 'end_user':
         return <EndUserDashboard />;
       case 'technician':
-        return <TechnicianDashboard />;
+        return <TechnicianDashboardActions />;
       case 'administrator':
         return <AdministratorDashboard />;
       default:

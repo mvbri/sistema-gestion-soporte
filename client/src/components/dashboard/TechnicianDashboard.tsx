@@ -1,19 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Laptop, PlusCircle, Ticket } from 'lucide-react';
+import { ClipboardList, Laptop, PlusCircle } from 'lucide-react';
 import { DashboardActionCard } from './DashboardActionCard';
 
-export const TechnicianDashboard: React.FC = () => {
+export const TechnicianDashboardActions: React.FC = () => {
   const navigate = useNavigate();
 
   return (
     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
       <DashboardActionCard
         accent="sky"
-        icon={Ticket}
-        title="Ver Tickets"
-        description="Visualiza todos los tickets del sistema"
-        onClick={() => navigate('/tickets')}
+        icon={ClipboardList}
+        title="Panel de tickets"
+        description="Gestiona tus tickets asignados y creados"
+        onClick={() => navigate('/tickets?tab=assigned')}
       />
       <DashboardActionCard
         accent="emerald"
@@ -21,13 +21,6 @@ export const TechnicianDashboard: React.FC = () => {
         title="Crear Ticket"
         description="Reporta un incidente como solicitante"
         onClick={() => navigate('/tickets/crear')}
-      />
-      <DashboardActionCard
-        accent="amber"
-        icon={ClipboardList}
-        title="Panel del Técnico"
-        description="Gestiona tus tickets asignados"
-        onClick={() => navigate('/tecnico/dashboard')}
       />
       <DashboardActionCard
         accent="violet"

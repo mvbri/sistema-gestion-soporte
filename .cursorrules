@@ -25,6 +25,12 @@ Este documento rige el desarrollo del backend para garantizar un código manteni
    - Usa Prettier y ESLint para asegurar que el código se vea igual sin importar quién lo escriba.
    - Las variables se declaran cerca de donde se usan.
 
+5. Control de Flujo (Early Return y Guard Clauses)
+   - Evita `else if` y `if` anidados cuando la lógica lo permita.
+   - Usa guard clauses al inicio de funciones (validar y `return` temprano).
+   - Prefiere bloques `if` independientes, funciones auxiliares con `return` por caso, o mapas/`switch` para mapeos por valor.
+   - Ver regla detallada: `.cursor/rules/control-flow.mdc`
+
 🛠️ II. The Pragmatic Programmer (Mentalidad)
 
 1. DRY: Don't Repeat Yourself

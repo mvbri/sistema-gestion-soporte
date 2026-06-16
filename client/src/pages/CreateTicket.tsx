@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCategorias, usePrioridades, useCreateTicketWithFormData, useFrequentIssues } from '../hooks/useTickets';
 import { createTicketSchema, type CreateTicketData } from '../schemas/ticketSchemas';
@@ -264,7 +264,13 @@ export const CreateTicket: React.FC = () => {
                 />
                 {!user?.incident_area_id && (
                   <p className="error-message">
-                    Debes configurar tu dirección en tu perfil antes de crear tickets.
+                    Debes configurar tu dirección en tu perfil antes de crear tickets.{' '}
+                    <Link
+                      to="/perfil"
+                      className="font-medium text-red-100 underline hover:text-white"
+                    >
+                      Actualizar aquí
+                    </Link>
                   </p>
                 )}
               </div>

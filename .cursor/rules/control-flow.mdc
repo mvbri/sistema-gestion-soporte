@@ -1,0 +1,120 @@
+---
+description: Preferir early return y guard clauses sobre else-if e if anidados
+alwaysApply: true
+---
+
+# Control de flujo: early return y guard clauses
+
+Evita cadenas de `else if` y `if` anidados cuando la lógica lo permita. Prioriza **guard clauses** (validaciones al inicio con `return` temprano) y **bloques `if` independientes** en lugar de ramas encadenadas.
+
+## Cuándo aplicar
+
+- Validaciones de permisos, existencia de recursos o datos inválidos → **early return** al inicio de la función.
+- Asignación de valores según condiciones mutuamente excluyentes → **bloques `if` separados** o función auxiliar con `return` por caso.
+- Mapeo de un valor a otro (roles, tipos de cambio, estados) → **`switch`**, **mapa de handlers** o **objeto lookup**.
+- Ramas `else` que solo cubren el caso negativo → invertir la condición y salir antes.
+
+## Cuándo `else if` sigue siendo aceptable
+
+- Condiciones **realmente mutuamente excluyentes** donde solo una puede cumplirse y un `if` separado sería incorrecto.
+- `switch` o mapa no aportan claridad en casos muy simples (2 ramas).
+
+## Ejemplos
+
+### Guard clauses en controladores
+
+```javascript
+// ❌ Evitar
+if (!ticket) {
+  sendError(res, 'Ticket no encontrado', null, 404);
+} else {
+  // ... 200 líneas de lógica
+}
+
+// ✅ Preferir
+if (!ticket) {
+  return sendError(res, 'Ticket no encontrado', null, 404);
+}
+// lógica principal sin anidar
+```
+
+### Cadenas de roles → bloques independientes
+
+```javascript
+// ❌ Evitar
+if (role === 'end_user') {
+  filters.created_by_user_id = id;
+} else if (role === 'technician') {
+  if (scope === 'created_by_me') {
+    filters.created_by_user_id = id;
+  } else {
+    filters.assigned_technician_id = id;
+  }
+}
+
+// ✅ Preferir
+if (role === 'end_user') {
+  filters.created_by_user_id = id;
+}
+
+if (role === 'technician' && scope === 'created_by_me') {
+  filters.created_by_user_id = id;
+}
+
+if (role === 'technician' && scope !== 'created_by_me') {
+  filters.assigned_technician_id = id;
+}
+```
+
+### Parsing / transformación → función con early return
+
+```javascript
+// ❌ Evitar
+if (raw === null || raw === '') {
+  value = null;
+} else if (raw !== undefined) {
+  value = parse(raw);
+} else {
+  value = undefined;
+}
+
+// ✅ Preferir
+function parseOptionalId(raw) {
+  if (raw === null || raw === '') return null;
+  if (raw === undefined) return undefined;
+  const parsed = typeof raw === 'number' ? raw : parseInt(raw, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+```
+
+### Mapeo por tipo → switch o mapa
+
+```javascript
+// ❌ Evitar cadena larga de else if
+if (cambio.campo === 'state') { ... }
+else if (cambio.campo === 'assigned_technician') { ... }
+else if (cambio.campo === 'category') { ... }
+
+// ✅ Preferir
+const descriptionByField = {
+  state: (c) => c.esAutoAsignado
+    ? `Estado cambiado automáticamente de "${c.anterior}" a "${c.nuevo}" al asignar técnico`
+    : `Estado cambiado de "${c.anterior}" a "${c.nuevo}"`,
+  assigned_technician: (c) =>
+    c.nuevo === 'Sin asignar' || c.nuevo === ''
+      ? 'Asignación removida'
+      : `Cambio de asignación a ${c.nuevo}`,
+  category: (c) => `Categoría cambiada de "${c.anterior}" a "${c.nuevo}"`,
+};
+
+const buildDescription = (cambio) =>
+  descriptionByField[cambio.campo]?.(cambio)
+  ?? `${cambio.campo} cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
+```
+
+## Checklist rápido
+
+- [ ] ¿Las validaciones fallan al inicio con `return`?
+- [ ] ¿Se puede extraer lógica anidada a una función auxiliar pequeña?
+- [ ] ¿Una cadena de `else if` puede ser `switch`, mapa o `if` independientes?
+- [ ] ¿El flujo principal queda al nivel superior de indentación?

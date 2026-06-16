@@ -72,6 +72,136 @@ const daysBetweenInclusive = (a, b) => {
     return Math.floor((end - start) / 86400000) + 1;
 };
 
+const isLegacySchemaError = (error) =>
+    error.code === 'ER_BAD_FIELD_ERROR' ||
+    error.code === 'ER_NO_SUCH_TABLE' ||
+    (error.message && error.message.includes('Unknown column'));
+
+const queryWithLegacySql = async (modernSql, legacySql) => {
+    try {
+        return await query(modernSql);
+    } catch (error) {
+        if (!isLegacySchemaError(error)) {
+            throw error;
+        }
+        return query(legacySql);
+    }
+};
+
+const queryNameById = async (table, id) => {
+    try {
+        return await query(`SELECT name FROM ${table} WHERE id = ?`, [id]);
+    } catch (error) {
+        if (!isLegacySchemaError(error)) {
+            throw error;
+        }
+        return query(`SELECT nombre as name FROM ${table} WHERE id = ?`, [id]);
+    }
+};
+
+const queryIncidentAreaNameById = async (areaId) => {
+    try {
+        return await query('SELECT name FROM incident_areas WHERE id = ?', [areaId]);
+    } catch (error) {
+        if (!isLegacySchemaError(error)) {
+            return [{ name: 'Desconocida' }];
+        }
+        try {
+            return await query('SELECT nombre as name FROM incident_areas WHERE id = ?', [areaId]);
+        } catch {
+            return [{ name: 'Desconocida' }];
+        }
+    }
+};
+
+const parseEquipmentIdsValue = (equipmentIds) => {
+    if (typeof equipmentIds === 'string') {
+        try {
+            return JSON.parse(equipmentIds);
+        } catch {
+            return equipmentIds
+                .split(',')
+                .map((id) => parseInt(id.trim(), 10))
+                .filter((id) => !Number.isNaN(id));
+        }
+    }
+
+    if (Array.isArray(equipmentIds)) {
+        return equipmentIds.map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id));
+    }
+
+    return [];
+};
+
+const parseEquipmentIdsFromBody = (equipmentIds) => {
+    if (!equipmentIds) return null;
+    return parseEquipmentIdsValue(equipmentIds);
+};
+
+const parseEquipmentIdsForUpdate = (equipmentIds) => {
+    if (equipmentIds === undefined) return undefined;
+    if (equipmentIds === null || equipmentIds === '') return [];
+    return parseEquipmentIdsValue(equipmentIds);
+};
+
+const parseAssignedTechnicianId = (raw) => {
+    if (raw === null || raw === '') return null;
+    if (raw === undefined) return undefined;
+    const parsed = typeof raw === 'number' ? raw : parseInt(raw, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+};
+
+const applyTicketListRoleFilters = (filters, { role, userId, scope, assignedTechnicianId }) => {
+    const scopeCreatedByMe = scope === 'created_by_me';
+
+    if (role === 'end_user') {
+        filters.created_by_user_id = userId;
+        return;
+    }
+
+    if (role === 'technician' && scopeCreatedByMe) {
+        filters.created_by_user_id = userId;
+    }
+
+    if (role === 'technician' && !scopeCreatedByMe) {
+        filters.assigned_technician_id = userId;
+    }
+
+    if (role === 'administrator' && scopeCreatedByMe) {
+        filters.created_by_user_id = userId;
+    }
+
+    if (role === 'administrator' && !scopeCreatedByMe && assignedTechnicianId) {
+        filters.assigned_technician_id = parseInt(assignedTechnicianId, 10);
+    }
+};
+
+const buildChangeDescription = (cambio) => {
+    if (cambio.campo === 'state') {
+        if (cambio.esAutoAsignado) {
+            return `Estado cambiado automáticamente de "${cambio.anterior}" a "${cambio.nuevo}" al asignar técnico`;
+        }
+        return `Estado cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
+    }
+
+    if (cambio.campo === 'assigned_technician') {
+        if (cambio.nuevo === 'Sin asignar' || cambio.nuevo === '') {
+            return 'Asignación removida';
+        }
+        return `Cambio de asignación a ${cambio.nuevo}`;
+    }
+
+    if (cambio.campo === 'category') {
+        return `Categoría cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
+    }
+
+    if (cambio.campo === 'priority') {
+        return `Prioridad cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
+    }
+
+    return `${cambio.campo} cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
+};
+
 export const createTicket = async (req, res) => {
     try {
         const {
@@ -96,18 +226,7 @@ export const createTicket = async (req, res) => {
         const imagenes = buildTicketImagesFromRequest(req);
         const image_url = imagenes.length > 0 ? JSON.stringify(imagenes) : null;
 
-        let parsedEquipmentIds = null;
-        if (equipment_ids) {
-            if (typeof equipment_ids === 'string') {
-                try {
-                    parsedEquipmentIds = JSON.parse(equipment_ids);
-                } catch {
-                    parsedEquipmentIds = equipment_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-                }
-            } else if (Array.isArray(equipment_ids)) {
-                parsedEquipmentIds = equipment_ids.map(id => parseInt(id)).filter(id => !isNaN(id));
-            }
-        }
+        const parsedEquipmentIds = parseEquipmentIdsFromBody(equipment_ids);
 
         const ticket = await Ticket.create({
             title,
@@ -139,6 +258,8 @@ export const createTicket = async (req, res) => {
  * Los usuarios con rol 'end_user' solo ven tickets que ellos crearon (filtro fijo).
  * Los técnicos ven por defecto solo tickets asignados a ellos; con query scope=created_by_me
  * solo los que crearon (para listados secundarios en el cliente).
+ * Los administradores ven todos los tickets por defecto; con scope=created_by_me solo los que
+ * crearon, y con assigned_technician_id filtran por técnico asignado (p. ej. sus propios).
  */
 export const getTickets = async (req, res) => {
     try {
@@ -156,18 +277,12 @@ export const getTickets = async (req, res) => {
         } = req.query;
 
         const filters = {};
-
-        if (role === 'end_user') {
-            filters.created_by_user_id = id;
-        } else if (role === 'technician') {
-            if (req.query.scope === 'created_by_me') {
-                filters.created_by_user_id = id;
-            } else {
-                filters.assigned_technician_id = id;
-            }
-        } else if (role === 'administrator' && assigned_technician_id) {
-            filters.assigned_technician_id = parseInt(assigned_technician_id, 10);
-        }
+        applyTicketListRoleFilters(filters, {
+            role,
+            userId: id,
+            scope: req.query.scope,
+            assignedTechnicianId: assigned_technician_id
+        });
 
         if (state_id) filters.state_id = parseInt(state_id);
         if (category_id) filters.category_id = parseInt(category_id);
@@ -269,18 +384,8 @@ export const updateTicket = async (req, res) => {
         console.log('Body recibido:', req.body);
         console.log('assigned_technician_id recibido:', assignedTechnicianIdRaw, typeof assignedTechnicianIdRaw);
 
-        const state_id = stateIdRaw !== undefined ? parseInt(stateIdRaw, 10) : undefined;
-        let assigned_technician_id;
-        if (assignedTechnicianIdRaw === null || assignedTechnicianIdRaw === '') {
-            assigned_technician_id = null;
-        } else if (assignedTechnicianIdRaw !== undefined) {
-            const parsed = typeof assignedTechnicianIdRaw === 'number' 
-                ? assignedTechnicianIdRaw 
-                : parseInt(assignedTechnicianIdRaw, 10);
-            assigned_technician_id = isNaN(parsed) ? null : parsed;
-        } else {
-            assigned_technician_id = undefined;
-        }
+        let state_id = stateIdRaw !== undefined ? parseInt(stateIdRaw, 10) : undefined;
+        const assigned_technician_id = parseAssignedTechnicianId(assignedTechnicianIdRaw);
         
         console.log('assigned_technician_id procesado:', assigned_technician_id);
 
@@ -300,7 +405,6 @@ export const updateTicket = async (req, res) => {
         }
 
         const cambios = [];
-        const historialEntries = [];
         let estadoAutoAsignado = false;
 
         if (role === 'administrator') {
@@ -316,20 +420,7 @@ export const updateTicket = async (req, res) => {
                 const areaIncidenteId = parseInt(areaIncidenteIdRaw, 10);
                 if (areaIncidenteId !== ticket.incident_area_id) {
                     const areaAnterior = ticket.incident_area_name || 'Sin área';
-                    let areaNueva;
-                    try {
-                        areaNueva = await query('SELECT name FROM incident_areas WHERE id = ?', [areaIncidenteId]);
-                    } catch (error) {
-                        if (error.code === 'ER_BAD_FIELD_ERROR' || error.code === 'ER_NO_SUCH_TABLE' || (error.message && error.message.includes('Unknown column'))) {
-                            try {
-                                areaNueva = await query('SELECT nombre as name FROM incident_areas WHERE id = ?', [areaIncidenteId]);
-                            } catch (error2) {
-                                areaNueva = [{ name: 'Desconocida' }];
-                            }
-                        } else {
-                            areaNueva = [{ name: 'Desconocida' }];
-                        }
-                    }
+                    const areaNueva = await queryIncidentAreaNameById(areaIncidenteId);
                     cambios.push({
                         campo: 'incident_area',
                         anterior: areaAnterior,
@@ -339,18 +430,8 @@ export const updateTicket = async (req, res) => {
             }
 
             if (category_id !== undefined && category_id !== ticket.category_id) {
-                let categoriaAnterior, categoriaNueva;
-                try {
-                    categoriaAnterior = await query('SELECT name FROM ticket_categories WHERE id = ?', [ticket.category_id]);
-                    categoriaNueva = await query('SELECT name FROM ticket_categories WHERE id = ?', [category_id]);
-                } catch (error) {
-                    if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
-                        categoriaAnterior = await query('SELECT nombre as name FROM ticket_categories WHERE id = ?', [ticket.category_id]);
-                        categoriaNueva = await query('SELECT nombre as name FROM ticket_categories WHERE id = ?', [category_id]);
-                    } else {
-                        throw error;
-                    }
-                }
+                const categoriaAnterior = await queryNameById('ticket_categories', ticket.category_id);
+                const categoriaNueva = await queryNameById('ticket_categories', category_id);
                 cambios.push({
                     campo: 'category',
                     anterior: categoriaAnterior[0]?.name || '',
@@ -359,18 +440,8 @@ export const updateTicket = async (req, res) => {
             }
 
             if (priority_id !== undefined && priority_id !== ticket.priority_id) {
-                let prioridadAnterior, prioridadNueva;
-                try {
-                    prioridadAnterior = await query('SELECT name FROM ticket_priorities WHERE id = ?', [ticket.priority_id]);
-                    prioridadNueva = await query('SELECT name FROM ticket_priorities WHERE id = ?', [priority_id]);
-                } catch (error) {
-                    if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
-                        prioridadAnterior = await query('SELECT nombre as name FROM ticket_priorities WHERE id = ?', [ticket.priority_id]);
-                        prioridadNueva = await query('SELECT nombre as name FROM ticket_priorities WHERE id = ?', [priority_id]);
-                    } else {
-                        throw error;
-                    }
-                }
+                const prioridadAnterior = await queryNameById('ticket_priorities', ticket.priority_id);
+                const prioridadNueva = await queryNameById('ticket_priorities', priority_id);
                 cambios.push({
                     campo: 'priority',
                     anterior: prioridadAnterior[0]?.name || '',
@@ -420,18 +491,8 @@ export const updateTicket = async (req, res) => {
         }
 
         if (state_id !== undefined && state_id !== ticket.state_id) {
-            let estadoAnterior, estadoNuevo;
-            try {
-                estadoAnterior = await query('SELECT name FROM ticket_states WHERE id = ?', [ticket.state_id]);
-                estadoNuevo = await query('SELECT name FROM ticket_states WHERE id = ?', [state_id]);
-            } catch (error) {
-                if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
-                    estadoAnterior = await query('SELECT nombre as name FROM ticket_states WHERE id = ?', [ticket.state_id]);
-                    estadoNuevo = await query('SELECT nombre as name FROM ticket_states WHERE id = ?', [state_id]);
-                } else {
-                    throw error;
-                }
-            }
+            const estadoAnterior = await queryNameById('ticket_states', ticket.state_id);
+            const estadoNuevo = await queryNameById('ticket_states', state_id);
             cambios.push({
                 campo: 'state',
                 anterior: estadoAnterior[0]?.name || '',
@@ -441,24 +502,10 @@ export const updateTicket = async (req, res) => {
         }
 
         const incident_area_id = areaIncidenteIdRaw !== undefined ? parseInt(areaIncidenteIdRaw, 10) : undefined;
-
-        let parsedEquipmentIds = undefined;
-        if (equipment_ids !== undefined) {
-            if (typeof equipment_ids === 'string') {
-                try {
-                    parsedEquipmentIds = JSON.parse(equipment_ids);
-                } catch {
-                    parsedEquipmentIds = equipment_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-                }
-            } else if (Array.isArray(equipment_ids)) {
-                parsedEquipmentIds = equipment_ids.map(id => parseInt(id)).filter(id => !isNaN(id));
-            } else if (equipment_ids === null || equipment_ids === '') {
-                parsedEquipmentIds = [];
-            }
-        }
+        const parsedEquipmentIds = parseEquipmentIdsForUpdate(equipment_ids);
 
         const updateData = {};
-        
+
         if (role === 'administrator') {
             if (title !== undefined) updateData.title = title;
             if (description !== undefined) updateData.description = description;
@@ -468,8 +515,10 @@ export const updateTicket = async (req, res) => {
             if (state_id !== undefined) updateData.state_id = state_id;
             if (assigned_technician_id !== undefined) updateData.assigned_technician_id = assigned_technician_id;
             if (parsedEquipmentIds !== undefined) updateData.equipment_ids = parsedEquipmentIds;
-        } else {
-            if (state_id !== undefined) updateData.state_id = state_id;
+        }
+
+        if (role === 'technician' && state_id !== undefined) {
+            updateData.state_id = state_id;
         }
 
         const updatedTicket = await Ticket.update(id, updateData);
@@ -494,26 +543,7 @@ export const updateTicket = async (req, res) => {
         }
 
         for (const cambio of cambios) {
-            let description = '';
-            if (cambio.campo === 'state') {
-                if (cambio.esAutoAsignado) {
-                    description = `Estado cambiado automáticamente de "${cambio.anterior}" a "${cambio.nuevo}" al asignar técnico`;
-                } else {
-                    description = `Estado cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
-                }
-            } else if (cambio.campo === 'assigned_technician') {
-                if (cambio.nuevo === 'Sin asignar' || cambio.nuevo === '') {
-                    description = `Asignación removida`;
-                } else {
-                    description = `Cambio de asignación a ${cambio.nuevo}`;
-                }
-            } else if (cambio.campo === 'category') {
-                description = `Categoría cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
-            } else if (cambio.campo === 'priority') {
-                description = `Prioridad cambiada de "${cambio.anterior}" a "${cambio.nuevo}"`;
-            } else {
-                description = `${cambio.campo} cambiado de "${cambio.anterior}" a "${cambio.nuevo}"`;
-            }
+            const description = buildChangeDescription(cambio);
 
             await TicketHistorial.create({
                 ticket_id: id,
@@ -597,19 +627,11 @@ export const addComment = async (req, res) => {
 
 export const getEstados = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM ticket_states WHERE active = TRUE ORDER BY `order`';
-        try {
-            const estados = await query(sql);
-            sendSuccess(res, 'Estados obtenidos exitosamente', estados);
-        } catch (error) {
-            if (error.code === 'ER_BAD_FIELD_ERROR') {
-                sql = 'SELECT * FROM ticket_states WHERE activo = TRUE ORDER BY orden';
-                const estados = await query(sql);
-                sendSuccess(res, 'Estados obtenidos exitosamente', estados);
-            } else {
-                throw error;
-            }
-        }
+        const estados = await queryWithLegacySql(
+            'SELECT * FROM ticket_states WHERE active = TRUE ORDER BY `order`',
+            'SELECT * FROM ticket_states WHERE activo = TRUE ORDER BY orden'
+        );
+        sendSuccess(res, 'Estados obtenidos exitosamente', estados);
     } catch (error) {
         console.error('Error al obtener estados:', error);
         sendError(res, 'Error al obtener estados', null, 500);
@@ -618,19 +640,11 @@ export const getEstados = async (req, res) => {
 
 export const getCategorias = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM ticket_categories WHERE active = TRUE ORDER BY name';
-        try {
-            const categorias = await query(sql);
-            sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
-        } catch (error) {
-            if (error.code === 'ER_BAD_FIELD_ERROR') {
-                sql = 'SELECT * FROM ticket_categories WHERE activo = TRUE ORDER BY nombre';
-                const categorias = await query(sql);
-                sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
-            } else {
-                throw error;
-            }
-        }
+        const categorias = await queryWithLegacySql(
+            'SELECT * FROM ticket_categories WHERE active = TRUE ORDER BY name',
+            'SELECT * FROM ticket_categories WHERE activo = TRUE ORDER BY nombre'
+        );
+        sendSuccess(res, 'Categorías obtenidas exitosamente', categorias);
     } catch (error) {
         console.error('Error al obtener categorías:', error);
         sendError(res, 'Error al obtener categorías', null, 500);
@@ -639,19 +653,11 @@ export const getCategorias = async (req, res) => {
 
 export const getPrioridades = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM ticket_priorities WHERE active = TRUE ORDER BY level';
-        try {
-            const prioridades = await query(sql);
-            sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
-        } catch (error) {
-            if (error.code === 'ER_BAD_FIELD_ERROR') {
-                sql = 'SELECT * FROM ticket_priorities WHERE activo = TRUE ORDER BY nivel';
-                const prioridades = await query(sql);
-                sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
-            } else {
-                throw error;
-            }
-        }
+        const prioridades = await queryWithLegacySql(
+            'SELECT * FROM ticket_priorities WHERE active = TRUE ORDER BY level',
+            'SELECT * FROM ticket_priorities WHERE activo = TRUE ORDER BY nivel'
+        );
+        sendSuccess(res, 'Prioridades obtenidas exitosamente', prioridades);
     } catch (error) {
         console.error('Error al obtener prioridades:', error);
         sendError(res, 'Error al obtener prioridades', null, 500);
@@ -660,19 +666,11 @@ export const getPrioridades = async (req, res) => {
 
 export const getDirecciones = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM incident_areas WHERE active = TRUE ORDER BY name';
-        try {
-            const direcciones = await query(sql);
-            sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
-        } catch (error) {
-            if (error.code === 'ER_BAD_FIELD_ERROR') {
-                sql = 'SELECT * FROM incident_areas WHERE activo = TRUE ORDER BY nombre';
-                const direcciones = await query(sql);
-                sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
-            } else {
-                throw error;
-            }
-        }
+        const direcciones = await queryWithLegacySql(
+            'SELECT * FROM incident_areas WHERE active = TRUE ORDER BY name',
+            'SELECT * FROM incident_areas WHERE activo = TRUE ORDER BY nombre'
+        );
+        sendSuccess(res, 'Direcciones obtenidas exitosamente', direcciones);
     } catch (error) {
         console.error('Error al obtener direcciones:', error);
         sendError(res, 'Error al obtener direcciones', null, 500);
@@ -681,31 +679,22 @@ export const getDirecciones = async (req, res) => {
 
 export const getTecnicos = async (req, res) => {
     try {
-        let sql = `
+        const modernSql = `
             SELECT u.id, u.full_name, u.email, u.department
             FROM users u
             JOIN roles r ON u.role_id = r.id
             WHERE r.name IN ('technician', 'administrator') AND u.active = TRUE
             ORDER BY u.full_name
         `;
-        try {
-            const tecnicos = await query(sql);
-            sendSuccess(res, 'Técnicos obtenidos exitosamente', tecnicos);
-        } catch (error) {
-            if (error.code === 'ER_BAD_FIELD_ERROR' || (error.message && error.message.includes('Unknown column'))) {
-                sql = `
-                    SELECT u.id, u.full_name, u.email, u.department
-                    FROM users u
-                    JOIN roles r ON u.role_id = r.id
-                    WHERE r.nombre IN ('technician', 'administrator') AND u.active = TRUE
-                    ORDER BY u.full_name
-                `;
-                const tecnicos = await query(sql);
-                sendSuccess(res, 'Técnicos obtenidos exitosamente', tecnicos);
-            } else {
-                throw error;
-            }
-        }
+        const legacySql = `
+            SELECT u.id, u.full_name, u.email, u.department
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            WHERE r.nombre IN ('technician', 'administrator') AND u.active = TRUE
+            ORDER BY u.full_name
+        `;
+        const tecnicos = await queryWithLegacySql(modernSql, legacySql);
+        sendSuccess(res, 'Técnicos obtenidos exitosamente', tecnicos);
     } catch (error) {
         console.error('Error al obtener técnicos:', error);
         sendError(res, 'Error al obtener técnicos', null, 500);
@@ -890,10 +879,8 @@ export const markAsResolved = async (req, res) => {
             return sendError(res, 'No autorizado para marcar este ticket como resuelto', null, 403);
         }
 
-        if (isEndUser) {
-            if (ticket.created_by_user_id !== userId) {
-                return sendError(res, 'Solo puedes marcar como resueltos los tickets que creaste', null, 403);
-            }
+        if (isEndUser && ticket.created_by_user_id !== userId) {
+            return sendError(res, 'Solo puedes marcar como resueltos los tickets que creaste', null, 403);
         }
 
         if (isTechnician && ticket.assigned_technician_id !== userId) {
@@ -923,22 +910,21 @@ export const markAsResolved = async (req, res) => {
             );
         }
 
-        if (isEndUser) {
-            if (ticket.state_id !== 2 && ticket.state_id !== 3) {
-                return sendError(
-                    res,
-                    'Solo puedes marcar como resuelto un ticket asignado o en proceso',
-                    null,
-                    400
-                );
-            }
-        } else {
-            if (ticket.state_id === 2) {
-                return sendError(res, 'No se puede marcar como resuelto un ticket "Asignado". Debe estar "En Proceso" primero', null, 400);
-            }
-            if (ticket.state_id !== 3) {
-                return sendError(res, 'Solo se puede marcar como resuelto un ticket que está "En Proceso"', null, 400);
-            }
+        if (isEndUser && ticket.state_id !== 2 && ticket.state_id !== 3) {
+            return sendError(
+                res,
+                'Solo puedes marcar como resuelto un ticket asignado o en proceso',
+                null,
+                400
+            );
+        }
+
+        if (!isEndUser && ticket.state_id === 2) {
+            return sendError(res, 'No se puede marcar como resuelto un ticket "Asignado". Debe estar "En Proceso" primero', null, 400);
+        }
+
+        if (!isEndUser && ticket.state_id !== 3) {
+            return sendError(res, 'Solo se puede marcar como resuelto un ticket que está "En Proceso"', null, 400);
         }
 
         const estadoAnterior = await query('SELECT name FROM ticket_states WHERE id = ?', [ticket.state_id]);
