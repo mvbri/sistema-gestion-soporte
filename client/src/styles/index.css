@@ -333,6 +333,10 @@
     @apply mb-0.5 text-[10px] sm:text-[11px] font-medium tracking-wide;
   }
 
+  .ticket-info-grid .stat-card-value {
+    @apply text-sm font-semibold leading-snug;
+  }
+
   .stat-card-value {
     @apply relative z-10 text-2xl sm:text-3xl font-bold text-white tabular-nums
            drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)];
@@ -665,4 +669,34 @@
 
 .app-shell .tickets-list-light .text-gray-500 {
   color: #6b7280;
+}
+
+/* Badges en detalle (badge-group): misma paleta clara que la tabla de tickets */
+.app-shell .badge-group .text-gray-900 {
+  color: #111827;
+}
+
+.app-shell .badge-group .text-gray-800 {
+  color: #1f2937;
+}
+
+.app-shell .badge-group .text-gray-700 {
+  color: #374151;
+}
+
+.app-shell .badge-group .text-gray-600 {
+  color: #4b5563;
+}
+
+.app-shell .badge-group .text-gray-500 {
+  color: #6b7280;
+}
+
+.app-shell .badge-group .text-slate-900 {
+  color: #0f172a;
+}
+
+.app-shell .badge-group .bg-gray-100 {
+  background-color: #f3f4f6;
+  backdrop-filter: none;
 }

@@ -673,26 +673,26 @@ export const TicketDetail: React.FC = () => {
                 <div className="ticket-info-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="stat-card stat-card--sky">
                     <p className="stat-card-title">Área del incidente</p>
-                    <p className="stat-card-value text-lg sm:text-xl mt-1">{ticket.incident_area_name || 'N/A'}</p>
+                    <p className="stat-card-value mt-1">{ticket.incident_area_name || 'N/A'}</p>
                   </div>
                   <div className="stat-card stat-card--violet">
                     <p className="stat-card-title">Creado por</p>
-                    <p className="stat-card-value text-lg sm:text-xl mt-1 truncate">{ticket.created_by_user_name || 'N/A'}</p>
+                    <p className="stat-card-value mt-1 truncate">{ticket.created_by_user_name || 'N/A'}</p>
                   </div>
                   <div className="stat-card stat-card--emerald">
                     <p className="stat-card-title">Fecha de creación</p>
-                    <p className="stat-card-value text-base sm:text-lg mt-1 leading-snug">{formatDate(ticket.created_at)}</p>
+                    <p className="stat-card-value mt-1">{formatDate(ticket.created_at)}</p>
                   </div>
                   {ticket.assigned_technician_name && (
                     <div className="stat-card stat-card--amber">
                       <p className="stat-card-title">Técnico asignado</p>
-                      <p className="stat-card-value text-lg sm:text-xl mt-1 truncate">{ticket.assigned_technician_name}</p>
+                      <p className="stat-card-value mt-1 truncate">{ticket.assigned_technician_name}</p>
                     </div>
                   )}
                   {ticket.closed_at && (
                     <div className="stat-card stat-card--violet">
                       <p className="stat-card-title">Fecha de cierre</p>
-                      <p className="stat-card-value text-base sm:text-lg mt-1 leading-snug">{formatDate(ticket.closed_at)}</p>
+                      <p className="stat-card-value mt-1">{formatDate(ticket.closed_at)}</p>
                     </div>
                   )}
                 </div>
