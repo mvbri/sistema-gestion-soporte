@@ -43,14 +43,15 @@ export const TicketListItem: React.FC<TicketListItemProps> = ({
     (stateId === 2 || stateId === 3);
 
   return (
-    <li className="px-4 sm:px-6 py-4 hover:bg-sky-50/90 transition-colors">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+    <li className="group relative overflow-hidden rounded-xl border border-sky-400/15 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-sky-950/50 px-4 py-4 shadow-sm shadow-black/20 ring-1 ring-white/[0.04] sm:px-6">
+      <span className="pointer-events-none absolute inset-y-3 left-0 w-1 rounded-r-full bg-gradient-to-b from-sky-300/70 via-cyan-400/50 to-blue-500/30 opacity-70" />
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
             <p className="text-sm sm:text-base font-medium text-gray-900 truncate w-full sm:w-auto">
               {ticket.title}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="ticket-badges flex flex-wrap items-center gap-2">
               <StatusBadge estado={ticket.state_name || ''} colorOverride={ticket.state_color} />
               {Boolean(ticket.reopened) && stateId === 3 && <ReopenedBadge />}
               <PriorityBadge prioridad={ticket.priority_name || ''} colorOverride={ticket.priority_color} />
@@ -68,7 +69,7 @@ export const TicketListItem: React.FC<TicketListItemProps> = ({
               <span className="truncate">Asignado a: {ticket.assigned_technician_name}</span>
             )}
             {stateId === 4 && Boolean(ticket.is_within_reopen_window) && (
-              <span className="truncate text-amber-700 font-medium">
+              <span className="truncate text-amber-300 font-medium">
                 Reapertura: {ticket.reopen_window_remaining_hours ?? 0} h restantes
               </span>
             )}

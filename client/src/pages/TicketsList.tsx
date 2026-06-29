@@ -233,8 +233,8 @@ export const TicketsList: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="card !p-0 overflow-hidden">
-                  <ul className="tickets-list-light divide-y divide-gray-200 bg-white/95">
+                <div className="card !p-0 overflow-hidden border-sky-300/25 ring-2 ring-sky-400/25 shadow-2xl shadow-sky-950/50">
+                  <ul className="space-y-2 bg-slate-950/55 p-2 sm:p-3">
                     {tickets.map((ticket) => (
                       <TicketListItem
                         key={ticket.id}

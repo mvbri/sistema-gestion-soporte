@@ -702,32 +702,39 @@
   color: #6b7280;
 }
 
-/* Badges en detalle (badge-group): misma paleta clara que la tabla de tickets */
-.app-shell .badge-group .text-gray-900 {
+/* Badges en detalle (badge-group) y en listas (ticket-badges): misma paleta clara */
+.app-shell .badge-group .text-gray-900,
+.app-shell .ticket-badges .text-gray-900 {
   color: #111827;
 }
 
-.app-shell .badge-group .text-gray-800 {
+.app-shell .badge-group .text-gray-800,
+.app-shell .ticket-badges .text-gray-800 {
   color: #1f2937;
 }
 
-.app-shell .badge-group .text-gray-700 {
+.app-shell .badge-group .text-gray-700,
+.app-shell .ticket-badges .text-gray-700 {
   color: #374151;
 }
 
-.app-shell .badge-group .text-gray-600 {
+.app-shell .badge-group .text-gray-600,
+.app-shell .ticket-badges .text-gray-600 {
   color: #4b5563;
 }
 
-.app-shell .badge-group .text-gray-500 {
+.app-shell .badge-group .text-gray-500,
+.app-shell .ticket-badges .text-gray-500 {
   color: #6b7280;
 }
 
-.app-shell .badge-group .text-slate-900 {
+.app-shell .badge-group .text-slate-900,
+.app-shell .ticket-badges .text-slate-900 {
   color: #0f172a;
 }
 
-.app-shell .badge-group .bg-gray-100 {
+.app-shell .badge-group .bg-gray-100,
+.app-shell .ticket-badges .bg-gray-100 {
   background-color: #f3f4f6;
   backdrop-filter: none;
 }

@@ -4,6 +4,8 @@ Documento de referencia para aplicar de forma consistente el diseño del sistema
 
 **Objetivo:** que cualquier vista nueva se vea “de la misma app” sin reinventar layouts, grids, inputs, estados ni acciones.
 
+> **Regla obligatoria (tablas):** **todas las tablas y listados de registros del resto de la app deben usar los mismos estilos que la tabla de tickets** (`TicketsList.tsx`). Es decir, el **Perfil Lista**: `card !p-0 overflow-hidden` + envoltorio `tickets-list-light` para la lista (`ul`) o la `<table>`, encabezado de tabla con fondo gris claro (`thead` `bg-gradient-to-r from-gray-50 to-gray-100`), filas con `text-gray-900` / `text-gray-600` y `hover` claro. No crear tablas con estilos propios ni fondos oscuros sueltos. La única excepción son las **listas internas oscuras de solicitudes** (ítems dentro de un formulario), que siguen el Perfil Solicitudes. Ver detalle en [Perfil Lista (vista de Tickets)](#perfil-lista-vista-de-tickets).
+
 ## Cómo elegir qué aplicar
 
 No todas las vistas necesitan todo. Elige según lo que tenga la pantalla:
@@ -228,7 +230,7 @@ No usar tabla HTML si basta una lista; es el patrón principal de tickets.
 
 ### Tabla HTML (`<table>`)
 
-Cuando necesites columnas fijas, envuelve la tabla:
+**Obligatorio:** cualquier tabla del resto de la app (usuarios, reportes, inventario en formato tabla, etc.) debe replicar exactamente este patrón de la tabla de tickets. Cuando necesites columnas fijas, envuelve la tabla:
 
 ```tsx
 <div className="card !p-0 overflow-hidden">
