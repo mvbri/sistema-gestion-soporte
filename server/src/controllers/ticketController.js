@@ -5,6 +5,11 @@ import Usuario from '../models/Usuario.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { enviarEmailAsignacion } from '../config/email.js';
 import { query } from '../config/database.js';
+import {
+    enrichTicketWithReopenInfo,
+    enrichTicketsWithReopenInfo,
+    validateTicketReopenRequest
+} from '../services/ticketReopenService.js';
 
 const buildTicketImagesFromRequest = (req) => {
     if (Array.isArray(req.cloudinaryImageUrls) && req.cloudinaryImageUrls.length > 0) {
@@ -295,7 +300,7 @@ export const getTickets = async (req, res) => {
         filters.limit = parseInt(limit);
         filters.offset = offset;
 
-        const tickets = await Ticket.findAll(filters);
+        const tickets = await enrichTicketsWithReopenInfo(await Ticket.findAll(filters));
         const total = await Ticket.count(filters);
 
         sendSuccess(res, 'Tickets obtenidos exitosamente', {
@@ -339,8 +344,9 @@ export const getTicketById = async (req, res) => {
         const comentarios = await TicketComentario.findByTicketId(id);
         const historial = await TicketHistorial.findByTicketId(id);
 
+        const ticketEnriched = await enrichTicketWithReopenInfo(ticket);
         const ticketConImagenes = {
-            ...ticket,
+            ...ticketEnriched,
             imagenes: parseTicketImages(ticket.image_url),
             equipment: ticket.equipment || []
         };
@@ -388,6 +394,15 @@ export const updateTicket = async (req, res) => {
         const assigned_technician_id = parseAssignedTechnicianId(assignedTechnicianIdRaw);
         
         console.log('assigned_technician_id procesado:', assigned_technician_id);
+
+        if (state_id === 5) {
+            return sendError(
+                res,
+                'Para cerrar un ticket usa el endpoint de cierre con motivo obligatorio',
+                null,
+                400
+            );
+        }
 
         if (role === 'technician') {
             if (ticket.assigned_technician_id !== userId) {
@@ -749,11 +764,21 @@ export const getStats = async (req, res) => {
             date_to: parsedTo.value
         };
 
-        const statsByEstado = await Ticket.getStats(filters);
-        const statsByCategory = await Ticket.getStatsByCategory(filters);
-        const statsByPriority = await Ticket.getStatsByPriority(filters);
-        const statsByIncidentArea = await Ticket.getStatsByIncidentArea(filters);
-        const totalTickets = await Ticket.count(filters);
+        const [
+            statsByEstado,
+            statsByCategory,
+            statsByPriority,
+            statsByIncidentArea,
+            totalTickets,
+            lifecycle
+        ] = await Promise.all([
+            Ticket.getStats(filters),
+            Ticket.getStatsByCategory(filters),
+            Ticket.getStatsByPriority(filters),
+            Ticket.getStatsByIncidentArea(filters),
+            Ticket.count(filters),
+            Ticket.getLifecycleMetrics(parsedFrom.value, parsedTo.value)
+        ]);
 
         const mappedStatsByEstado = statsByEstado.map(stat => ({
             estado_id: stat.state_id,
@@ -781,6 +806,18 @@ export const getStats = async (req, res) => {
             cantidad: stat.count || 0
         }));
 
+        const resolucionesPorTecnico = lifecycle.resolved_by_technician.map((row) => ({
+            tecnico_id: row.technician_user_id,
+            tecnico_nombre: row.technician_name,
+            cantidad: typeof row.count === 'bigint' ? Number(row.count) : row.count || 0
+        }));
+
+        const cierresPorTecnico = lifecycle.closed_by_technician.map((row) => ({
+            tecnico_id: row.technician_user_id,
+            tecnico_nombre: row.technician_name,
+            cantidad: typeof row.count === 'bigint' ? Number(row.count) : row.count || 0
+        }));
+
         sendSuccess(res, 'Estadísticas obtenidas exitosamente', {
             porEstado: mappedStatsByEstado,
             porCategoria: mappedStatsByCategory,
@@ -790,7 +827,14 @@ export const getStats = async (req, res) => {
             period: {
                 date_from: parsedFrom.value,
                 date_to: parsedTo.value
-            }
+            },
+            tickets_creados: totalTickets || 0,
+            tickets_resueltos: lifecycle.tickets_resolved_total,
+            tickets_cerrados: lifecycle.tickets_closed_total,
+            promedio_horas_hasta_resolucion: lifecycle.avg_hours_to_resolution,
+            promedio_horas_hasta_cierre: lifecycle.avg_hours_to_closure,
+            resolucionesPorTecnico,
+            cierresPorTecnico
         });
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);
@@ -941,9 +985,123 @@ export const markAsResolved = async (req, res) => {
             description: `Estado cambiado de "${estadoAnterior[0]?.name || ''}" a "${estadoNuevo[0]?.name || ''}"`
         });
 
-        sendSuccess(res, 'Ticket marcado como "Resuelto"', updatedTicket);
+        const ticketWithReopenInfo = await enrichTicketWithReopenInfo(updatedTicket);
+        sendSuccess(res, 'Ticket marcado como "Resuelto"', ticketWithReopenInfo);
     } catch (error) {
         console.error('Error al marcar como resuelto:', error);
         sendError(res, 'Error al marcar ticket como resuelto', null, 500);
+    }
+};
+
+/**
+ * Reabre un ticket resuelto mediante botón explícito.
+ * Usuario creador: solo dentro de la ventana configurada y con motivo obligatorio.
+ * Administrador: sin límite de ventana; motivo opcional.
+ * El estado interno pasa a En Proceso (3) con reopened=true para badge en UI.
+ */
+export const reopenTicket = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, id: userId } = req.user;
+        const { reason } = req.body;
+
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return sendError(res, 'Ticket no encontrado', null, 404);
+        }
+
+        const validation = await validateTicketReopenRequest(
+            ticket,
+            { role, userId },
+            reason
+        );
+        if (!validation.ok) {
+            return sendError(res, validation.message, null, validation.status);
+        }
+
+        const user = await Usuario.findById(userId);
+        const userName = user?.full_name || 'Usuario';
+        const reasonText = reason?.trim() || 'Sin motivo indicado';
+
+        const estadoAnterior = await query('SELECT name FROM ticket_states WHERE id = ?', [ticket.state_id]);
+        const estadoNuevo = await query('SELECT name FROM ticket_states WHERE id = ?', [3]);
+
+        const updatedTicket = await Ticket.reopen(id);
+
+        const historyDescription = `El ticket fue reabierto por ${userName} debido a: ${reasonText}`;
+
+        await TicketHistorial.create({
+            ticket_id: id,
+            user_id: userId,
+            change_type: 'REOPEN',
+            previous_field: estadoAnterior[0]?.name || 'Resuelto',
+            new_field: estadoNuevo[0]?.name || 'En Proceso',
+            description: historyDescription
+        });
+
+        if (reason?.trim()) {
+            await TicketComentario.create({
+                ticket_id: id,
+                user_id: userId,
+                content: `Reapertura solicitada: ${reason.trim()}`
+            });
+        }
+
+        sendSuccess(res, 'Ticket reabierto exitosamente', updatedTicket);
+    } catch (error) {
+        console.error('Error al reabrir ticket:', error);
+        sendError(res, 'Error al reabrir ticket', null, 500);
+    }
+};
+
+/**
+ * Cierra un ticket definitivamente. Solo administrador.
+ * Requiere motivo de cierre en texto libre (closure_reason).
+ */
+export const closeTicket = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, id: userId } = req.user;
+        const { closure_reason: closureReason } = req.body;
+
+        if (role !== 'administrator') {
+            return sendError(res, 'Solo un administrador puede cerrar tickets definitivamente', null, 403);
+        }
+
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return sendError(res, 'Ticket no encontrado', null, 404);
+        }
+
+        if (ticket.state_id === 5) {
+            return sendError(res, 'El ticket ya está cerrado', null, 400);
+        }
+
+        const reasonText = closureReason?.trim();
+        if (!reasonText || reasonText.length < 3) {
+            return sendError(res, 'El motivo de cierre es obligatorio (mínimo 3 caracteres)', null, 400);
+        }
+
+        const user = await Usuario.findById(userId);
+        const userName = user?.full_name || 'Administrador';
+
+        const estadoAnterior = await query('SELECT name FROM ticket_states WHERE id = ?', [ticket.state_id]);
+        const estadoNuevo = await query('SELECT name FROM ticket_states WHERE id = ?', [5]);
+
+        const updatedTicket = await Ticket.close(id, reasonText);
+
+        await TicketHistorial.create({
+            ticket_id: id,
+            user_id: userId,
+            change_type: 'CLOSE',
+            previous_field: estadoAnterior[0]?.name || '',
+            new_field: estadoNuevo[0]?.name || 'Cerrado',
+            description: `Ticket cerrado por ${userName}. Motivo: ${reasonText}`
+        });
+
+        sendSuccess(res, 'Ticket cerrado exitosamente', updatedTicket);
+    } catch (error) {
+        console.error('Error al cerrar ticket:', error);
+        sendError(res, 'Error al cerrar ticket', null, 500);
     }
 };

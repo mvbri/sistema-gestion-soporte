@@ -2,6 +2,7 @@ import type { Ticket, TicketListTab } from '../../types';
 import { StatusBadge } from './StatusBadge';
 import { PriorityBadge } from './PriorityBadge';
 import { CategoryBadge } from './CategoryBadge';
+import { ReopenedBadge } from './ReopenedBadge';
 
 interface TicketListItemProps {
   ticket: Ticket;
@@ -51,6 +52,7 @@ export const TicketListItem: React.FC<TicketListItemProps> = ({
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge estado={ticket.state_name || ''} colorOverride={ticket.state_color} />
+              {Boolean(ticket.reopened) && stateId === 3 && <ReopenedBadge />}
               <PriorityBadge prioridad={ticket.priority_name || ''} colorOverride={ticket.priority_color} />
               <CategoryBadge categoria={ticket.category_name || ''} />
             </div>
@@ -64,6 +66,11 @@ export const TicketListItem: React.FC<TicketListItemProps> = ({
             <span className="truncate">Por: {ticket.created_by_user_name || 'N/A'}</span>
             {ticket.assigned_technician_name && (
               <span className="truncate">Asignado a: {ticket.assigned_technician_name}</span>
+            )}
+            {stateId === 4 && Boolean(ticket.is_within_reopen_window) && (
+              <span className="truncate text-amber-700 font-medium">
+                Reapertura: {ticket.reopen_window_remaining_hours ?? 0} h restantes
+              </span>
             )}
           </div>
         </div>

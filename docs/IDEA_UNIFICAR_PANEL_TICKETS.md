@@ -58,4 +58,4 @@
 
 ---
 
-[← Volver a pendientes de tickets](PENDIENTES_TICKETS.md)
+[← Volver al flujo de tickets](FLUJO_TICKETS.md)

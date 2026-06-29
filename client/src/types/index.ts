@@ -100,6 +100,14 @@ export interface Ticket {
   created_at: string;
   updated_at: string;
   closed_at?: string | null;
+  closure_reason?: string | null;
+  resolved_at?: string | null;
+  reopened?: boolean;
+  reopened_at?: string | null;
+  reopen_window_hours?: number;
+  reopen_window_expires_at?: string | null;
+  is_within_reopen_window?: boolean;
+  reopen_window_remaining_hours?: number;
   // Campos legacy en español para compatibilidad (deprecated)
   titulo?: string;
   descripcion?: string;
@@ -159,6 +167,24 @@ export interface Tecnico {
   department?: string;
 }
 
+export interface TicketLifecycleMetrics {
+  tickets_creados: number;
+  tickets_resueltos: number;
+  tickets_cerrados: number;
+  promedio_horas_hasta_resolucion: number | null;
+  promedio_horas_hasta_cierre: number | null;
+  resolucionesPorTecnico: Array<{
+    tecnico_id: number;
+    tecnico_nombre: string;
+    cantidad: number;
+  }>;
+  cierresPorTecnico: Array<{
+    tecnico_id: number;
+    tecnico_nombre: string;
+    cantidad: number;
+  }>;
+}
+
 export interface TicketStats {
   period?: {
     date_from: string;
@@ -187,28 +213,27 @@ export interface TicketStats {
     cantidad: number;
   }>;
   total: number;
+  tickets_creados?: number;
+  tickets_resueltos?: number;
+  tickets_cerrados?: number;
+  promedio_horas_hasta_resolucion?: number | null;
+  promedio_horas_hasta_cierre?: number | null;
+  resolucionesPorTecnico?: TicketLifecycleMetrics['resolucionesPorTecnico'];
+  cierresPorTecnico?: TicketLifecycleMetrics['cierresPorTecnico'];
 }
 
 /** Reporte de tickets por rango de fechas (solo administración). */
-export interface TicketsPeriodReport {
+export interface TicketsPeriodReport extends TicketLifecycleMetrics {
   period: {
     date_from: string;
     date_to: string;
   };
-  tickets_creados: number;
-  tickets_cerrados: number;
-  promedio_horas_resolucion: number | null;
   porEstado: TicketStats['porEstado'];
   porCategoria: TicketStats['porCategoria'];
   porPrioridad: TicketStats['porPrioridad'];
   porArea: Array<{
     id: number;
     nombre: string;
-    cantidad: number;
-  }>;
-  cierresPorTecnico: Array<{
-    tecnico_id: number;
-    tecnico_nombre: string;
     cantidad: number;
   }>;
 }

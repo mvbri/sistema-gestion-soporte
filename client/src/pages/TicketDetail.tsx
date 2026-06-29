@@ -13,13 +13,18 @@ import {
   useUpdateTicket, 
   useAddComment, 
   useStartProgress, 
-  useMarkAsResolved 
+  useMarkAsResolved,
+  useReopenTicket,
+  useCloseTicket,
 } from '../hooks/useTickets';
 import { useEquipment } from '../hooks/useEquipment';
 import { updateTicketSchema, commentSchema, type UpdateTicketData, type CommentData } from '../schemas/ticketSchemas';
 import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
 import { CategoryBadge } from '../components/tickets/CategoryBadge';
+import { ReopenedBadge } from '../components/tickets/ReopenedBadge';
+import { ReopenTicketModal } from '../components/tickets/ReopenTicketModal';
+import { CloseTicketModal } from '../components/tickets/CloseTicketModal';
 import { translateRole } from '../utils/roleTranslations';
 import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
 import type { EquipmentFilters } from '../types';
@@ -43,6 +48,8 @@ export const TicketDetail: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
 
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
@@ -63,6 +70,8 @@ export const TicketDetail: React.FC = () => {
   const addCommentMutation = useAddComment();
   const startProgressMutation = useStartProgress();
   const markAsResolvedMutation = useMarkAsResolved();
+  const reopenTicketMutation = useReopenTicket();
+  const closeTicketMutation = useCloseTicket();
 
   const ticket = ticketData?.ticket;
   const comentarios = ticketData?.comentarios || [];
@@ -193,6 +202,11 @@ export const TicketDetail: React.FC = () => {
       if (user?.role === 'administrator' && isEditing) {
         dataToSend.equipment_ids = selectedEquipmentIds;
       }
+
+      if (data.estado_id === 5 && ticket?.state_id !== 5) {
+        setCloseModalOpen(true);
+        return;
+      }
       
       console.log('Datos a enviar:', dataToSend);
       
@@ -232,11 +246,52 @@ export const TicketDetail: React.FC = () => {
     markAsResolvedMutation.mutate(id);
   };
 
+  const handleReopenConfirm = (reason: string) => {
+    if (!id) return;
+    reopenTicketMutation.mutate(
+      { id, reason: reason || undefined },
+      {
+        onSuccess: () => setReopenModalOpen(false),
+      }
+    );
+  };
+
+  const handleCloseConfirm = (closureReason: string) => {
+    if (!id) return;
+    closeTicketMutation.mutate(
+      { id, closureReason },
+      {
+        onSuccess: () => {
+          setCloseModalOpen(false);
+          setIsEditing(false);
+          if (location.pathname.includes('/editar')) {
+            navigate(`/tickets/${id}`);
+          }
+        },
+      }
+    );
+  };
+
+  const handleAdminEstadoChange = (newEstadoId: number, onChange: (value: number) => void) => {
+    if (newEstadoId === 5 && ticket?.state_id !== 5) {
+      setCloseModalOpen(true);
+      return;
+    }
+    onChange(newEstadoId);
+  };
+
   const isAssignedTechnician = user?.role === 'technician' && ticket?.assigned_technician_id === user?.id;
   const isTicketCreatorEndUser =
     user?.role === 'end_user' && ticket?.created_by_user_id === user?.id;
-  const canEdit = user?.role === 'administrator' || isAssignedTechnician;
+  const isAdmin = user?.role === 'administrator';
+  const canEdit = isAdmin || isAssignedTechnician;
   const canComment = user?.role !== undefined;
+  const canRequestReopenAsUser =
+    isTicketCreatorEndUser &&
+    ticket?.state_id === 4 &&
+    Boolean(ticket.is_within_reopen_window);
+  const canReopenAsAdmin = isAdmin && ticket?.state_id === 4;
+  const canCloseAsAdmin = isAdmin && ticket?.state_id !== 5;
 
   if (loadingTicket) {
     return (
@@ -302,6 +357,10 @@ export const TicketDetail: React.FC = () => {
         return 'CREACIÓN';
       case 'DELETE':
         return 'ELIMINACIÓN';
+      case 'REOPEN':
+        return 'REAPERTURA';
+      case 'CLOSE':
+        return 'CIERRE';
       default:
         return changeType;
     }
@@ -315,6 +374,26 @@ export const TicketDetail: React.FC = () => {
     : ticket.imagen_url
       ? [ticket.imagen_url]
       : [];
+
+  const adminEstadoOptions = (() => {
+    const withoutClosed = estados.filter((estado) => estado.id !== 5);
+    if (ticket.state_id === 5) {
+      const closedEstado = estados.find((estado) => estado.id === 5);
+      return closedEstado ? [...withoutClosed, closedEstado] : withoutClosed;
+    }
+    if (canCloseAsAdmin) {
+      const closedEstado = estados.find((estado) => estado.id === 5) ?? {
+        id: 5,
+        name: 'Cerrado',
+        description: '',
+        color: 'bg-gray-100',
+        order: 5,
+        active: true,
+      };
+      return [...withoutClosed, closedEstado];
+    }
+    return withoutClosed;
+  })();
 
   return (
     <>
@@ -361,14 +440,63 @@ export const TicketDetail: React.FC = () => {
                   colorOverride={ticket.priority_color}
                 />
                 <CategoryBadge categoria={ticket.category_name || ''} />
+                {Boolean(ticket.reopened) && ticket.state_id === 3 && <ReopenedBadge />}
               </div>
             </header>
 
             <div className="h-px bg-gradient-to-r from-transparent via-sky-400/35 to-transparent" aria-hidden />
 
+            {ticket.state_id === 4 && (
+              <div
+                className={`rounded-xl border px-4 py-3 text-sm ${
+                  ticket.is_within_reopen_window
+                    ? 'border-amber-400/40 bg-amber-500/10 text-amber-50'
+                    : 'border-slate-400/30 bg-slate-900/40 text-slate-200'
+                }`}
+              >
+                {ticket.is_within_reopen_window ? (
+                  <p>
+                    Ventana de reapertura activa: quedan aproximadamente{' '}
+                    <strong>{ticket.reopen_window_remaining_hours ?? 0} h</strong> de{' '}
+                    {ticket.reopen_window_hours ?? 48} h configuradas
+                    {ticket.reopen_window_expires_at && (
+                      <>
+                        {' '}
+                        (vence el{' '}
+                        {new Date(ticket.reopen_window_expires_at).toLocaleString('es-VE', {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })}
+                        )
+                      </>
+                    )}
+                    .
+                  </p>
+                ) : (
+                  <p>
+                    La ventana de reapertura de {ticket.reopen_window_hours ?? 48} h ha expirado.
+                    {ticket.resolved_at && (
+                      <>
+                        {' '}
+                        El ticket se marcó como resuelto el{' '}
+                        {new Date(ticket.resolved_at).toLocaleString('es-VE', {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })}
+                        .
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+
             {((isAssignedTechnician && (ticket.state_id === 2 || ticket.state_id === 3)) ||
               (canEdit && !isEditing) ||
-              (isTicketCreatorEndUser && (ticket.state_id === 2 || ticket.state_id === 3))) && (
+              (isTicketCreatorEndUser && (ticket.state_id === 2 || ticket.state_id === 3)) ||
+              canRequestReopenAsUser ||
+              canReopenAsAdmin ||
+              canCloseAsAdmin) && (
               <div className="flex flex-wrap items-center gap-3">
                 {isAssignedTechnician && ticket.state_id === 2 && (
                   <button
@@ -397,6 +525,45 @@ export const TicketDetail: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {markAsResolvedMutation.isPending ? 'Marcando...' : 'Marcar como resuelto'}
+                  </button>
+                )}
+
+                {canRequestReopenAsUser && (
+                  <button
+                    type="button"
+                    onClick={() => setReopenModalOpen(true)}
+                    disabled={reopenTicketMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg hover:from-amber-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                  >
+                    ¿No se ha solucionado?
+                  </button>
+                )}
+
+                {canReopenAsAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setReopenModalOpen(true)}
+                    disabled={reopenTicketMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-orange-900/25 ring-1 ring-amber-400/30 hover:from-amber-400 hover:to-orange-500 hover:shadow-xl hover:ring-amber-300/40 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                  >
+                    <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {reopenTicketMutation.isPending ? 'Reabriendo…' : 'Reabrir ticket'}
+                  </button>
+                )}
+
+                {canCloseAsAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setCloseModalOpen(true)}
+                    disabled={closeTicketMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-200 bg-slate-800/70 border border-slate-500/45 shadow-sm ring-1 ring-slate-600/30 hover:bg-slate-700/80 hover:border-slate-400/55 hover:text-white hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                  >
+                    <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {closeTicketMutation.isPending ? 'Cerrando…' : 'Cerrar ticket'}
                   </button>
                 )}
 
@@ -466,17 +633,40 @@ export const TicketDetail: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <div>
                       <label htmlFor="ticket-edit-state" className="label-field">Estado</label>
-                      <select
-                        id="ticket-edit-state"
-                        {...registerUpdate('estado_id', { valueAsNumber: true })}
-                        className={`input-dark ${formStyles.selectField}`}
-                      >
-                        {estados.map((estado) => (
-                          <option key={estado.id} value={estado.id}>
-                            {estado.name}
-                          </option>
-                        ))}
-                      </select>
+                      <Controller
+                        name="estado_id"
+                        control={controlUpdate}
+                        render={({ field }) => {
+                          const currentValue = field.value ?? ticket.state_id;
+                          const numericValue =
+                            typeof currentValue === 'number'
+                              ? currentValue
+                              : parseInt(String(currentValue), 10);
+
+                          return (
+                            <select
+                              id="ticket-edit-state"
+                              value={Number.isNaN(numericValue) ? ticket.state_id : numericValue}
+                              onChange={(event) => {
+                                const newValue = parseInt(event.target.value, 10);
+                                if (!Number.isNaN(newValue)) {
+                                  handleAdminEstadoChange(newValue, field.onChange);
+                                }
+                              }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                              className={`input-dark ${formStyles.selectField}`}
+                            >
+                              {adminEstadoOptions.map((estado) => (
+                                <option key={estado.id} value={estado.id}>
+                                  {estado.name}
+                                </option>
+                              ))}
+                            </select>
+                          );
+                        }}
+                      />
                     </div>
 
                     <div>
@@ -573,7 +763,7 @@ export const TicketDetail: React.FC = () => {
                     control={controlUpdate}
                     render={({ field }) => {
                       const estadosPermitidos = estados.filter(e => 
-                        e.id === 2 || e.id === 3 || e.id === 4 || e.id === 5
+                        e.id === 2 || e.id === 3 || e.id === 4
                       );
                       const estadoAsignado = estados.find(e => e.id === 2);
                       const currentValue = field.value ?? ticket?.state_id ?? 2;
@@ -693,6 +883,12 @@ export const TicketDetail: React.FC = () => {
                     <div className="stat-card stat-card--violet">
                       <p className="stat-card-title">Fecha de cierre</p>
                       <p className="stat-card-value mt-1">{formatDate(ticket.closed_at)}</p>
+                    </div>
+                  )}
+                  {ticket.closure_reason && (
+                    <div className="stat-card stat-card--violet md:col-span-2">
+                      <p className="stat-card-title">Motivo de cierre</p>
+                      <p className="stat-card-value mt-1 break-words">{ticket.closure_reason}</p>
                     </div>
                   )}
                 </div>
@@ -956,6 +1152,12 @@ export const TicketDetail: React.FC = () => {
                           border: 'border-l-rose-400',
                           iconBg: 'bg-rose-500 ring-rose-400/50',
                         };
+                      case 'REOPEN':
+                        return {
+                          badge: 'bg-amber-500/20 text-amber-100 ring-amber-400/35',
+                          border: 'border-l-amber-400',
+                          iconBg: 'bg-amber-500 ring-amber-400/50',
+                        };
                       default:
                         return {
                           badge: 'bg-slate-500/20 text-slate-200 ring-slate-400/35',
@@ -1011,6 +1213,23 @@ export const TicketDetail: React.FC = () => {
           </div>
         </div>
       </PageWrapper>
+
+      <ReopenTicketModal
+        isOpen={reopenModalOpen}
+        onClose={() => setReopenModalOpen(false)}
+        onConfirm={handleReopenConfirm}
+        isSubmitting={reopenTicketMutation.isPending}
+        requireReason={!isAdmin}
+        title={canRequestReopenAsUser ? '¿No se ha solucionado?' : 'Reabrir ticket'}
+        confirmLabel={canRequestReopenAsUser ? 'Solicitar reapertura' : 'Reabrir ticket'}
+      />
+
+      <CloseTicketModal
+        isOpen={closeModalOpen}
+        onClose={() => setCloseModalOpen(false)}
+        onConfirm={handleCloseConfirm}
+        isSubmitting={closeTicketMutation.isPending}
+      />
     </>
   );
 };

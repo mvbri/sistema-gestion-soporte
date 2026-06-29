@@ -1,6 +1,12 @@
 import { query } from '../config/database.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import Usuario from '../models/Usuario.js';
+import {
+    getTicketReopenWindowHours,
+    updateTicketReopenWindowHours,
+    MIN_TICKET_REOPEN_WINDOW_HOURS,
+    MAX_TICKET_REOPEN_WINDOW_HOURS
+} from '../services/ticketReopenService.js';
 
 /**
  * Obtiene todas las categorías de ticket.
@@ -1334,5 +1340,57 @@ export const deleteUser = async (req, res) => {
             );
         }
         sendError(res, 'Error al eliminar usuario', null, 500);
+    }
+};
+
+/**
+ * Obtiene la configuración de tickets (ventana de reapertura).
+ */
+export const getTicketSettings = async (req, res) => {
+    try {
+        const ticketReopenWindowHours = await getTicketReopenWindowHours();
+        sendSuccess(res, 'Configuración de tickets obtenida exitosamente', {
+            ticket_reopen_window_hours: ticketReopenWindowHours,
+            min_ticket_reopen_window_hours: MIN_TICKET_REOPEN_WINDOW_HOURS,
+            max_ticket_reopen_window_hours: MAX_TICKET_REOPEN_WINDOW_HOURS
+        });
+    } catch (error) {
+        console.error('Error al obtener configuración de tickets:', error);
+        sendError(res, 'Error al obtener configuración de tickets', null, 500);
+    }
+};
+
+/**
+ * Actualiza la ventana de reapertura de tickets resueltos (horas).
+ */
+export const updateTicketSettings = async (req, res) => {
+    try {
+        const { ticket_reopen_window_hours } = req.body;
+
+        if (ticket_reopen_window_hours === undefined || ticket_reopen_window_hours === null) {
+            return sendError(res, 'El campo ticket_reopen_window_hours es requerido', null, 400);
+        }
+
+        const parsed = parseInt(ticket_reopen_window_hours, 10);
+        if (Number.isNaN(parsed)) {
+            return sendError(res, 'La ventana de reapertura debe ser un número entero de horas', null, 400);
+        }
+
+        if (parsed < MIN_TICKET_REOPEN_WINDOW_HOURS || parsed > MAX_TICKET_REOPEN_WINDOW_HOURS) {
+            return sendError(
+                res,
+                `La ventana de reapertura debe estar entre ${MIN_TICKET_REOPEN_WINDOW_HOURS} y ${MAX_TICKET_REOPEN_WINDOW_HOURS} horas`,
+                null,
+                400
+            );
+        }
+
+        const savedHours = await updateTicketReopenWindowHours(parsed);
+        sendSuccess(res, 'Configuración de tickets actualizada exitosamente', {
+            ticket_reopen_window_hours: savedHours
+        });
+    } catch (error) {
+        console.error('Error al actualizar configuración de tickets:', error);
+        sendError(res, 'Error al actualizar configuración de tickets', null, 500);
     }
 };

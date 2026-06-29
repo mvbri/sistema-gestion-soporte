@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTicketStats } from '../hooks/useTickets';
+import { TicketLifecycleSummaryCards } from '../components/tickets/TicketLifecycleSummaryCards';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -19,6 +20,30 @@ function defaultDateRange(): { from: string; to: string } {
   const from = new Date();
   from.setDate(from.getDate() - 29);
   return { from: formatDateInput(from), to: formatDateInput(to) };
+}
+
+const DEFAULT_ESTADO_ICON =
+  'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+
+const ESTADO_ICON_PATHS: Record<string, string> = {
+  abierto:
+    'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
+  asignado:
+    'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+  'en proceso':
+    'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+  resuelto: DEFAULT_ESTADO_ICON,
+  cerrado:
+    'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+};
+
+function getEstadoIconPath(nombre: string): string {
+  const key = nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+  return ESTADO_ICON_PATHS[key] ?? DEFAULT_ESTADO_ICON;
 }
 
 export const TicketsDashboard: React.FC = () => {
@@ -176,6 +201,22 @@ export const TicketsDashboard: React.FC = () => {
             </div>
 
             <div className="mb-6 sm:mb-8">
+              <h2 className="mb-3 text-sm sm:text-base font-semibold text-white">Actividad del período</h2>
+              {stats.period && (
+                <TicketLifecycleSummaryCards
+                  metrics={{
+                    tickets_creados: stats.tickets_creados ?? stats.total,
+                    tickets_resueltos: stats.tickets_resueltos ?? 0,
+                    tickets_cerrados: stats.tickets_cerrados ?? 0,
+                    promedio_horas_hasta_resolucion: stats.promedio_horas_hasta_resolucion ?? null,
+                    promedio_horas_hasta_cierre: stats.promedio_horas_hasta_cierre ?? null,
+                  }}
+                  period={stats.period}
+                />
+              )}
+            </div>
+
+            <div className="mb-6 sm:mb-8">
               <h2 className="mb-3 text-sm sm:text-base font-semibold text-white">Resumen general</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="stat-card stat-card--sky">
@@ -196,7 +237,7 @@ export const TicketsDashboard: React.FC = () => {
             </div>
 
           <div className="mb-6 sm:mb-8">
-            <h2 className="mb-3 text-sm sm:text-base font-semibold text-white">Tickets por estado</h2>
+            <h2 className="mb-3 text-sm sm:text-base font-semibold text-white">Estado actual de tickets creados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {stats.porEstado.length === 0 ? (
                 <div className="stat-card stat-card--emerald">
@@ -220,11 +261,11 @@ export const TicketsDashboard: React.FC = () => {
                       <div>
                         <p className="stat-card-title">{estado.estado_nombre}</p>
                         <p className="stat-card-value">{estado.cantidad}</p>
-                        <p className="stat-card-hint text-emerald-100/70">Tickets en este estado</p>
+                        <p className="stat-card-hint text-emerald-100/70">Creados en el rango</p>
                       </div>
                       <div className="stat-card-icon stat-card-icon--emerald">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getEstadoIconPath(estado.estado_nombre)} />
                         </svg>
                       </div>
                     </div>

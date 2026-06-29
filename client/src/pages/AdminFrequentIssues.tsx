@@ -6,8 +6,6 @@ import { PageWrapper } from '../components/PageWrapper';
 import {
   useAdminFrequentIssues,
   useAdminCategorias,
-  useCreateFrequentIssue,
-  useUpdateFrequentIssue,
   useDeleteFrequentIssue,
 } from '../hooks/useAdmin';
 import { EditIcon } from '../components/icons/EditIcon';
@@ -15,8 +13,6 @@ import { DeleteIcon } from '../components/icons/DeleteIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
 import { ClearFiltersIcon } from '../components/icons/ClearFiltersIcon';
 import type { FrequentIssue } from '../types';
-import formStyles from '../styles/modules/forms.module.css';
-
 /** Números de página con elipsis si hay muchas páginas. */
 function buildDesktopPageList(totalPages: number, current: number): Array<number | 'ellipsis'> {
   if (totalPages <= 7) {
@@ -59,16 +55,12 @@ export const AdminFrequentIssues: React.FC = () => {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<number | undefined>(undefined);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingIssue, setEditingIssue] = useState<FrequentIssue | null>(null);
   const [issueToDelete, setIssueToDelete] = useState<FrequentIssue | null>(null);
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data: issues = [], isLoading } = useAdminFrequentIssues();
   const { data: categorias = [] } = useAdminCategorias();
-  const createMutation = useCreateFrequentIssue();
-  const updateMutation = useUpdateFrequentIssue();
   const deleteMutation = useDeleteFrequentIssue();
 
   useEffect(() => {
@@ -132,51 +124,6 @@ export const AdminFrequentIssues: React.FC = () => {
     return c?.name || '—';
   };
 
-  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const title = (fd.get('title') as string).trim();
-    const possible_solution = (fd.get('possible_solution') as string).trim();
-    const symptoms = (fd.get('symptoms') as string)?.trim() || undefined;
-    const cat = fd.get('category_id') as string;
-    const category_id = cat && cat !== '' ? Number(cat) : null;
-    const active = fd.get('active') === 'on';
-
-    createMutation.mutate(
-      { title, possible_solution, symptoms, category_id, active },
-      {
-        onSuccess: () => {
-          setShowCreateForm(false);
-          form.reset();
-        },
-      }
-    );
-  };
-
-  const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingIssue) return;
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const title = (fd.get('title') as string).trim();
-    const possible_solution = (fd.get('possible_solution') as string).trim();
-    const symptoms = (fd.get('symptoms') as string)?.trim() || '';
-    const cat = fd.get('category_id') as string;
-    const category_id = cat && cat !== '' ? Number(cat) : null;
-    const active = fd.get('active') === 'on';
-
-    updateMutation.mutate(
-      {
-        id: editingIssue.id,
-        data: { title, possible_solution, symptoms, category_id, active },
-      },
-      {
-        onSuccess: () => setEditingIssue(null),
-      }
-    );
-  };
-
   const confirmDelete = () => {
     if (!issueToDelete) return;
     deleteMutation.mutate(issueToDelete.id, {
@@ -202,7 +149,7 @@ export const AdminFrequentIssues: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setShowCreateForm(true)}
+                onClick={() => navigate('/admin/frequent-issues/crear')}
                 className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -477,7 +424,7 @@ export const AdminFrequentIssues: React.FC = () => {
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => setEditingIssue(issue)}
+                                  onClick={() => navigate(`/admin/frequent-issues/${issue.id}/editar`)}
                                   className="btn-warning p-2 sm:p-2.5 flex items-center justify-center"
                                   aria-label="Editar"
                                   title="Editar"
@@ -573,197 +520,6 @@ export const AdminFrequentIssues: React.FC = () => {
                   )}
                 </div>
               </>
-            )}
-
-            {showCreateForm && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
-                <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Nueva falla frecuente</h2>
-                    <button
-                      type="button"
-                      onClick={() => setShowCreateForm(false)}
-                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
-                      aria-label="Cerrar"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <form onSubmit={handleCreate} className="space-y-4">
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">
-                        Título
-                        <span className="text-red-300/90" aria-hidden>
-                          {' '}
-                          *
-                        </span>
-                      </label>
-                      <input
-                        name="title"
-                        required
-                        className="input-dark"
-                        placeholder="Ej. Sin conexión a internet"
-                      />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">Síntomas</label>
-                      <textarea
-                        name="symptoms"
-                        rows={3}
-                        className="input-dark"
-                        placeholder="Descripción breve de lo que observa el usuario"
-                      />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">
-                        Posible solución
-                        <span className="text-red-300/90" aria-hidden>
-                          {' '}
-                          *
-                        </span>
-                      </label>
-                      <textarea
-                        name="possible_solution"
-                        required
-                        rows={4}
-                        className="input-dark"
-                        placeholder="Pasos sugeridos para resolver o escalar"
-                      />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">Categoría de ticket</label>
-                      <select name="category_id" className={`input-dark ${formStyles.selectField}`} defaultValue="">
-                        <option value="">Sin categoría</option>
-                        {categorias.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                            {!c.active ? ' (inactiva)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="active"
-                        id="create-active"
-                        defaultChecked
-                        className="rounded border-sky-400/40 bg-slate-900/80 text-sky-500"
-                      />
-                      <label htmlFor="create-active" className="text-sm text-blue-100/85">
-                        Visible en formularios (activa)
-                      </label>
-                    </div>
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                      <button type="button" onClick={() => setShowCreateForm(false)} className="btn-secondary w-full sm:w-auto">
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={createMutation.isPending}
-                        className="btn-primary w-full sm:w-auto disabled:opacity-50"
-                      >
-                        {createMutation.isPending ? 'Guardando…' : 'Crear'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {editingIssue && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
-                <div className="card max-h-[95vh] w-full max-w-2xl overflow-y-auto !p-5 sm:max-h-[90vh] sm:!p-8">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-white sm:text-2xl">Editar falla frecuente</h2>
-                    <button
-                      type="button"
-                      onClick={() => setEditingIssue(null)}
-                      className="rounded-lg p-2 text-sky-200/70 transition-colors hover:bg-sky-500/15 hover:text-white"
-                      aria-label="Cerrar"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <form onSubmit={handleUpdate} className="space-y-4" key={editingIssue.id}>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">
-                        Título
-                        <span className="text-red-300/90" aria-hidden>
-                          {' '}
-                          *
-                        </span>
-                      </label>
-                      <input name="title" required defaultValue={editingIssue.title} className="input-dark" />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">Síntomas</label>
-                      <textarea
-                        name="symptoms"
-                        rows={3}
-                        defaultValue={editingIssue.symptoms || ''}
-                        className="input-dark"
-                      />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">
-                        Posible solución
-                        <span className="text-red-300/90" aria-hidden>
-                          {' '}
-                          *
-                        </span>
-                      </label>
-                      <textarea
-                        name="possible_solution"
-                        required
-                        rows={4}
-                        defaultValue={editingIssue.possible_solution}
-                        className="input-dark"
-                      />
-                    </div>
-                    <div className={formStyles.formGroup}>
-                      <label className="label-field">Categoría de ticket</label>
-                      <select
-                        name="category_id"
-                        className={`input-dark ${formStyles.selectField}`}
-                        defaultValue={editingIssue.category_id ?? ''}
-                      >
-                        <option value="">Sin categoría</option>
-                        {categorias.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                            {!c.active ? ' (inactiva)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="active"
-                        id="edit-active"
-                        defaultChecked={editingIssue.active}
-                        className="rounded border-sky-400/40 bg-slate-900/80 text-sky-500"
-                      />
-                      <label htmlFor="edit-active" className="text-sm text-blue-100/85">
-                        Visible en formularios (activa)
-                      </label>
-                    </div>
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                      <button type="button" onClick={() => setEditingIssue(null)} className="btn-secondary w-full sm:w-auto">
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={updateMutation.isPending}
-                        className="btn-primary w-full sm:w-auto disabled:opacity-50"
-                      >
-                        {updateMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
             )}
 
             {issueToDelete && (

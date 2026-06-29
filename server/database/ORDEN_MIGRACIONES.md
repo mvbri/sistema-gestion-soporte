@@ -1,13 +1,13 @@
 ## 📋 Orden de Ejecución de Migraciones (para replicar en otra PC)
 
-> Este documento refleja **las 32 migraciones** que existen en `server/database/`
+> Este documento refleja **las 35 migraciones** que existen en `server/database/`
 > y el **orden correcto de dependencias** para levantar una base vacía en otra máquina.
 
 ---
 
 ## ✅ Orden recomendado desde una base vacía
 
-Ejecutar estas migraciones **en este orden** (1–32):
+Ejecutar estas migraciones **en este orden** (1–35):
 
 ### Núcleo: roles, usuarios y tickets
 
@@ -116,6 +116,16 @@ Ejecutar estas migraciones **en este orden** (1–32):
 32. **`migration_2026-05-24_12-00-00_create_schema_migrations.sql`**
     - Crea `schema_migrations` (registro de migraciones aplicadas por `npm run migrate`).
 
+33. **`migration_2026-06-16_14-00-00_add_ticket_reopen_window_settings.sql`**
+    - Crea `system_settings` con `ticket_reopen_window_hours` (default 48 h).
+    - Agrega `resolved_at` en `tickets` para calcular la ventana de reapertura.
+
+34. **`migration_2026-06-16_16-00-00_add_ticket_reopen_columns.sql`**
+    - Agrega `reopened` y `reopened_at` en `tickets` (badge Reabierto sobre En Proceso).
+
+35. **`migration_2026-06-24_12-00-00_add_ticket_closure_reason.sql`**
+    - Agrega `closure_reason` (texto libre) en `tickets` para el cierre definitivo por admin.
+
 > **Nota:** Los pasos 25 y 31 comparten timestamp `2026-04-29_20-30-00` pero afectan tablas distintas; el orden entre ellos es interchangeable.
 
 ---
@@ -174,6 +184,9 @@ SOURCE server/database/migration_2026-04-29_18-00-00_remove_quantity_not_applica
 SOURCE server/database/migration_2026-04-29_19-15-00_add_addressee_name_and_title.sql;
 SOURCE server/database/migration_2026-04-29_20-30-00_rename_request_area_to_addressee_addressing_text.sql;
 SOURCE server/database/migration_2026-05-24_12-00-00_create_schema_migrations.sql;
+SOURCE server/database/migration_2026-06-16_14-00-00_add_ticket_reopen_window_settings.sql;
+SOURCE server/database/migration_2026-06-16_16-00-00_add_ticket_reopen_columns.sql;
+SOURCE server/database/migration_2026-06-24_12-00-00_add_ticket_closure_reason.sql;
 ```
 
 Puedes adaptar las rutas según dónde ejecutes MySQL (por ejemplo, rutas absolutas), o usar `npm run migrate` en lugar de `SOURCE` manual.
@@ -191,7 +204,7 @@ Ver [`server/scripts/README.md`](../scripts/README.md).
 
 ## ℹ️ Notas
 
-- **`schema.sql`** y **`schema_tickets.sql`** son scripts antiguos de esquema completo y **no son necesarios** para una instalación nueva si ejecutas las **32** migraciones anteriores (o `npm run migrate`).
+- **`schema.sql`** y **`schema_tickets.sql`** son scripts antiguos de esquema completo y **no son necesarios** para una instalación nueva si ejecutas las **33** migraciones anteriores (o `npm run migrate`).
 - Los pasos **4–5** son idempotentes: en instalaciones nuevas `create_users` (3) ya incluye esas columnas.
 - La cadena **28 → 30 → 31** de solicitudes de materiales debe respetarse (columnas intermedias `addressed_to` / `request_area` antes del renombrado final).
 - La cadena **22 → 23 → 24** de préstamos debe respetarse (tabla base antes de columnas adicionales).

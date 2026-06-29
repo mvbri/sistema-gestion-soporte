@@ -37,7 +37,9 @@ import {
     updateUserStatus,
     updateUser,
     verifyUserEmail,
-    deleteUser
+    deleteUser,
+    getTicketSettings,
+    updateTicketSettings
 } from '../controllers/adminController.js';
 import {
     getFrequentIssuesAdmin,
@@ -239,6 +241,14 @@ router.put('/frequent-issues/:id', [
     handleValidationErrors
 ], updateFrequentIssue);
 router.delete('/frequent-issues/:id', deleteFrequentIssue);
+
+router.get('/ticket-settings', getTicketSettings);
+router.put('/ticket-settings', [
+    body('ticket_reopen_window_hours')
+        .isInt({ min: 1, max: 720 })
+        .withMessage('La ventana de reapertura debe ser un entero entre 1 y 720 horas'),
+    handleValidationErrors
+], updateTicketSettings);
 
 router.use('/backup', backupRoutes);
 

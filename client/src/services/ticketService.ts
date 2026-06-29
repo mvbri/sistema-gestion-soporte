@@ -164,4 +164,18 @@ export const ticketService = {
     const response = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/marcar-resuelto`);
     return response.data;
   },
+
+  async reopen(id: string, reason?: string): Promise<ApiResponse<Ticket>> {
+    const response = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/reabrir`, {
+      reason: reason?.trim() || undefined,
+    });
+    return response.data;
+  },
+
+  async close(id: string, closureReason: string): Promise<ApiResponse<Ticket>> {
+    const response = await api.patch<ApiResponse<Ticket>>(`/tickets/${id}/cerrar`, {
+      closure_reason: closureReason.trim(),
+    });
+    return response.data;
+  },
 };

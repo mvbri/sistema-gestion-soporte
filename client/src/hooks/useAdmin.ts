@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type CreateFrequentIssueData, type UpdateFrequentIssueData } from '../services/adminService';
+import { adminService, type CreateCategoriaData, type UpdateCategoriaData, type CreatePrioridadData, type UpdatePrioridadData, type CreateEstadoData, type UpdateEstadoData, type CreateDireccionData, type UpdateDireccionData, type DireccionesFilters, type CreateEquipmentTypeData, type UpdateEquipmentTypeData, type CreateConsumableTypeData, type UpdateConsumableTypeData, type CreateToolTypeData, type UpdateToolTypeData, type UsersFilters, type CreateUserData, type UpdateUserStatusData, type UpdateUserData, type CreateFrequentIssueData, type UpdateFrequentIssueData, type UpdateTicketSettingsData } from '../services/adminService';
 import { toast } from 'react-toastify';
 
 export const useAdminCategorias = () => {
@@ -626,6 +626,33 @@ export const useDeleteFrequentIssue = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Error al eliminar falla frecuente');
+    },
+  });
+};
+
+export const useAdminTicketSettings = () => {
+  return useQuery({
+    queryKey: ['adminTicketSettings'],
+    queryFn: () => adminService.getTicketSettings(),
+    select: (response) => response.data,
+    staleTime: 60 * 1000,
+  });
+};
+
+export const useUpdateTicketSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateTicketSettingsData) => adminService.updateTicketSettings(data),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['adminTicketSettings'] });
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        toast.success('Configuración de tickets actualizada exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar configuración de tickets');
     },
   });
 };

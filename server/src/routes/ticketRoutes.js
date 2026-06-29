@@ -13,13 +13,17 @@ import {
     getTecnicos,
     getStats,
     startProgress,
-    markAsResolved
+    markAsResolved,
+    reopenTicket,
+    closeTicket
 } from '../controllers/ticketController.js';
 import { getFrequentIssues } from '../controllers/frequentIssueController.js';
 import {
     validateCreateTicket,
     validateUpdateTicket,
-    validateComment
+    validateComment,
+    validateReopenTicket,
+    validateCloseTicket
 } from '../utils/validators.js';
 import { authenticate } from '../utils/jwt.js';
 import { upload, cloudinaryUploadMiddleware } from '../config/upload.js';
@@ -44,5 +48,7 @@ router.delete('/:id', deleteTicket);
 router.post('/:id/comentarios', validateComment, addComment);
 router.patch('/:id/iniciar-progreso', startProgress);
 router.patch('/:id/marcar-resuelto', markAsResolved);
+router.patch('/:id/reabrir', validateReopenTicket, reopenTicket);
+router.patch('/:id/cerrar', validateCloseTicket, closeTicket);
 
 export default router;

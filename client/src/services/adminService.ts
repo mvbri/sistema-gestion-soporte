@@ -154,6 +154,16 @@ export interface UpdateFrequentIssueData {
   active?: boolean;
 }
 
+export interface TicketSettings {
+  ticket_reopen_window_hours: number;
+  min_ticket_reopen_window_hours: number;
+  max_ticket_reopen_window_hours: number;
+}
+
+export interface UpdateTicketSettingsData {
+  ticket_reopen_window_hours: number;
+}
+
 export const adminService = {
   async getCategorias(): Promise<ApiResponse<CategoriaTicket[]>> {
     const response = await api.get<ApiResponse<CategoriaTicket[]>>('/admin/categorias');
@@ -364,6 +374,16 @@ export const adminService = {
 
   async deleteFrequentIssue(id: number): Promise<ApiResponse<null>> {
     const response = await api.delete<ApiResponse<null>>(`/admin/frequent-issues/${id}`);
+    return response.data;
+  },
+
+  async getTicketSettings(): Promise<ApiResponse<TicketSettings>> {
+    const response = await api.get<ApiResponse<TicketSettings>>('/admin/ticket-settings');
+    return response.data;
+  },
+
+  async updateTicketSettings(data: UpdateTicketSettingsData): Promise<ApiResponse<{ ticket_reopen_window_hours: number }>> {
+    const response = await api.put<ApiResponse<{ ticket_reopen_window_hours: number }>>('/admin/ticket-settings', data);
     return response.data;
   },
 };

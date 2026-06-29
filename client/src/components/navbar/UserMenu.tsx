@@ -67,7 +67,7 @@ export const UserMenu: React.FC = () => {
       </button>
 
       {userMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-64 rounded-xl py-2 z-20 bg-gradient-to-b from-slate-950/95 via-sky-950/90 to-slate-950/95 backdrop-blur-xl border border-sky-400/35 shadow-2xl shadow-sky-950/60">
+        <div className="absolute right-0 top-full mt-2 w-64 rounded-xl py-2 z-20 bg-gradient-to-b from-slate-950/[0.99] via-sky-950/[0.98] to-slate-950/[0.99] backdrop-blur-md border border-sky-400/35 shadow-2xl shadow-sky-950/60">
           <div className="px-4 py-3 border-b border-sky-400/25">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold text-white">

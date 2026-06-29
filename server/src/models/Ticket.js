@@ -128,7 +128,10 @@ class Ticket {
 
     static _normalizeTicket(ticket, fromOldColumns) {
         if (!ticket) return ticket;
-        return ticket;
+        return {
+            ...ticket,
+            reopened: Boolean(ticket.reopened),
+        };
     }
 
     static async _executeFindAll(sql, filters) {
@@ -242,6 +245,30 @@ class Ticket {
             if (state_id === 5) {
                 updates.push('closed_at = NOW()');
             }
+
+            if (state_id === 4) {
+                updates.push('resolved_at = NOW()');
+                updates.push('reopened = FALSE');
+                updates.push('reopened_at = NULL');
+            }
+        }
+
+        if (data.reopened !== undefined) {
+            updates.push('reopened = ?');
+            params.push(data.reopened ? 1 : 0);
+        }
+
+        if (data.reopened_at !== undefined) {
+            if (data.reopened_at === null) {
+                updates.push('reopened_at = NULL');
+            } else {
+                updates.push('reopened_at = ?');
+                params.push(data.reopened_at);
+            }
+        }
+
+        if (data.clear_resolved_at) {
+            updates.push('resolved_at = NULL');
         }
 
         if (assigned_technician_id !== undefined) {
@@ -263,6 +290,39 @@ class Ticket {
             }
         }
 
+        return await this.findById(id);
+    }
+
+    /**
+     * Cierra un ticket definitivamente con motivo de cierre en texto libre.
+     * @param {string} id - UUID del ticket
+     * @param {string} closureReason - Motivo obligatorio ingresado por el administrador
+     */
+    static async close(id, closureReason) {
+        const sql = `
+            UPDATE tickets
+            SET state_id = 5,
+                closed_at = NOW(),
+                closure_reason = ?
+            WHERE id = ?
+        `;
+        await query(sql, [closureReason.trim(), id]);
+        return await this.findById(id);
+    }
+
+    /**
+     * Reabre un ticket resuelto: pasa a En Proceso con flag reopened para badge en UI.
+     */
+    static async reopen(id) {
+        const sql = `
+            UPDATE tickets
+            SET state_id = 3,
+                reopened = TRUE,
+                reopened_at = NOW(),
+                resolved_at = NULL
+            WHERE id = ?
+        `;
+        await query(sql, [id]);
         return await this.findById(id);
     }
 
@@ -492,9 +552,101 @@ class Ticket {
         }
     }
 
+    static toCount(raw) {
+        return typeof raw === 'bigint' ? Number(raw) : raw ?? 0;
+    }
+
+    static toAvgHours(raw) {
+        if (raw === null || raw === undefined) {
+            return null;
+        }
+        return Number(Number(raw).toFixed(2));
+    }
+
+    /**
+     * Métricas de resolución temporal (resolved_at) y cierre definitivo (closed_at)
+     * en el rango [dateFrom, dateTo] inclusive (comparación DATE).
+     */
+    static async getLifecycleMetrics(dateFrom, dateTo) {
+        const rangeParams = [dateFrom, dateTo];
+
+        const resolvedTotalSql = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            WHERE t.resolved_at IS NOT NULL
+            AND DATE(t.resolved_at) >= ? AND DATE(t.resolved_at) <= ?
+        `;
+
+        const closedTotalSql = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+        `;
+
+        const avgHoursToResolutionSql = `
+            SELECT AVG(TIMESTAMPDIFF(HOUR, t.created_at, t.resolved_at)) as avg_hours
+            FROM tickets t
+            WHERE t.resolved_at IS NOT NULL
+            AND DATE(t.resolved_at) >= ? AND DATE(t.resolved_at) <= ?
+        `;
+
+        const avgHoursToClosureSql = `
+            SELECT AVG(TIMESTAMPDIFF(HOUR, t.created_at, t.closed_at)) as avg_hours
+            FROM tickets t
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+        `;
+
+        const resolvedByTechnicianSql = `
+            SELECT u.id as technician_user_id, u.full_name as technician_name, COUNT(t.id) as count
+            FROM tickets t
+            INNER JOIN users u ON t.assigned_technician_id = u.id
+            WHERE t.resolved_at IS NOT NULL
+            AND DATE(t.resolved_at) >= ? AND DATE(t.resolved_at) <= ?
+            GROUP BY u.id, u.full_name
+            ORDER BY count DESC
+        `;
+
+        const closedByTechnicianSql = `
+            SELECT u.id as technician_user_id, u.full_name as technician_name, COUNT(t.id) as count
+            FROM tickets t
+            INNER JOIN users u ON t.assigned_technician_id = u.id
+            WHERE t.closed_at IS NOT NULL
+            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
+            GROUP BY u.id, u.full_name
+            ORDER BY count DESC
+        `;
+
+        const [
+            resolvedTotalRows,
+            closedTotalRows,
+            avgHoursToResolutionRows,
+            avgHoursToClosureRows,
+            resolvedByTechnician,
+            closedByTechnician
+        ] = await Promise.all([
+            query(resolvedTotalSql, rangeParams),
+            query(closedTotalSql, rangeParams),
+            query(avgHoursToResolutionSql, rangeParams),
+            query(avgHoursToClosureSql, rangeParams),
+            query(resolvedByTechnicianSql, rangeParams),
+            query(closedByTechnicianSql, rangeParams)
+        ]);
+
+        return {
+            tickets_resolved_total: this.toCount(resolvedTotalRows[0]?.total),
+            tickets_closed_total: this.toCount(closedTotalRows[0]?.total),
+            avg_hours_to_resolution: this.toAvgHours(avgHoursToResolutionRows[0]?.avg_hours),
+            avg_hours_to_closure: this.toAvgHours(avgHoursToClosureRows[0]?.avg_hours),
+            resolved_by_technician: resolvedByTechnician,
+            closed_by_technician: closedByTechnician
+        };
+    }
+
     /**
      * Aggregates for tickets created in [dateFrom, dateTo] (inclusive, DATE comparison)
-     * plus closures and resolution metrics for the same calendar range on closed_at.
+     * plus lifecycle metrics (resolved_at vs closed_at) for the same calendar range.
      */
     static async getPeriodReport(dateFrom, dateTo) {
         const rangeParams = [dateFrom, dateTo];
@@ -503,13 +655,6 @@ class Ticket {
             SELECT COUNT(*) as total
             FROM tickets t
             WHERE DATE(t.created_at) >= ? AND DATE(t.created_at) <= ?
-        `;
-
-        const closedTotalSql = `
-            SELECT COUNT(*) as total
-            FROM tickets t
-            WHERE t.closed_at IS NOT NULL
-            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
         `;
 
         const byStateSql = `
@@ -556,58 +701,29 @@ class Ticket {
             ORDER BY count DESC
         `;
 
-        const closedByTechnicianSql = `
-            SELECT u.id as technician_user_id, u.full_name as technician_name, COUNT(t.id) as count
-            FROM tickets t
-            INNER JOIN users u ON t.assigned_technician_id = u.id
-            WHERE t.closed_at IS NOT NULL
-            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
-            GROUP BY u.id, u.full_name
-            ORDER BY count DESC
-        `;
-
-        const avgResolutionSql = `
-            SELECT AVG(TIMESTAMPDIFF(HOUR, t.created_at, t.closed_at)) as avg_hours
-            FROM tickets t
-            WHERE t.closed_at IS NOT NULL
-            AND DATE(t.closed_at) >= ? AND DATE(t.closed_at) <= ?
-        `;
-
         const [
             createdTotalRows,
-            closedTotalRows,
+            lifecycle,
             byState,
             byCategory,
             byPriority,
-            byIncidentArea,
-            closedByTechnician,
-            avgResolutionRows
+            byIncidentArea
         ] = await Promise.all([
             query(createdTotalSql, rangeParams),
-            query(closedTotalSql, rangeParams),
+            this.getLifecycleMetrics(dateFrom, dateTo),
             query(byStateSql, rangeParams),
             query(byCategorySql, rangeParams),
             query(byPrioritySql, rangeParams),
-            query(byIncidentAreaSql, rangeParams),
-            query(closedByTechnicianSql, rangeParams),
-            query(avgResolutionSql, rangeParams)
+            query(byIncidentAreaSql, rangeParams)
         ]);
 
-        const rawCreated = createdTotalRows[0]?.total ?? 0;
-        const rawClosed = closedTotalRows[0]?.total ?? 0;
-        const rawAvg = avgResolutionRows[0]?.avg_hours;
-
         return {
-            tickets_created_total: typeof rawCreated === 'bigint' ? Number(rawCreated) : rawCreated,
-            tickets_closed_total: typeof rawClosed === 'bigint' ? Number(rawClosed) : rawClosed,
-            avg_resolution_hours: rawAvg === null || rawAvg === undefined
-                ? null
-                : Number(Number(rawAvg).toFixed(2)),
+            tickets_created_total: this.toCount(createdTotalRows[0]?.total),
+            ...lifecycle,
             by_state: byState,
             by_category: byCategory,
             by_priority: byPriority,
-            by_incident_area: byIncidentArea,
-            closed_by_technician: closedByTechnician
+            by_incident_area: byIncidentArea
         };
     }
 }

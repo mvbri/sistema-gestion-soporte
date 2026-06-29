@@ -22,6 +22,7 @@ import { TicketsDashboard } from './pages/TicketsDashboard';
 import { AdminConfig } from './pages/AdminConfig';
 import { AdminUsers } from './pages/AdminUsers';
 import { AdminFrequentIssues } from './pages/AdminFrequentIssues';
+import { AdminFrequentIssueForm } from './pages/AdminFrequentIssueForm';
 import { BackupRestore } from './pages/BackupRestore';
 import { Profile } from './pages/Profile';
 import { EquipmentList } from './pages/EquipmentList';
@@ -133,6 +134,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/frequent-issues/crear"
+            element={
+              <ProtectedRoute allowedRoles={['administrator']}>
+                <AdminFrequentIssueForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/frequent-issues/:id/editar"
+            element={
+              <ProtectedRoute allowedRoles={['administrator']}>
+                <AdminFrequentIssueForm />
               </ProtectedRoute>
             }
           />

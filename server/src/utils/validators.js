@@ -231,6 +231,27 @@ export const validateUpdateTicket = [
   handleValidationErrors,
 ];
 
+export const validateReopenTicket = [
+  body('reason')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isLength({ min: 5 })
+    .withMessage('El motivo debe tener al menos 5 caracteres'),
+
+  handleValidationErrors,
+];
+
+export const validateCloseTicket = [
+  body('closure_reason')
+    .trim()
+    .notEmpty()
+    .withMessage('El motivo de cierre es obligatorio')
+    .isLength({ min: 3, max: 500 })
+    .withMessage('El motivo de cierre debe tener entre 3 y 500 caracteres'),
+
+  handleValidationErrors,
+];
+
 // Validaciones para comentarios
 export const validateComment = [
   body('content')

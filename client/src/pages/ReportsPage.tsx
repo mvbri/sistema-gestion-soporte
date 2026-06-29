@@ -7,6 +7,7 @@ import { useTicketsPeriodReport } from '../hooks/useReports';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
 import type { TicketsPeriodReport } from '../types';
+import { TicketLifecycleSummaryCards } from '../components/tickets/TicketLifecycleSummaryCards';
 import {
   Bar,
   BarChart,
@@ -46,11 +47,19 @@ function downloadTicketsReportCsv(report: TicketsPeriodReport): void {
   rows.push(['Periodo', 'Desde', report.period.date_from]);
   rows.push(['Periodo', 'Hasta', report.period.date_to]);
   rows.push(['Resumen', 'Tickets creados', String(report.tickets_creados)]);
+  rows.push(['Resumen', 'Tickets resueltos', String(report.tickets_resueltos)]);
   rows.push(['Resumen', 'Tickets cerrados', String(report.tickets_cerrados)]);
   rows.push([
     'Resumen',
-    'Promedio horas resolución',
-    report.promedio_horas_resolucion === null ? '' : String(report.promedio_horas_resolucion),
+    'Promedio horas hasta resolución',
+    report.promedio_horas_hasta_resolucion === null
+      ? ''
+      : String(report.promedio_horas_hasta_resolucion),
+  ]);
+  rows.push([
+    'Resumen',
+    'Promedio horas hasta cierre',
+    report.promedio_horas_hasta_cierre === null ? '' : String(report.promedio_horas_hasta_cierre),
   ]);
   report.porEstado.forEach((e) => {
     rows.push(['Por estado', e.estado_nombre, String(e.cantidad)]);
@@ -63,6 +72,9 @@ function downloadTicketsReportCsv(report: TicketsPeriodReport): void {
   });
   report.porArea.forEach((a) => {
     rows.push(['Por área', a.nombre, String(a.cantidad)]);
+  });
+  report.resolucionesPorTecnico.forEach((t) => {
+    rows.push(['Resoluciones por técnico', t.tecnico_nombre, String(t.cantidad)]);
   });
   report.cierresPorTecnico.forEach((t) => {
     rows.push(['Cierres por técnico', t.tecnico_nombre, String(t.cantidad)]);
@@ -138,10 +150,17 @@ async function downloadTicketsReportPdf(report: TicketsPeriodReport): Promise<vo
       ['Desde', report.period.date_from],
       ['Hasta', report.period.date_to],
       ['Tickets creados', String(report.tickets_creados)],
+      ['Tickets resueltos', String(report.tickets_resueltos)],
       ['Tickets cerrados', String(report.tickets_cerrados)],
       [
-        'Promedio horas resolucion',
-        report.promedio_horas_resolucion === null ? 'N/A' : String(report.promedio_horas_resolucion),
+        'Promedio horas hasta resolucion',
+        report.promedio_horas_hasta_resolucion === null
+          ? 'N/A'
+          : String(report.promedio_horas_hasta_resolucion),
+      ],
+      [
+        'Promedio horas hasta cierre',
+        report.promedio_horas_hasta_cierre === null ? 'N/A' : String(report.promedio_horas_hasta_cierre),
       ],
     ],
     styles: { fontSize: 10 },
@@ -168,6 +187,12 @@ async function downloadTicketsReportPdf(report: TicketsPeriodReport): Promise<vo
     {
       title: 'Tickets por area',
       rows: toPdfTableRows(report.porArea.map((a) => ({ name: a.nombre, value: a.cantidad }))),
+    },
+    {
+      title: 'Resoluciones por tecnico',
+      rows: toPdfTableRows(
+        report.resolucionesPorTecnico.map((t) => ({ name: t.tecnico_nombre, value: t.cantidad }))
+      ),
     },
     {
       title: 'Cierres por tecnico',
@@ -340,7 +365,7 @@ export const ReportsPage: React.FC = () => {
             <div>
               <h1 className="page-heading">Reportes</h1>
               <p className="page-subheading">
-                Tickets creados en el período seleccionado, cierres y tiempos de resolución
+                Tickets creados, resueltos, cerrados y tiempos del período
               </p>
             </div>
             {report && (
@@ -427,90 +452,8 @@ export const ReportsPage: React.FC = () => {
 
           {!isLoading && !isError && report && (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                <div className="stat-card stat-card--sky">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="stat-card-title">Tickets creados</p>
-                      <p className="stat-card-value">{report.tickets_creados}</p>
-                      <p className="stat-card-hint">En el período (fecha de creación)</p>
-                    </div>
-                    <div className="stat-card-icon stat-card-icon--sky">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="stat-card stat-card--emerald">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="stat-card-title">Tickets cerrados</p>
-                      <p className="stat-card-value">{report.tickets_cerrados}</p>
-                      <p className="stat-card-hint">Cerrados en el período (fecha de cierre)</p>
-                    </div>
-                    <div className="stat-card-icon stat-card-icon--emerald">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="stat-card stat-card--amber">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="stat-card-title">Tiempo medio de resolución</p>
-                      <p className="stat-card-value">
-                        {report.promedio_horas_resolucion === null
-                          ? '—'
-                          : `${report.promedio_horas_resolucion} h`}
-                      </p>
-                      <p className="stat-card-hint">Solo tickets cerrados en el período</p>
-                    </div>
-                    <div className="stat-card-icon stat-card-icon--amber">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="stat-card stat-card--violet">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="stat-card-title">Período</p>
-                      <p className="stat-card-value text-base sm:text-lg font-semibold leading-snug">
-                        {report.period.date_from}
-                        <span className="mx-1.5 opacity-60">→</span>
-                        {report.period.date_to}
-                      </p>
-                    </div>
-                    <div className="stat-card-icon stat-card-icon--violet">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <TicketLifecycleSummaryCards metrics={report} period={report.period} />
               </div>
 
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 mb-6">
@@ -628,34 +571,74 @@ export const ReportsPage: React.FC = () => {
                   )}
                 </div>
 
+                <div className="content-panel mb-6">
+                  <h2 className="mb-4 text-lg font-semibold text-white">
+                    Creados por área de incidente
+                  </h2>
+                  {report.porArea.every((a) => !a.cantidad) ? (
+                    <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        data={report.porArea}
+                        margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                        <XAxis
+                          dataKey="nombre"
+                          tick={CHART_AXIS_TICK}
+                          angle={-35}
+                          textAnchor="end"
+                          height={70}
+                        />
+                        <YAxis tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
+                        <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                        <Bar dataKey="cantidad" radius={[8, 8, 0, 0]}>
+                          {report.porArea.map((a, index) => (
+                            <Cell
+                              key={a.id}
+                              fill={CHART_PALETTE[(index + 2) % CHART_PALETTE.length]}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                   <div className="content-panel">
                     <h2 className="mb-4 text-lg font-semibold text-white">
-                      Creados por área de incidente
+                      Resoluciones por técnico
                     </h2>
-                    {report.porArea.every((a) => !a.cantidad) ? (
-                      <p className="py-16 text-center text-blue-200/50">Sin datos en este período</p>
+                    {report.resolucionesPorTecnico.length === 0 ? (
+                      <p className="py-16 text-center text-blue-200/50">
+                        Sin resoluciones en este período
+                      </p>
                     ) : (
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer
+                        width="100%"
+                        height={Math.max(280, report.resolucionesPorTecnico.length * 36)}
+                      >
                         <BarChart
-                          data={report.porArea}
-                          margin={{ top: 8, right: 8, left: 0, bottom: 48 }}
+                          layout="vertical"
+                          data={report.resolucionesPorTecnico}
+                          margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
-                          <XAxis
-                            dataKey="nombre"
+                          <XAxis type="number" tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
+                          <YAxis
+                            type="category"
+                            dataKey="tecnico_nombre"
+                            width={120}
                             tick={CHART_AXIS_TICK}
-                            angle={-35}
-                            textAnchor="end"
-                            height={70}
                           />
-                          <YAxis tick={CHART_AXIS_TICK_Y} allowDecimals={false} />
                           <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                          <Bar dataKey="cantidad" radius={[8, 8, 0, 0]}>
-                            {report.porArea.map((a, index) => (
+                          <Bar dataKey="cantidad" radius={[0, 8, 8, 0]}>
+                            {report.resolucionesPorTecnico.map((t, index) => (
                               <Cell
-                                key={a.id}
-                                fill={CHART_PALETTE[(index + 2) % CHART_PALETTE.length]}
+                                key={t.tecnico_id}
+                                fill={CHART_PALETTE[index % CHART_PALETTE.length]}
                               />
                             ))}
                           </Bar>

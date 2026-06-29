@@ -467,6 +467,33 @@
     @apply text-violet-100/70;
   }
 
+  .stat-card--slate {
+    @apply border-slate-400/45;
+    background: linear-gradient(
+      135deg,
+      rgba(148, 163, 184, 0.26) 0%,
+      rgba(71, 85, 105, 0.5) 42%,
+      rgba(15, 23, 42, 0.88) 100%
+    );
+    box-shadow:
+      0 4px 12px -2px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(148, 163, 184, 0.15);
+  }
+
+  .stat-card--slate:hover {
+    box-shadow:
+      0 6px 16px -2px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(148, 163, 184, 0.25);
+  }
+
+  .stat-card--slate .stat-card-title {
+    @apply text-slate-100;
+  }
+
+  .stat-card--slate .stat-card-hint {
+    @apply text-slate-100/70;
+  }
+
   .stat-card-icon {
     @apply relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-xl
            flex items-center justify-center border shadow-sm;
@@ -490,6 +517,10 @@
 
   .stat-card-icon--violet {
     @apply bg-gradient-to-br from-violet-400/55 to-purple-500/40 border-violet-300/50 text-violet-50;
+  }
+
+  .stat-card-icon--slate {
+    @apply bg-gradient-to-br from-slate-400/55 to-slate-600/40 border-slate-300/50 text-slate-50;
   }
 }
 

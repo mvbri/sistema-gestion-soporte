@@ -225,3 +225,41 @@ export const useMarkAsResolved = () => {
     },
   });
 };
+
+export const useReopenTicket = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      ticketService.reopen(id, reason),
+    onSuccess: (response, variables) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.invalidateQueries({ queryKey: ['ticket', variables.id] });
+        toast.success('Ticket reabierto exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al reabrir ticket');
+    },
+  });
+};
+
+export const useCloseTicket = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, closureReason }: { id: string; closureReason: string }) =>
+      ticketService.close(id, closureReason),
+    onSuccess: (response, variables) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        queryClient.invalidateQueries({ queryKey: ['ticket', variables.id] });
+        toast.success('Ticket cerrado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al cerrar ticket');
+    },
+  });
+};

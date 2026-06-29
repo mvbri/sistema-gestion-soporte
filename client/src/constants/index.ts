@@ -18,3 +18,13 @@ export const STORAGE_KEYS = {
   USER: 'user',
 } as const;
 
+export const TICKET_CLOSURE_CATEGORIES = [
+  { value: 'solved', label: 'Solucionado' },
+  { value: 'cancelled', label: 'Cancelado' },
+  { value: 'duplicate', label: 'Duplicado' },
+  { value: 'other', label: 'Otro' },
+] as const;
+
+export type TicketClosureCategoryValue =
+  (typeof TICKET_CLOSURE_CATEGORIES)[number]['value'];
+

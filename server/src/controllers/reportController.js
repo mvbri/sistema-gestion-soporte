@@ -96,18 +96,27 @@ export const getTicketsPeriodReport = async (req, res) => {
             cantidad: typeof row.count === 'bigint' ? Number(row.count) : row.count || 0
         }));
 
+        const resolucionesPorTecnico = raw.resolved_by_technician.map((row) => ({
+            tecnico_id: row.technician_user_id,
+            tecnico_nombre: row.technician_name,
+            cantidad: typeof row.count === 'bigint' ? Number(row.count) : row.count || 0
+        }));
+
         sendSuccess(res, 'Reporte generado correctamente', {
             period: {
                 date_from: parsedFrom.value,
                 date_to: parsedTo.value
             },
             tickets_creados: raw.tickets_created_total,
+            tickets_resueltos: raw.tickets_resolved_total,
             tickets_cerrados: raw.tickets_closed_total,
-            promedio_horas_resolucion: raw.avg_resolution_hours,
+            promedio_horas_hasta_resolucion: raw.avg_hours_to_resolution,
+            promedio_horas_hasta_cierre: raw.avg_hours_to_closure,
             porEstado,
             porCategoria,
             porPrioridad,
             porArea,
+            resolucionesPorTecnico,
             cierresPorTecnico
         });
     } catch (error) {

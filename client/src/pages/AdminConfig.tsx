@@ -32,13 +32,15 @@ import {
   useCreateToolType,
   useUpdateToolType,
   useDeleteToolType,
+  useAdminTicketSettings,
+  useUpdateTicketSettings,
 } from '../hooks/useAdmin';
 import type { CategoriaTicket, PrioridadTicket, EstadoTicket, DireccionTicket, EquipmentType, ConsumableType, ToolType } from '../types';
 
 export const AdminConfig: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'estados' | 'direcciones' | 'equipment-types' | 'consumable-types' | 'tool-types'>('categorias');
+  const [activeTab, setActiveTab] = useState<'categorias' | 'prioridades' | 'estados' | 'direcciones' | 'equipment-types' | 'consumable-types' | 'tool-types' | 'tickets'>('categorias');
   const [editingCategoria, setEditingCategoria] = useState<CategoriaTicket | null>(null);
   const [editingPrioridad, setEditingPrioridad] = useState<PrioridadTicket | null>(null);
   const [editingEstado, setEditingEstado] = useState<EstadoTicket | null>(null);
@@ -69,6 +71,8 @@ export const AdminConfig: React.FC = () => {
   const [direccionesLimit] = useState(5);
   const [direccionesOrderBy] = useState<'name' | 'description' | 'active' | 'created_at' | 'updated_at'>('name');
   const [direccionesOrderDirection, setDireccionesOrderDirection] = useState<'ASC' | 'DESC'>('ASC');
+  const [reopenWindowPreset, setReopenWindowPreset] = useState<'48' | '72' | 'custom'>('48');
+  const [customReopenWindowHours, setCustomReopenWindowHours] = useState('48');
 
   const { data: categorias = [], isLoading: loadingCategorias } = useAdminCategorias();
   const { data: prioridades = [], isLoading: loadingPrioridades } = useAdminPrioridades();
@@ -76,6 +80,7 @@ export const AdminConfig: React.FC = () => {
   const { data: equipmentTypes = [], isLoading: loadingEquipmentTypes } = useAdminEquipmentTypes();
   const { data: consumableTypes = [], isLoading: loadingConsumableTypes } = useAdminConsumableTypes();
   const { data: toolTypes = [], isLoading: loadingToolTypes } = useAdminToolTypes();
+  const { data: ticketSettings, isLoading: loadingTicketSettings } = useAdminTicketSettings();
   const { 
     data: direccionesData, 
     isLoading: loadingDirecciones 
@@ -115,14 +120,50 @@ export const AdminConfig: React.FC = () => {
   const createToolTypeMutation = useCreateToolType();
   const updateToolTypeMutation = useUpdateToolType();
   const deleteToolTypeMutation = useDeleteToolType();
+  const updateTicketSettingsMutation = useUpdateTicketSettings();
 
-  const loading = loadingCategorias || loadingPrioridades || loadingEstados || loadingDirecciones || loadingEquipmentTypes || loadingConsumableTypes || loadingToolTypes;
+  const loading = loadingCategorias || loadingPrioridades || loadingEstados || loadingDirecciones || loadingEquipmentTypes || loadingConsumableTypes || loadingToolTypes || loadingTicketSettings;
 
   useEffect(() => {
     if (user?.role !== 'administrator') {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (!ticketSettings) return;
+
+    const hours = ticketSettings.ticket_reopen_window_hours;
+    if (hours === 48) {
+      setReopenWindowPreset('48');
+      setCustomReopenWindowHours('48');
+      return;
+    }
+    if (hours === 72) {
+      setReopenWindowPreset('72');
+      setCustomReopenWindowHours('72');
+      return;
+    }
+    setReopenWindowPreset('custom');
+    setCustomReopenWindowHours(String(hours));
+  }, [ticketSettings]);
+
+  const handleSaveTicketSettings = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const hours =
+      reopenWindowPreset === '48'
+        ? 48
+        : reopenWindowPreset === '72'
+          ? 72
+          : parseInt(customReopenWindowHours, 10);
+
+    if (Number.isNaN(hours)) {
+      return;
+    }
+
+    updateTicketSettingsMutation.mutate({ ticket_reopen_window_hours: hours });
+  };
 
   const handleCreateCategoria = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -485,7 +526,7 @@ export const AdminConfig: React.FC = () => {
             <header className="mb-6">
               <h1 className="page-heading">Configuración de administración</h1>
               <p className="page-subheading">
-                Gestiona categorías, prioridades, estados, direcciones y tipos del inventario.
+                Gestiona categorías, prioridades, estados, direcciones, tipos del inventario y parámetros de tickets.
               </p>
             </header>
 
@@ -561,6 +602,16 @@ export const AdminConfig: React.FC = () => {
                 }`}
               >
                 Tipos de Herramientas
+              </button>
+              <button
+                onClick={() => setActiveTab('tickets')}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
+                  activeTab === 'tickets'
+                    ? 'bg-sky-500/20 text-white border border-sky-300/40'
+                    : 'bg-slate-900/30 text-blue-100/75 border border-sky-400/10 hover:border-sky-300/25 hover:text-white'
+                }`}
+              >
+                Tickets
               </button>
                 </nav>
               </div>
@@ -2443,6 +2494,97 @@ export const AdminConfig: React.FC = () => {
                     ))
                   )}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'tickets' && (
+              <div>
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Configuración de tickets</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Define cuánto tiempo tiene el usuario para solicitar la reapertura después de que un ticket se marque como resuelto.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSaveTicketSettings} className="max-w-xl space-y-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                  <fieldset className="space-y-3">
+                    <legend className="text-sm font-semibold text-gray-900 mb-2">
+                      Ventana de reapertura
+                    </legend>
+
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="reopen_window_preset"
+                        value="48"
+                        checked={reopenWindowPreset === '48'}
+                        onChange={() => setReopenWindowPreset('48')}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <span className="text-sm text-gray-800">48 horas (2 días)</span>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="reopen_window_preset"
+                        value="72"
+                        checked={reopenWindowPreset === '72'}
+                        onChange={() => setReopenWindowPreset('72')}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <span className="text-sm text-gray-800">72 horas (3 días)</span>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="reopen_window_preset"
+                        value="custom"
+                        checked={reopenWindowPreset === 'custom'}
+                        onChange={() => setReopenWindowPreset('custom')}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <span className="text-sm text-gray-800">Personalizado</span>
+                    </label>
+                  </fieldset>
+
+                  {reopenWindowPreset === 'custom' && (
+                    <div>
+                      <label htmlFor="custom_reopen_window_hours" className="block text-sm font-medium text-gray-700 mb-1">
+                        Horas personalizadas
+                      </label>
+                      <input
+                        id="custom_reopen_window_hours"
+                        type="number"
+                        min={ticketSettings?.min_ticket_reopen_window_hours ?? 1}
+                        max={ticketSettings?.max_ticket_reopen_window_hours ?? 720}
+                        value={customReopenWindowHours}
+                        onChange={(e) => setCustomReopenWindowHours(e.target.value)}
+                        required
+                        className="w-full max-w-xs px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Entre {ticketSettings?.min_ticket_reopen_window_hours ?? 1} y {ticketSettings?.max_ticket_reopen_window_hours ?? 720} horas.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="submit"
+                      disabled={updateTicketSettingsMutation.isPending}
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg active:scale-95 transition-all duration-200 ease-in-out disabled:opacity-60"
+                    >
+                      {updateTicketSettingsMutation.isPending ? 'Guardando...' : 'Guardar configuración'}
+                    </button>
+                    {ticketSettings && (
+                      <p className="text-sm text-gray-600">
+                        Valor actual: <strong>{ticketSettings.ticket_reopen_window_hours} h</strong>
+                      </p>
+                    )}
+                  </div>
+                </form>
               </div>
             )}
           </div>
