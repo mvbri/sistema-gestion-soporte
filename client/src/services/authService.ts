@@ -7,6 +7,7 @@ export interface RegisterData {
   password: string;
   phone?: string | null;
   incident_area_id: number;
+  turnstileToken: string;
 }
 
 export interface LoginData {
@@ -43,13 +44,19 @@ export const authService = {
     return response.data;
   },
 
-  async resendVerification(email: string): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>('/auth/resend-verification', { email });
+  async resendVerification(email: string, turnstileToken: string): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>('/auth/resend-verification', {
+      email,
+      turnstileToken,
+    });
     return response.data;
   },
 
-  async requestPasswordRecovery(email: string): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>('/auth/request-password-recovery', { email });
+  async requestPasswordRecovery(email: string, turnstileToken: string): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>('/auth/request-password-recovery', {
+      email,
+      turnstileToken,
+    });
     return response.data;
   },
 

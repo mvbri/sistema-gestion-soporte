@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,9 +7,13 @@ import { useAuth } from '../hooks/useAuth';
 import { registroSchema } from '../schemas/authSchemas';
 import type { RegisterData } from '../services/authService';
 import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
+import {
+  TurnstileCaptcha,
+  type TurnstileCaptchaRef,
+} from '../components/security/TurnstileCaptcha';
 import formStyles from '../styles/modules/forms.module.css';
 
-const formatRegisterData = (data: RegisterData): RegisterData => {
+const formatRegisterData = (data: RegisterData, turnstileToken: string): RegisterData => {
   const formatRequiredField = (value: string): string => value.trim();
   
   const formatOptionalField = (value?: string | null): string | null => {
@@ -24,12 +28,15 @@ const formatRegisterData = (data: RegisterData): RegisterData => {
     password: data.password,
     phone: formatOptionalField(data.phone),
     incident_area_id: data.incident_area_id,
+    turnstileToken,
   };
 };
 
 export const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileCaptchaRef>(null);
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const { data: direcciones = [], isLoading: loadingDirecciones } = useDireccionesOptions();
@@ -38,14 +45,22 @@ export const Register: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterData>({
+  } = useForm<Omit<RegisterData, 'turnstileToken'>>({
     resolver: zodResolver(registroSchema),
   });
 
-  const onSubmit = async (data: RegisterData) => {
+  const onSubmit = async (data: Omit<RegisterData, 'turnstileToken'>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'Register.tsx:onSubmit',message:'submit attempted',data:{hasTurnstileToken:!!turnstileToken,tokenLength:turnstileToken?.length??0},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
+    if (!turnstileToken) {
+      toast.error('Completa la verificación de seguridad');
+      return;
+    }
+
     setLoading(true);
     try {
-      const cleanData = formatRegisterData(data);
+      const cleanData = formatRegisterData(data as RegisterData, turnstileToken);
       await registerUser(cleanData);
       toast.success('Registro exitoso. Ahora configura tus preguntas de seguridad.');
       navigate('/configurar-preguntas-seguridad', {
@@ -69,6 +84,8 @@ export const Register: React.FC = () => {
       
       toast.error(errorMessage);
     } finally {
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
       setLoading(false);
     }
   };
@@ -242,12 +259,19 @@ export const Register: React.FC = () => {
             )}
           </div>
 
+          <TurnstileCaptcha
+            ref={turnstileRef}
+            onVerify={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+          />
+
           <button
             type="submit"
             className="btn-primary w-full mt-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/40 py-2.5
                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-400 focus:ring-offset-slate-900
                        disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
-            disabled={loading}
+            disabled={loading || !turnstileToken}
           >
             {loading ? (
               <span className={formStyles.loadingSpinner}></span>

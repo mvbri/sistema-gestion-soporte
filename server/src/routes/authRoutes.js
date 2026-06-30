@@ -26,14 +26,15 @@ import {
     validateSetSecurityQuestionsPublic
 } from '../utils/validators.js';
 import { authenticate } from '../utils/jwt.js';
+import { validateTurnstile } from '../middleware/validateTurnstile.js';
 
 const router = express.Router();
 
-router.post('/register', validateRegistro, registerController);
+router.post('/register', validateTurnstile, validateRegistro, registerController);
 router.post('/login', validateLogin, login);
 router.get('/verify-email', verifyEmail);
-router.post('/resend-verification', validateRecuperacionPassword, resendVerification);
-router.post('/request-password-recovery', validateRecuperacionPassword, requestRecovery);
+router.post('/resend-verification', validateTurnstile, validateRecuperacionPassword, resendVerification);
+router.post('/request-password-recovery', validateTurnstile, validateRecuperacionPassword, requestRecovery);
 router.post('/reset-password', validateRestablecerPassword, resetPassword);
 
 router.post('/get-security-questions', validateGetSecurityQuestions, getSecurityQuestions);

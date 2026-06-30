@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { recuperacionSchema } from '../schemas/authSchemas';
+import {
+  TurnstileCaptcha,
+  type TurnstileCaptchaRef,
+} from '../components/security/TurnstileCaptcha';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface RecoveryData {
@@ -16,6 +20,8 @@ type RecoveryMethod = 'email' | 'security-questions';
 export const RequestPasswordRecovery: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState<RecoveryMethod>('email');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileCaptchaRef>(null);
   const navigate = useNavigate();
 
   const {
@@ -28,13 +34,20 @@ export const RequestPasswordRecovery: React.FC = () => {
 
   const handleMethodChange = (newMethod: RecoveryMethod) => {
     setMethod(newMethod);
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   };
 
   const onSubmit = async (data: RecoveryData) => {
     setLoading(true);
     try {
       if (method === 'email') {
-        const response = await authService.requestPasswordRecovery(data.email);
+        if (!turnstileToken) {
+          toast.error('Completa la verificación de seguridad');
+          return;
+        }
+
+        const response = await authService.requestPasswordRecovery(data.email, turnstileToken);
         if (response.success) {
           toast.success('Se ha enviado un email con las instrucciones para recuperar tu contraseña.');
         } else {
@@ -64,6 +77,10 @@ export const RequestPasswordRecovery: React.FC = () => {
       }
       toast.error(errorMessage);
     } finally {
+      if (method === 'email') {
+        setTurnstileToken(null);
+        turnstileRef.current?.reset();
+      }
       setLoading(false);
     }
   };
@@ -137,12 +154,21 @@ export const RequestPasswordRecovery: React.FC = () => {
             )}
           </div>
 
+          {method === 'email' && (
+            <TurnstileCaptcha
+              ref={turnstileRef}
+              onVerify={setTurnstileToken}
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => setTurnstileToken(null)}
+            />
+          )}
+
           <button
             type="submit"
             className="btn-primary w-full mt-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/40 py-2.5
                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-400 focus:ring-offset-slate-900
                        disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
-            disabled={loading}
+            disabled={loading || (method === 'email' && !turnstileToken)}
           >
             {loading ? (
               <span className={formStyles.loadingSpinner}></span>

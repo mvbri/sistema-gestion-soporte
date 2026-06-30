@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { recuperacionSchema } from '../schemas/authSchemas';
+import {
+  TurnstileCaptcha,
+  type TurnstileCaptchaRef,
+} from '../components/security/TurnstileCaptcha';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface VerificationData {
@@ -15,6 +19,8 @@ export const RequestVerification: React.FC = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileCaptchaRef>(null);
   const emailFromState = location.state?.email || '';
 
   const {
@@ -53,9 +59,14 @@ export const RequestVerification: React.FC = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      toast.error('Completa la verificación de seguridad');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await authService.resendVerification(data.email);
+      const response = await authService.resendVerification(data.email, turnstileToken);
       if (response.success) {
         toast.success('Se ha enviado un nuevo email de verificación.');
         setCooldown(60);
@@ -72,6 +83,8 @@ export const RequestVerification: React.FC = () => {
       }
       toast.error(errorMessage);
     } finally {
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
       setLoading(false);
     }
   };
@@ -103,6 +116,15 @@ export const RequestVerification: React.FC = () => {
             )}
           </div>
 
+          {cooldown === 0 && (
+            <TurnstileCaptcha
+              ref={turnstileRef}
+              onVerify={setTurnstileToken}
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => setTurnstileToken(null)}
+            />
+          )}
+
           {cooldown > 0 ? (
             <div className="text-center py-4">
               <p className="text-gray-600 mb-2">
@@ -116,7 +138,7 @@ export const RequestVerification: React.FC = () => {
             <button
               type="submit"
               className="btn-primary w-full"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
             >
               {loading ? (
                 <span className={formStyles.loadingSpinner}></span>
