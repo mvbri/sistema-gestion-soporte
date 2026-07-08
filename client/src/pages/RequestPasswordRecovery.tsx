@@ -9,6 +9,7 @@ import {
   TurnstileCaptcha,
   type TurnstileCaptchaRef,
 } from '../components/security/TurnstileCaptcha';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface RecoveryData {
@@ -68,14 +69,7 @@ export const RequestPasswordRecovery: React.FC = () => {
         }
       }
     } catch (err: unknown) {
-      let errorMessage = 'Error al solicitar recuperación';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al solicitar recuperación'));
     } finally {
       if (method === 'email') {
         setTurnstileToken(null);

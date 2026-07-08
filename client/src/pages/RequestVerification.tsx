@@ -9,6 +9,7 @@ import {
   TurnstileCaptcha,
   type TurnstileCaptchaRef,
 } from '../components/security/TurnstileCaptcha';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface VerificationData {
@@ -74,14 +75,7 @@ export const RequestVerification: React.FC = () => {
         toast.error(response.message || 'Error al enviar verificación');
       }
     } catch (err: unknown) {
-      let errorMessage = 'Error al enviar verificación';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al enviar verificación'));
     } finally {
       setTurnstileToken(null);
       turnstileRef.current?.reset();

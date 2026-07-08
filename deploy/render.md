@@ -62,9 +62,12 @@ EMAIL_FROM=Sistema de Soporte <tu@email-verificado-en-sendgrid.com>
 
 UPLOAD_PROVIDER=cloudinary
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+
+TURNSTILE_SITE_KEY=0x4AAAAAAA...
+TURNSTILE_SECRET_KEY=0x4AAAAAAA...
 ```
 
-Detalle de email: [`sendgrid.md`](sendgrid.md). Detalle de imágenes: [`cloudinary.md`](cloudinary.md).
+Detalle de email: [`sendgrid.md`](sendgrid.md). Detalle de imágenes: [`cloudinary.md`](cloudinary.md). CAPTCHA: [`turnstile.md`](turnstile.md).
 
 ## Email y uploads: producción vs local
 
@@ -72,6 +75,7 @@ Detalle de email: [`sendgrid.md`](sendgrid.md). Detalle de imágenes: [`cloudina
 |--|---------------------|------------------|
 | Email | `EMAIL_PROVIDER=sendgrid` + `SENDGRID_API_KEY` | Sin `EMAIL_PROVIDER`; Gmail SMTP |
 | Imágenes | `UPLOAD_PROVIDER=cloudinary` | Disco `server/uploads/` |
+| CAPTCHA | `TURNSTILE_SECRET_KEY` (par con `VITE_TURNSTILE_SITE_KEY` en Vercel) | Claves de prueba `1x...` en `server/.env` y `client/.env` |
 
 ## Migraciones
 

@@ -1,5 +1,6 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
+import api from '../../utils/api';
 
 export interface TurnstileCaptchaProps {
   onVerify: (token: string) => void;
@@ -11,12 +12,29 @@ export interface TurnstileCaptchaRef {
   reset: () => void;
 }
 
-const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-const isTestSiteKey = typeof siteKey === 'string' && siteKey.startsWith('1x');
+/** Disponible en build si VITE_TURNSTILE_SITE_KEY estuvo en el entorno de Vite al compilar. */
+const buildTimeSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
+
+async function resolveTurnstileSiteKey(): Promise<string | null> {
+  const fromBuild = buildTimeSiteKey?.trim();
+  if (fromBuild) {
+    return fromBuild;
+  }
+
+  const response = await api.get<{ success: boolean; data?: { turnstileSiteKey?: string | null } }>(
+    '/auth/public-config'
+  );
+  const fromApi = response.data?.data?.turnstileSiteKey?.trim();
+  return fromApi || null;
+}
 
 export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptchaProps>(
   ({ onVerify, onExpire, onError }, ref) => {
     const turnstileRef = useRef<TurnstileInstance>(null);
+    const [siteKey, setSiteKey] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [widgetErrorCode, setWidgetErrorCode] = useState<string | null>(null);
 
     useImperativeHandle(ref, () => ({
       reset: () => {
@@ -24,11 +42,52 @@ export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptcha
       },
     }));
 
-    if (!siteKey) {
-      // #region agent log
-      fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'TurnstileCaptcha.tsx:missingKey',message:'siteKey missing',data:{hasSiteKey:false},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
-      console.error('VITE_TURNSTILE_SITE_KEY no está configurada');
+    useEffect(() => {
+      let cancelled = false;
+
+      resolveTurnstileSiteKey()
+        .then((key) => {
+          if (cancelled) {
+            return;
+          }
+
+          if (key) {
+            setSiteKey(key);
+            setLoadFailed(false);
+            return;
+          }
+
+          setLoadFailed(true);
+          console.error('VITE_TURNSTILE_SITE_KEY y TURNSTILE_SITE_KEY no están configuradas');
+        })
+        .catch((error) => {
+          if (cancelled) {
+            return;
+          }
+
+          setLoadFailed(true);
+          console.error('Error al cargar configuración de Turnstile:', error);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    if (loading) {
+      return (
+        <p className="text-xs text-gray-300 text-center" aria-live="polite">
+          Cargando verificación de seguridad…
+        </p>
+      );
+    }
+
+    if (loadFailed || !siteKey) {
       return (
         <p className="text-xs text-red-200 text-center">
           Verificación de seguridad no disponible. Contacta al administrador.
@@ -36,32 +95,43 @@ export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptcha
       );
     }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'TurnstileCaptcha.tsx:render',message:'widget rendering',data:{hasSiteKey:true,isTestSiteKey,keyPrefix:siteKey.slice(0,4)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
+    const handleTurnstileError = (errorCode?: string) => {
+      const code = errorCode ?? 'unknown';
 
-    const handleVerify = (token: string) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'TurnstileCaptcha.tsx:onSuccess',message:'turnstile verified',data:{tokenLength:token.length,isTestSiteKey},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-      // #endregion
-      onVerify(token);
+      setWidgetErrorCode(code);
+      onError();
     };
 
+    const widgetErrorMessage = (() => {
+      if (widgetErrorCode === '110200') {
+        return `Dominio no autorizado en Cloudflare Turnstile. Añade "${window.location.hostname}" en Hostname Management del widget.`;
+      }
+      if (widgetErrorCode === '200500') {
+        return 'No se pudo conectar con Cloudflare. Comprueba tu red, VPN o bloqueadores de anuncios.';
+      }
+      if (widgetErrorCode && widgetErrorCode !== 'unknown') {
+        return `Error de verificación Cloudflare (código ${widgetErrorCode}). Revisa la configuración del widget.`;
+      }
+      return null;
+    })();
+
     return (
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-2">
         <Turnstile
           ref={turnstileRef}
           siteKey={siteKey}
-          onSuccess={handleVerify}
+          onSuccess={onVerify}
           onExpire={onExpire}
-          onError={() => {
-            // #region agent log
-            fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'TurnstileCaptcha.tsx:onError',message:'turnstile error',data:{isTestSiteKey},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
-            onError();
+          onError={() => handleTurnstileError()}
+          options={{
+            theme: 'dark',
+            size: 'normal',
+            'error-callback': (code: string) => handleTurnstileError(code),
           }}
-          options={{ theme: 'dark', size: 'normal' }}
         />
+        {widgetErrorMessage && (
+          <p className="text-xs text-amber-200 text-center max-w-sm">{widgetErrorMessage}</p>
+        )}
       </div>
     );
   }

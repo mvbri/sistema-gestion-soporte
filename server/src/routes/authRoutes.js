@@ -12,7 +12,8 @@ import {
     verifySecurityAnswers,
     setSecurityQuestions,
     setSecurityQuestionsPublic,
-    getDireccionesPublic
+    getDireccionesPublic,
+    getPublicConfig
 } from '../controllers/authController.js';
 import {
     validateRegistro,
@@ -43,6 +44,7 @@ router.post('/set-security-questions-public', validateSetSecurityQuestionsPublic
 
 // Direcciones públicas para formularios de registro
 router.get('/direcciones', getDireccionesPublic);
+router.get('/public-config', getPublicConfig);
 
 router.get('/current-user', authenticate, getCurrentUser);
 router.put('/profile', authenticate, validateUpdateProfile, updateCurrentUser);

@@ -90,10 +90,24 @@ if (fs.existsSync(envPath)) {
       console.log('OK: uploads en disco (desarrollo / servidor propio)');
     }
   }
+
+  const turnstileSecret = readEnvValue(envText, 'TURNSTILE_SECRET_KEY');
+  const turnstileSiteKey = readEnvValue(envText, 'TURNSTILE_SITE_KEY');
+  if (!turnstileSecret || turnstileSecret.includes('CAMBIAR') || turnstileSecret.startsWith('1x')) {
+    console.warn('ADVERTENCIA: Revisar TURNSTILE_SECRET_KEY (usar Secret Key real de Cloudflare en producción)');
+  } else {
+    console.log('OK: TURNSTILE_SECRET_KEY configurado');
+  }
+  if (!turnstileSiteKey || turnstileSiteKey.includes('CAMBIAR') || turnstileSiteKey.startsWith('1x')) {
+    console.warn('ADVERTENCIA: Revisar TURNSTILE_SITE_KEY (Site Key real de Cloudflare en producción)');
+  } else {
+    console.log('OK: TURNSTILE_SITE_KEY configurado');
+  }
 }
 
 console.log('');
 console.log('Verificación completada. Prueba manual recomendada:');
-console.log('  - Login y correo 2FA (SendGrid en producción)');
+console.log('  - Registro con widget Turnstile (VITE_TURNSTILE_SITE_KEY en Vercel + redeploy)');
+console.log('  - Login y correo de verificación (SendGrid en producción)');
 console.log('  - Crear ticket con imagen (Cloudinary en producción)');
 console.log('  - Frontend Vercel con VITE_API_URL apuntando al API');

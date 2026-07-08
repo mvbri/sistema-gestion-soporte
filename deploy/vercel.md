@@ -16,8 +16,20 @@
 | Variable | Ejemplo |
 |----------|---------|
 | `VITE_API_URL` | `https://sistema-soporte-api.onrender.com/api` |
+| `VITE_TURNSTILE_SITE_KEY` | Site Key de [Cloudflare Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) |
+
+Guía completa de Turnstile: [`turnstile.md`](turnstile.md).
 
 4. Deploy.
+
+### Turnstile (CAPTCHA) — obligatorio
+
+Sin `VITE_TURNSTILE_SITE_KEY` el registro muestra: *"Verificación de seguridad no disponible. Contacta al administrador."*
+
+1. Crear sitio en Cloudflare Turnstile con el dominio de Vercel (ej. `tu-app.vercel.app`).
+2. Copiar la **Site Key** en Vercel como `VITE_TURNSTILE_SITE_KEY`.
+3. Copiar la **Secret Key** en Render como `TURNSTILE_SECRET_KEY` (ver [`render.md`](render.md)).
+4. Tras añadir la variable, hacer **Redeploy** en Vercel (Vite incluye `VITE_*` solo en el build).
 
 ## CORS en Render
 
@@ -42,6 +54,7 @@ Si `.vercel.app` es lento o inaccesible desde algunas redes:
 ## Verificación
 
 1. Abrir la URL de Vercel e iniciar sesión (DevTools → Network → peticiones a `/api/...` en Render).
-2. **Registro** o reenvío de verificación → email vía SendGrid (revisar bandeja y Activity en SendGrid).
-3. **Ticket con imagen** → URL absoluta de Cloudinary en el detalle del ticket.
-4. Tras ~15 min sin uso del API, el primer request puede tardar ~1 min (cold start de Render).
+2. **Registro** → widget Turnstile visible; tras enviar, email vía SendGrid (revisar bandeja y Activity en SendGrid).
+3. **Recuperación de contraseña** (email) y **reenvío de verificación** → Turnstile + correo SendGrid.
+4. **Ticket con imagen** → URL absoluta de Cloudinary en el detalle del ticket.
+5. Tras ~15 min sin uso del API, el primer request puede tardar ~1 min (cold start de Render).

@@ -27,3 +27,4 @@ services:
       # JWT_SECRET, FRONTEND_URL, CORS_ORIGINS
       # SENDGRID_API_KEY, EMAIL_FROM
       # CLOUDINARY_URL
+      # TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY (ver deploy/turnstile.md)

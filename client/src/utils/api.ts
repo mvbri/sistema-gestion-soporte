@@ -1,6 +1,9 @@
 // Utilidades para llamadas API
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { queryClient } from '../config/queryClient';
+import { getApiErrorMessage } from './apiError';
+
+type ApiErrorWithMessage = AxiosError & { userMessage?: string };
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -32,7 +35,7 @@ api.interceptors.request.use(
 // Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: ApiErrorWithMessage) => {
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
       const isRecoveryRoute = 
@@ -52,6 +55,7 @@ api.interceptors.response.use(
         }
       }
     }
+    error.userMessage = getApiErrorMessage(error);
     return Promise.reject(error);
   }
 );

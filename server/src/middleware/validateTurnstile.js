@@ -15,10 +15,6 @@ export const validateTurnstile = async (req, res, next) => {
     try {
         const result = await verifyTurnstileToken(token, req.ip);
 
-        // #region agent log
-        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'validateTurnstile.js:verify',message:'turnstile verify result',data:{success:!!result.success,errorCodes:result['error-codes']??[]},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-
         if (!result.success) {
             return sendError(
                 res,

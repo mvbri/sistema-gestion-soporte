@@ -101,7 +101,18 @@ export const register = async (req, res) => {
             console.log('El correo se envió exitosamente, no se eliminarán los recursos');
         }
 
-        const errorMessage = error.message || 'Error al registrar usuario';
+        const rawMessage = error.message || '';
+        const isEmailFailure =
+            rawMessage.includes('correo') ||
+            rawMessage.includes('SendGrid') ||
+            rawMessage.includes('SENDGRID') ||
+            rawMessage.includes('EMAIL_FROM') ||
+            rawMessage === 'Forbidden';
+
+        const errorMessage = isEmailFailure
+            ? 'No se pudo enviar el correo de verificación. Revisa la configuración de email o intenta más tarde.'
+            : 'Error al registrar usuario. Intenta más tarde.';
+
         sendError(res, errorMessage, null, 500);
     }
 };
@@ -672,4 +683,15 @@ export const getDireccionesPublic = async (req, res) => {
         console.error('Error al obtener direcciones públicas:', error);
         sendError(res, 'Error al obtener direcciones', null, 500);
     }
+};
+
+/**
+ * Configuración pública para el cliente (site key de Turnstile).
+ * La site key no es secreta; permite cargar el CAPTCHA cuando VITE_TURNSTILE_SITE_KEY
+ * no estuvo disponible en el build de Vercel.
+ */
+export const getPublicConfig = async (req, res) => {
+    const turnstileSiteKey = process.env.TURNSTILE_SITE_KEY?.trim() || null;
+
+    sendSuccess(res, 'Configuración pública', { turnstileSiteKey });
 };

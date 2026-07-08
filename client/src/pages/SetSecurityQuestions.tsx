@@ -5,6 +5,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { securityQuestionsSchema } from '../schemas/authSchemas';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface SecurityQuestionsData {
@@ -65,14 +66,7 @@ export const SetSecurityQuestions: React.FC = () => {
         toast.error(response.message || 'Error al configurar preguntas de seguridad');
       }
     } catch (err: unknown) {
-      let errorMessage = 'Error al configurar preguntas de seguridad';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al configurar preguntas de seguridad'));
     } finally {
       setLoading(false);
     }

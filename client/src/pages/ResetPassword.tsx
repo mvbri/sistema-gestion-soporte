@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authService } from '../services/authService';
 import { restablecerPasswordSchema } from '../schemas/authSchemas';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 interface ResetPasswordData {
@@ -53,14 +54,7 @@ export const ResetPassword: React.FC = () => {
         toast.error(response.message || 'Error al restablecer contraseña');
       }
     } catch (err: unknown) {
-      let errorMessage = 'Error al restablecer contraseña';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al restablecer contraseña'));
     } finally {
       setLoading(false);
     }

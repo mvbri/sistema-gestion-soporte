@@ -9,7 +9,8 @@ Ver [`HOSTING.md`](HOSTING.md) para decisiones de arquitectura y justificación.
 1. **TiDB Cloud** — cluster Starter; ver [`tidb.md`](tidb.md). Copiar host, puerto, usuario y contraseña.
 2. **SendGrid** — cuenta free, Single Sender verificado, API key `SG....`; ver [`sendgrid.md`](sendgrid.md).
 3. **Cloudinary** — cuenta free, copiar `CLOUDINARY_URL`; ver [`cloudinary.md`](cloudinary.md).
-4. **Migraciones** — desde tu PC con `server/.env` apuntando a TiDB (ver [Entornos y `.env`](#entornos-y-archivos-env)):
+4. **Cloudflare Turnstile** — sitio con dominio de Vercel; Site Key + Secret Key; ver [`turnstile.md`](turnstile.md).
+5. **Migraciones** — desde tu PC con `server/.env` apuntando a TiDB (ver [Entornos y `.env`](#entornos-y-archivos-env)):
 
 ```bash
 cd server
@@ -19,16 +20,17 @@ npm install
 npm run deploy:prepare
 ```
 
-5. **Render** — Web Service, variables de [`render.md`](render.md); start: `npm run deploy:start`.
-6. **Vercel** — [`vercel.md`](vercel.md); `VITE_API_URL=https://tu-api.onrender.com/api`.
-7. **Verificar** — `API_URL=https://tu-api.onrender.com npm run deploy:verify` y [checklist manual](#checklist-de-verificación-manual).
+6. **Render** — Web Service, variables de [`render.md`](render.md); start: `npm run deploy:start`.
+7. **Vercel** — [`vercel.md`](vercel.md); `VITE_API_URL` y `VITE_TURNSTILE_SITE_KEY`; **Redeploy** tras añadir variables.
+8. **Verificar** — `API_URL=https://tu-api.onrender.com npm run deploy:verify` y [checklist manual](#checklist-de-verificación-manual).
 
 ## Entornos y archivos `.env`
 
 | Uso | Archivo | Contenido principal |
 |-----|---------|---------------------|
 | Desarrollo local | [`server/.env`](../server/.env) (copiar de [`server/.env.example`](../server/.env.example)) | MariaDB local, Gmail SMTP, `FRONTEND_URL=http://localhost:5173`, **sin** `EMAIL_PROVIDER` ni `UPLOAD_PROVIDER` |
-| Producción (Render dashboard) | Variables en Render | Ver [`server/.env.production.example`](../server/.env.production.example): TiDB, SendGrid, Cloudinary, CORS |
+| Producción (Render dashboard) | Variables en Render | Ver [`server/.env.production.example`](../server/.env.production.example): TiDB, SendGrid, Cloudinary, Turnstile, CORS |
+| Producción (Vercel dashboard) | Variables en Vercel | `VITE_API_URL`, `VITE_TURNSTILE_SITE_KEY` — ver [`turnstile.md`](turnstile.md) |
 | Migraciones a TiDB desde PC | `server/.env` temporal | Copiar production example; rellenar solo `DB_*` y `DB_SSL=true` para `npm run deploy:prepare` |
 
 **Importante:** no pongas `EMAIL_PROVIDER=sendgrid` en el `.env` de desarrollo local; usa Gmail SMTP.
@@ -40,8 +42,9 @@ npm run deploy:prepare
 | [`tidb.md`](tidb.md) | Base de datos TiDB Cloud, SSL, migraciones |
 | [`sendgrid.md`](sendgrid.md) | Email en producción, Single Sender, API key |
 | [`cloudinary.md`](cloudinary.md) | Imágenes de tickets en producción |
+| [`turnstile.md`](turnstile.md) | CAPTCHA (registro, recuperación, reenvío de verificación) |
 | [`render.md`](render.md) | Backend, env vars, spin-down |
-| [`vercel.md`](vercel.md) | Frontend, `VITE_API_URL`, dominio |
+| [`vercel.md`](vercel.md) | Frontend, `VITE_API_URL`, Turnstile, dominio |
 
 ## Scripts útiles
 
@@ -63,6 +66,7 @@ deploy/
 ├── tidb.md
 ├── sendgrid.md
 ├── cloudinary.md
+├── turnstile.md
 ├── render.md
 ├── vercel.md
 └── scripts/
@@ -83,7 +87,8 @@ UPDATE users SET role_id = 1 WHERE email = 'admin@alcaldia.gob.ve';
 
 - [ ] `npm run deploy:verify` OK contra la URL de Render
 - [ ] Login desde la URL de Vercel
-- [ ] Registro o reenvío de verificación de email (SendGrid)
+- [ ] Registro: widget Turnstile visible y email de verificación (SendGrid)
+- [ ] Reenvío de verificación y recuperación por email (Turnstile + SendGrid)
 - [ ] Recuperación de contraseña (email con enlace)
 - [ ] Crear ticket con imagen adjunta (URL absoluta Cloudinary en detalle)
 - [ ] Primer request tras ~15 min inactivo (cold start Render ~1 min)

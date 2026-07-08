@@ -44,6 +44,7 @@ Render bloquea SMTP 587; en producción siempre `EMAIL_PROVIDER=sendgrid`.
 
 | Error | Causa | Solución |
 |-------|--------|----------|
+| Toast **"Forbidden"** al registrarse | Turnstile pasó pero SendGrid rechazó el envío (403) | Revisar `SENDGRID_API_KEY` y que `EMAIL_FROM` coincida con el Single Sender verificado |
 | 401 / 403 | API key incorrecta o sin permiso Mail Send | Regenerar key con permiso de envío |
 | The from address does not match | `EMAIL_FROM` distinto del Single Sender | Usar exactamente el email verificado |
 | Email no llega | Spam o sender no verificado | Completar verificación Single Sender; revisar carpeta spam |

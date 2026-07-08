@@ -36,10 +36,10 @@ Usuarios → Vercel (React) → Render (Express) → TiDB + Cloudinary + SendGri
 
 ## Variables por entorno
 
-| Entorno | Email | Uploads | Base de datos |
-|---------|-------|---------|---------------|
-| **Local** (`server/.env`) | Sin `EMAIL_PROVIDER` → Gmail SMTP (`EMAIL_HOST`, `EMAIL_USER`, `EMAIL_PASS`) | Sin `UPLOAD_PROVIDER` → carpeta `server/uploads/` | MariaDB local, `DB_SSL=false` |
-| **Render** (dashboard) | `EMAIL_PROVIDER=sendgrid`, `SENDGRID_API_KEY`, `EMAIL_FROM` | `UPLOAD_PROVIDER=cloudinary`, `CLOUDINARY_URL` | TiDB, `DB_SSL=true` |
+| Entorno | Email | Uploads | CAPTCHA | Base de datos |
+|---------|-------|---------|---------|---------------|
+| **Local** (`server/.env`, `client/.env`) | Sin `EMAIL_PROVIDER` → Gmail SMTP | Sin `UPLOAD_PROVIDER` → `server/uploads/` | Claves de prueba `1x...` | MariaDB local, `DB_SSL=false` |
+| **Render + Vercel** | `EMAIL_PROVIDER=sendgrid`, `SENDGRID_API_KEY` | `UPLOAD_PROVIDER=cloudinary` | `TURNSTILE_SECRET_KEY` (Render) + `VITE_TURNSTILE_SITE_KEY` (Vercel) | TiDB, `DB_SSL=true` |
 
 Plantilla producción: [`server/.env.production.example`](../server/.env.production.example).
 
@@ -64,6 +64,7 @@ Plantilla producción: [`server/.env.production.example`](../server/.env.product
 - Base de datos: [`tidb.md`](tidb.md)
 - Email: [`sendgrid.md`](sendgrid.md)
 - Imágenes: [`cloudinary.md`](cloudinary.md)
+- CAPTCHA: [`turnstile.md`](turnstile.md)
 - Backend: [`render.md`](render.md)
 - Frontend: [`vercel.md`](vercel.md)
 - Servidor propio (opcional): [`scripts/install-server.sh`](scripts/install-server.sh)

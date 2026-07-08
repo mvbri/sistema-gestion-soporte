@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
 import { loginSchema } from '../schemas/authSchemas';
 import type { LoginData } from '../services/authService';
+import { getApiErrorBody, getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 export const Login: React.FC = () => {
@@ -31,39 +32,34 @@ export const Login: React.FC = () => {
       toast.success('Sesión iniciada exitosamente');
       navigate('/dashboard');
     } catch (err: unknown) {
-      let errorMessage = 'Error al iniciar sesión';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string; data?: { requires_verification?: boolean } } } };
-        if (axiosError.response?.data) {
-          errorMessage = axiosError.response.data.message || errorMessage;
-          
-          // Caso: Email no verificado
-          if (axiosError.response.data.data?.requires_verification ||
-              errorMessage.includes('verifica tu email') ||
-              errorMessage.includes('email antes de iniciar')) {
-            navigate('/solicitar-verificacion', {
-              state: { email: data.email }
-            });
-            return;
-          }
-          
-          // Caso: Usuario verificado pero inactivo
-          if (errorMessage.includes('verificada pero inactiva') ||
-              errorMessage.includes('inactiva. Contacta al administrador para activar')) {
-            toast.error(errorMessage);
-            return;
-          }
-          
-          // Caso: Usuario inactivo (sin verificar)
-          if (errorMessage.includes('desactivada') ||
-              errorMessage.includes('desactivado')) {
-            toast.error(errorMessage);
-            return;
-          }
-        }
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
+      const errorMessage = getApiErrorMessage(err, 'Error al iniciar sesión');
+      const errorBody = getApiErrorBody(err);
+      const errorFlags =
+        errorBody?.errors && !Array.isArray(errorBody.errors)
+          ? (errorBody.errors as { requires_verification?: boolean })
+          : null;
+
+      if (
+        errorFlags?.requires_verification ||
+        errorMessage.includes('verifica tu email') ||
+        errorMessage.includes('email antes de iniciar')
+      ) {
+        navigate('/solicitar-verificacion', {
+          state: { email: data.email },
+        });
+        return;
       }
+
+      if (
+        errorMessage.includes('verificada pero inactiva') ||
+        errorMessage.includes('inactiva. Contacta al administrador para activar') ||
+        errorMessage.includes('desactivada') ||
+        errorMessage.includes('desactivado')
+      ) {
+        toast.error(errorMessage);
+        return;
+      }
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);

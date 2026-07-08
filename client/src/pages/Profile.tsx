@@ -8,6 +8,7 @@ import { PageWrapper } from '../components/PageWrapper';
 import { perfilSchema, securityQuestionsSchema } from '../schemas/authSchemas';
 import type { UpdateProfileData } from '../services/authService';
 import { authService } from '../services/authService';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 import { translateRole } from '../utils/roleTranslations';
 import { useDireccionesOptions } from '../hooks/useDireccionesOptions';
@@ -94,18 +95,13 @@ export const Profile: React.FC = () => {
       toast.success('Perfil actualizado correctamente');
     } catch (err) {
       let errorMessage = 'Error al actualizar perfil';
-      
-      if (err instanceof Error) {
-        if (err.message === 'dirección_obligatoria') {
-          errorMessage = 'La dirección es obligatoria';
-        } else {
-          errorMessage = err.message;
-        }
-      } else if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
+
+      if (err instanceof Error && err.message === 'dirección_obligatoria') {
+        errorMessage = 'La dirección es obligatoria';
+      } else {
+        errorMessage = getApiErrorMessage(err, errorMessage);
       }
-      
+
       toast.error(errorMessage);
       console.error('Error al actualizar perfil:', err);
     }
@@ -128,14 +124,7 @@ export const Profile: React.FC = () => {
         toast.error(response.message || 'Error al configurar preguntas de seguridad');
       }
     } catch (err) {
-      let errorMessage = 'Error al configurar preguntas de seguridad';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al configurar preguntas de seguridad'));
     }
   };
 

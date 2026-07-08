@@ -4,6 +4,7 @@ import type { LoginData, RegisterData, UpdateProfileData } from '../services/aut
 import type { User } from '../types';
 import { AuthContext } from './authContext';
 import { queryClient } from '../config/queryClient';
+import { getApiErrorMessage, sanitizeApiMessage } from '../utils/apiError';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -55,14 +56,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(newUser);
       previousUserIdRef.current = newUser.id;
     } else {
-      throw new Error(response.message);
+      throw new Error(sanitizeApiMessage(response.message, 'Error al iniciar sesión'));
     }
   };
 
   const register = async (data: RegisterData): Promise<void> => {
-    const response = await authService.register(data);
-    if (!response.success) {
-      throw new Error(response.message || 'Error al registrar usuario');
+    try {
+      const response = await authService.register(data);
+      if (!response.success) {
+        throw new Error(sanitizeApiMessage(response.message, 'Error al registrar usuario'));
+      }
+    } catch (error: unknown) {
+      throw new Error(getApiErrorMessage(error, 'Error al registrar usuario'));
     }
   };
 

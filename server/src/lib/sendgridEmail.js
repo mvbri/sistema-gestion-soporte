@@ -9,6 +9,39 @@ function ensureApiKey() {
     }
 }
 
+/**
+ * Convierte errores de la API de SendGrid en mensajes legibles para el cliente.
+ * @param {unknown} error - Error lanzado por @sendgrid/mail.
+ * @returns {Error}
+ */
+function toSendGridUserError(error) {
+    const response = error?.response;
+    const statusCode = response?.statusCode ?? response?.code;
+    const apiErrors = response?.body?.errors;
+
+    if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+        const detail = apiErrors.map((entry) => entry.message).filter(Boolean).join(' ');
+        if (statusCode === 403) {
+            return new Error(
+                'No se pudo enviar el correo: SendGrid rechazó la solicitud. Verifica SENDGRID_API_KEY y que EMAIL_FROM esté verificado como remitente.'
+            );
+        }
+        return new Error(`No se pudo enviar el correo: ${detail}`);
+    }
+
+    if (statusCode === 403 || error?.message === 'Forbidden') {
+        return new Error(
+            'No se pudo enviar el correo: SendGrid rechazó la solicitud. Verifica SENDGRID_API_KEY y que EMAIL_FROM esté verificado como remitente.'
+        );
+    }
+
+    if (error instanceof Error && error.message?.trim()) {
+        return error;
+    }
+
+    return new Error('No se pudo enviar el correo de verificación. Intenta más tarde.');
+}
+
 export async function sendSendGridEmail({ to, subject, html }) {
     const from = process.env.EMAIL_FROM;
 
@@ -21,12 +54,17 @@ export async function sendSendGridEmail({ to, subject, html }) {
 
     ensureApiKey();
 
-    await sgMail.send({
-        to,
-        from,
-        subject,
-        html,
-    });
+    try {
+        await sgMail.send({
+            to,
+            from,
+            subject,
+            html,
+        });
+    } catch (error) {
+        console.error('Error SendGrid:', error?.response?.body ?? error);
+        throw toSendGridUserError(error);
+    }
 
     return true;
 }

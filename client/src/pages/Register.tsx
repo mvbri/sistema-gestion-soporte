@@ -11,6 +11,7 @@ import {
   TurnstileCaptcha,
   type TurnstileCaptchaRef,
 } from '../components/security/TurnstileCaptcha';
+import { getApiErrorMessage } from '../utils/apiError';
 import formStyles from '../styles/modules/forms.module.css';
 
 const formatRegisterData = (data: RegisterData, turnstileToken: string): RegisterData => {
@@ -50,9 +51,6 @@ export const Register: React.FC = () => {
   });
 
   const onSubmit = async (data: Omit<RegisterData, 'turnstileToken'>) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2d335f'},body:JSON.stringify({sessionId:'2d335f',location:'Register.tsx:onSubmit',message:'submit attempted',data:{hasTurnstileToken:!!turnstileToken,tokenLength:turnstileToken?.length??0},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     if (!turnstileToken) {
       toast.error('Completa la verificación de seguridad');
       return;
@@ -67,22 +65,7 @@ export const Register: React.FC = () => {
         state: { email: cleanData.email }
       });
     } catch (err: unknown) {
-      let errorMessage = 'Error al registrar usuario';
-      
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string; errors?: Array<{ msg?: string; message?: string }> } } };
-        const data = axiosError.response?.data;
-        
-        if (data?.errors?.length) {
-          errorMessage = data.errors.map((e) => e.msg || e.message).filter(Boolean).join(', ');
-        } else if (data?.message) {
-          errorMessage = data.message;
-        }
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      toast.error(errorMessage);
+      toast.error(getApiErrorMessage(err, 'Error al registrar usuario'));
     } finally {
       setTurnstileToken(null);
       turnstileRef.current?.reset();
