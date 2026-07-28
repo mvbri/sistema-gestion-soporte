@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FileDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { MainNavbar } from '../components/MainNavbar';
 import { PageWrapper } from '../components/PageWrapper';
@@ -26,6 +27,7 @@ import { ReopenedBadge } from '../components/tickets/ReopenedBadge';
 import { ReopenTicketModal } from '../components/tickets/ReopenTicketModal';
 import { CloseTicketModal } from '../components/tickets/CloseTicketModal';
 import { translateRole } from '../utils/roleTranslations';
+import { downloadTicketPdf } from '../utils/ticketPdf';
 import { FrequentIssueIcon } from '../components/icons/FrequentIssueIcon';
 import type { EquipmentFilters } from '../types';
 import formStyles from '../styles/modules/forms.module.css';
@@ -50,6 +52,7 @@ export const TicketDetail: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
@@ -293,6 +296,16 @@ export const TicketDetail: React.FC = () => {
   const canReopenAsAdmin = isAdmin && ticket?.state_id === 4;
   const canCloseAsAdmin = isAdmin && ticket?.state_id !== 5;
 
+  const handleExportPdf = async () => {
+    if (!ticket || isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      await downloadTicketPdf({ ticket });
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   if (loadingTicket) {
     return (
       <>
@@ -512,8 +525,21 @@ export const TicketDetail: React.FC = () => {
               (isTicketCreatorEndUser && (ticket.state_id === 2 || ticket.state_id === 3)) ||
               canRequestReopenAsUser ||
               canReopenAsAdmin ||
-              canCloseAsAdmin) && (
+              canCloseAsAdmin ||
+              !isEditing) && (
               <div className="flex flex-wrap items-center gap-3">
+                {!isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleExportPdf}
+                    disabled={isExportingPdf}
+                    className="btn-primary inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    title="Generar PDF para visto bueno del Director de Informática"
+                  >
+                    <FileDown className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                    {isExportingPdf ? 'Generando PDF…' : 'Generar PDF'}
+                  </button>
+                )}
                 {isAssignedTechnician && ticket.state_id === 2 && (
                   <button
                     type="button"
