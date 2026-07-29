@@ -19,6 +19,7 @@ import { StatusBadge } from '../components/tickets/StatusBadge';
 import { PriorityBadge } from '../components/tickets/PriorityBadge';
 import { CategoryBadge } from '../components/tickets/CategoryBadge';
 import { translateRole } from '../utils/roleTranslations';
+import { resolveUploadUrl } from '../utils/uploadUrl';
 
 export const TicketDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,11 @@ export const TicketDetail: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    setBrokenImages(new Set());
+  }, [id]);
 
   const { data: ticketData, isLoading: loadingTicket } = useTicket(id);
   const { data: estados = [] } = useEstados();
@@ -196,12 +202,15 @@ export const TicketDetail: React.FC = () => {
     });
   };
 
-  const apiBaseUrl = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
   const imagenes = ticket.imagenes && ticket.imagenes.length > 0
     ? ticket.imagenes
     : ticket.imagen_url
       ? [ticket.imagen_url]
       : [];
+
+  const handleImageError = (index: number) => {
+    setBrokenImages((prev) => new Set(prev).add(index));
+  };
 
   return (
     <>
@@ -411,15 +420,37 @@ export const TicketDetail: React.FC = () => {
               </div>
 
               {imagenes.length > 0 && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {imagenes.map((relativeUrl, index) => (
-                    <img
-                      key={`${relativeUrl}-${index}`}
-                      src={`${apiBaseUrl}${relativeUrl}`}
-                      alt={`Imagen ${index + 1} del ticket`}
-                      className="w-full h-auto rounded-md object-contain bg-gray-100"
-                    />
-                  ))}
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">
+                    Imágenes adjuntas ({imagenes.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {imagenes.map((relativeUrl, index) => (
+                      brokenImages.has(index) ? (
+                        <div
+                          key={`${relativeUrl}-${index}`}
+                          className="flex items-center justify-center w-full min-h-32 rounded-md bg-gray-100 border border-gray-200 text-sm text-gray-500 p-4 text-center"
+                        >
+                          No se pudo cargar la imagen
+                        </div>
+                      ) : (
+                        <a
+                          key={`${relativeUrl}-${index}`}
+                          href={resolveUploadUrl(relativeUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src={resolveUploadUrl(relativeUrl)}
+                            alt={`Imagen ${index + 1} del ticket`}
+                            className="w-full h-auto rounded-md object-contain bg-gray-100"
+                            onError={() => handleImageError(index)}
+                          />
+                        </a>
+                      )
+                    ))}
+                  </div>
                 </div>
               )}
 

@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+const requiredSelectId = (message: string) =>
+  z.preprocess(
+    (value) => {
+      if (value === '' || value === null || value === undefined) return undefined;
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    },
+    z.number({ required_error: message }).int().min(1, message)
+  );
+
 export const createTicketSchema = z.object({
   titulo: z
     .string()
@@ -15,15 +25,9 @@ export const createTicketSchema = z.object({
     .min(1, 'El área del incidente es requerida')
     .max(255, 'El área del incidente no puede exceder 255 caracteres'),
   
-  categoria_id: z
-    .number()
-    .int()
-    .min(1, 'La categoría es requerida'),
+  categoria_id: requiredSelectId('La categoría es obligatoria'),
   
-  prioridad_id: z
-    .number()
-    .int()
-    .min(1, 'La prioridad es requerida'),
+  prioridad_id: requiredSelectId('La prioridad es obligatoria'),
   
   imagen: z
     .any()
