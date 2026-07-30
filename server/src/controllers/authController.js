@@ -6,6 +6,7 @@ import { generarTokenVerificacion } from '../utils/crypto.js';
 import { enviarEmailVerificacion, enviarEmailRecuperacion } from '../config/email.js';
 import { sendSuccess, sendError } from '../utils/responseHandler.js';
 import { query } from '../config/database.js';
+import { debugLog, getEmailConfigStatus } from '../lib/debugLog.js';
 
 const buildClientUserPayload = async (userRow) => {
     if (!userRow || userRow.id == null) {
@@ -345,6 +346,20 @@ export const requestRecovery = async (req, res) => {
                 code: error.code,
                 response: error.response
             });
+
+            // #region agent log
+            debugLog(
+                'authController.js:requestRecovery',
+                'recovery email failed',
+                {
+                    emailConfig: getEmailConfigStatus(),
+                    errorMessage: error?.message,
+                    errorCode: error?.code,
+                    sendgridStatus: error?.response?.statusCode ?? error?.response?.code,
+                },
+                'H2'
+            );
+            // #endregion
 
             if (process.env.EMAIL_PROVIDER === 'sendgrid') {
                 if (!process.env.SENDGRID_API_KEY || !process.env.EMAIL_FROM) {

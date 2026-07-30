@@ -15,6 +15,7 @@ import materialRequestRoutes from './routes/materialRequestRoutes.js';
 import { assertSchemaReady, evaluateSchemaStatus } from './lib/startupSchemaCheck.js';
 import { verifyDbConnection } from './lib/verifyDbConnection.js';
 import { getCorsOrigins, createCorsOriginValidator } from './lib/corsConfig.js';
+import { getEmailConfigStatus } from './lib/debugLog.js';
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.get('/api/health', async (req, res) => {
                 pendingMigrations: schema.pendingMigrations,
                 missingColumnsCount: schema.missingColumns.length,
             },
+            email: getEmailConfigStatus(),
         });
     } catch (err) {
         res.status(500).json({

@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { debugLog } from './debugLog.js';
 
 let apiKeyConfigured = false;
 
@@ -63,6 +64,18 @@ export async function sendSendGridEmail({ to, subject, html }) {
         });
     } catch (error) {
         console.error('Error SendGrid:', error?.response?.body ?? error);
+        // #region agent log
+        debugLog(
+            'sendgridEmail.js:sendSendGridEmail',
+            'SendGrid API error',
+            {
+                statusCode: error?.response?.statusCode ?? error?.response?.code,
+                apiErrors: error?.response?.body?.errors?.map((e) => e.message) ?? [],
+                fromDomain: from?.includes('@') ? from.split('@').pop()?.replace(/[>]/g, '') : null,
+            },
+            'H3'
+        );
+        // #endregion
         throw toSendGridUserError(error);
     }
 

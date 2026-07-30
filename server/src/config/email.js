@@ -2,6 +2,7 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { sendSendGridEmail, verifySendGridConfig } from '../lib/sendgridEmail.js';
+import { debugLog } from '../lib/debugLog.js';
 
 dotenv.config();
 
@@ -32,17 +33,50 @@ if (!useSendGrid) {
 }
 
 async function dispatchEmail({ to, subject, html }) {
-    if (useSendGrid) {
-        return sendSendGridEmail({ to, subject, html });
-    }
+    // #region agent log
+    debugLog(
+        'email.js:dispatchEmail',
+        'dispatch start',
+        {
+            useSendGrid,
+            emailProvider: process.env.EMAIL_PROVIDER || '(unset)',
+            sendgridKeySet: Boolean(process.env.SENDGRID_API_KEY),
+            smtpUserSet: Boolean(process.env.EMAIL_USER),
+            emailFromSet: Boolean(process.env.EMAIL_FROM),
+            frontendUrlSet: Boolean(process.env.FRONTEND_URL),
+        },
+        'H1'
+    );
+    // #endregion
 
-    await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to,
-        subject,
-        html,
-    });
-    return true;
+    try {
+        if (useSendGrid) {
+            return await sendSendGridEmail({ to, subject, html });
+        }
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_FROM,
+            to,
+            subject,
+            html,
+        });
+        return true;
+    } catch (error) {
+        // #region agent log
+        debugLog(
+            'email.js:dispatchEmail',
+            'dispatch failed',
+            {
+                useSendGrid,
+                errorMessage: error?.message,
+                errorCode: error?.code,
+                sendgridStatus: error?.response?.statusCode ?? error?.response?.code,
+            },
+            useSendGrid ? 'H2' : 'H1'
+        );
+        // #endregion
+        throw error;
+    }
 }
 
 export const enviarEmailVerificacion = async (email, token, name) => {
