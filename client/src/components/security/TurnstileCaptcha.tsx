@@ -122,11 +122,10 @@ export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptcha
           siteKey={siteKey}
           onSuccess={onVerify}
           onExpire={onExpire}
-          onError={() => handleTurnstileError()}
+          onError={(code) => handleTurnstileError(code)}
           options={{
             theme: 'dark',
             size: 'normal',
-            'error-callback': (code: string) => handleTurnstileError(code),
           }}
         />
         {widgetErrorMessage && (
