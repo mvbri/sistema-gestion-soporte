@@ -24,7 +24,10 @@ const PORT = process.env.PORT || 5000;
 const corsOrigins = getCorsOrigins();
 
 // Middlewares
-app.use(helmet());
+// Permite que el frontend (Vercel) embeba imágenes de /uploads servidas desde otro origen (Render).
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
     origin: createCorsOriginValidator(corsOrigins),
     credentials: true,
