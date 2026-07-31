@@ -293,7 +293,7 @@ export const CreateTicket: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.categoria_id && <p className="error-message">{errors.categoria_id.message}</p>}
+                  {errors.categoria_id?.message && <p className="error-message">{String(errors.categoria_id.message)}</p>}
                 </div>
 
                 <div className={`${formStyles.formGroup} !mb-0`}>
