@@ -12,135 +12,56 @@ import {
 
 dotenv.config();
 
+
+import { getDbPoolOptions } from '../lib/dbConfig.js';
+import mysqldump from 'mysqldump';
+
 /**
  * Genera un respaldo completo de la base de datos usando la conexión de MariaDB
  */
 export const generateBackup = async (req, res) => {
-    let backupFilePath = null;
-    let writeStream = null;
-
     try {
-        const timestamp = new Date()
-            .toISOString()
-            .replace(/[:.]/g, '-')
-            .replace('T', '_')
-            .substring(0, 19);
-        
-        const backupFileName = `backup_${timestamp}.sql`;
-        backupFilePath = path.join(backupsDirPath, backupFileName);
-
-        // Asegurar que el directorio existe
+     
         if (!fs.existsSync(backupsDirPath)) {
             fs.mkdirSync(backupsDirPath, { recursive: true });
         }
 
-        writeStream = fs.createWriteStream(backupFilePath);
-        
-        // Escribir encabezado del backup
-        writeStream.write(`-- Backup generado el ${new Date().toISOString()}\n`);
-        writeStream.write(`-- Sistema de Gestión de Soporte Técnico\n\n`);
-        writeStream.write(`SET FOREIGN_KEY_CHECKS = 0;\n`);
-        writeStream.write(`SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";\n\n`);
+        // 3. Generar nombre de archivo único con la fecha de hoy
+        const today = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .replace('T', '_')
+        .substring(0, 19);
+        const FILE_NAME = `backup_${today}.sql`;
+        const FULL_PATH = path.join(backupsDirPath, FILE_NAME);
 
-        const conn = await getConnection();
-        
-        try {
-            // Obtener todas las tablas
-            const tables = await conn.query('SHOW TABLES');
-            const tableNames = tables.map(row => Object.values(row)[0]);
-            
-            console.log(`📊 Generando backup de ${tableNames.length} tablas...`);
+        console.log(`Iniciando respaldo de ${getDbPoolOptions().database}...`);
 
-            // Para cada tabla, generar CREATE TABLE y datos
-            for (const tableName of tableNames) {
-                console.log(`  📝 Procesando tabla: ${tableName}`);
-                
-                // Obtener CREATE TABLE statement
-                const createTableResult = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
-                const createTableSQL = normalizeSqlForTarget(createTableResult[0]['Create Table']);
-                
-                // Escribir DROP TABLE y CREATE TABLE
-                writeStream.write(`\n-- --------------------------------------------------------\n`);
-                writeStream.write(`-- Estructura de tabla para \`${tableName}\`\n`);
-                writeStream.write(`-- --------------------------------------------------------\n\n`);
-                writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
-                writeStream.write(`${createTableSQL};\n\n`);
-                
-                // Obtener datos de la tabla
-                const rows = await conn.query(`SELECT * FROM \`${tableName}\``);
-                
-                if (rows.length > 0) {
-                    // Obtener nombres de columnas
-                    const columns = Object.keys(rows[0]);
-                    const columnsList = columns.map(col => `\`${col}\``).join(', ');
-                    
-                    writeStream.write(`-- --------------------------------------------------------\n`);
-                    writeStream.write(`-- Datos de la tabla \`${tableName}\`\n`);
-                    writeStream.write(`-- --------------------------------------------------------\n\n`);
-                    
-                    // Escribir INSERT statements
-                    for (const row of rows) {
-                        const values = columns.map(col => {
-                            const value = row[col];
-                            if (value === null || value === undefined) {
-                                return 'NULL';
-                            } else if (typeof value === 'string') {
-                                // Escapar comillas y caracteres especiales
-                                const escaped = value
-                                    .replace(/\\/g, '\\\\')
-                                    .replace(/'/g, "\\'")
-                                    .replace(/"/g, '\\"')
-                                    .replace(/\n/g, '\\n')
-                                    .replace(/\r/g, '\\r')
-                                    .replace(/\t/g, '\\t');
-                                return `'${escaped}'`;
-                            } else if (value instanceof Date) {
-                                return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
-                            } else {
-                                return value;
-                            }
-                        }).join(', ');
-                        
-                        writeStream.write(`INSERT INTO \`${tableName}\` (${columnsList}) VALUES (${values});\n`);
+        // 4. Esperar a que el paquete realice el volcado y lo guarde en el disco
+        await mysqldump({
+            connection: getDbPoolOptions(),
+            dumpToFile: FULL_PATH,
+            dump: {
+                schema: {
+                    table: {
+                        dropIfExist: true // 👈 ESTA es la ubicación exacta en el paquete npm
                     }
-                    writeStream.write(`\n`);
                 }
             }
-            
-            // Rehabilitar verificaciones de clave foránea
-            writeStream.write(`SET FOREIGN_KEY_CHECKS = 1;\n`);
-            
-            writeStream.end();
-            
-            // Esperar a que el stream termine de escribir
-            await new Promise((resolve, reject) => {
-                writeStream.on('finish', resolve);
-                writeStream.on('error', reject);
-            });
-            
-            console.log(`✅ Backup generado exitosamente: ${backupFileName}`);
-            
-        } finally {
-            conn.release();
-        }
+        });
 
-        if (!fs.existsSync(backupFilePath)) {
-            throw new Error('El archivo de respaldo no se generó correctamente');
-        }
+        // 5. Verificar el tamaño del archivo guardado en el servidor
+        const stats = fs.statSync(FULL_PATH);
+        const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-        const stats = fs.statSync(backupFilePath);
-        if (stats.size === 0) {
-            fs.unlinkSync(backupFilePath);
-            throw new Error('El respaldo generado está vacío');
-        }
-
-        // Guardar también en el directorio de backups para listado
-        // (el archivo ya está guardado)
+        console.log(`✅ ¡Respaldo completado con éxito!`);
+        console.log(`📂 Archivo guardado en: ${FULL_PATH}`);
+        console.log(`⚖️  Tamaño: ${fileSizeInMB} MB`);
 
         res.setHeader('Content-Type', 'application/sql');
-        res.setHeader('Content-Disposition', `attachment; filename="${backupFileName}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${FULL_PATH}"`);
         
-        const fileStream = fs.createReadStream(backupFilePath);
+        const fileStream = fs.createReadStream(FULL_PATH);
         fileStream.pipe(res);
 
         fileStream.on('error', (error) => {
@@ -150,29 +71,174 @@ export const generateBackup = async (req, res) => {
             }
         });
 
-    } catch (error) {
-        console.error('Error al generar respaldo:', error);
-        console.error('Stack trace:', error.stack);
-        
-        if (writeStream && !writeStream.destroyed) {
-            writeStream.destroy();
-        }
-        
-        if (backupFilePath && fs.existsSync(backupFilePath)) {
-            try {
-                fs.unlinkSync(backupFilePath);
-            } catch (unlinkError) {
-                console.error('Error al eliminar archivo temporal:', unlinkError);
-            }
-        }
-
-        if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
-            return sendError(res, 'La operación de respaldo excedió el tiempo límite', null, 500);
-        }
-
+    } catch (err) {
+        // Captura cualquier error de conexión o de escritura en el servidor
+        console.error(`❌ Error al generar el respaldo:`, err.message);
         sendError(res, error.message || 'Error al generar el respaldo de la base de datos', null, 500);
     }
-};
+}
+
+/**
+ * Genera un respaldo completo de la base de datos usando la conexión de MariaDB
+ */
+// export const generateBackup = async (req, res) => {
+//     let backupFilePath = null;
+//     let writeStream = null;
+
+//     try {
+//         const timestamp = new Date()
+//             .toISOString()
+//             .replace(/[:.]/g, '-')
+//             .replace('T', '_')
+//             .substring(0, 19);
+        
+//         const backupFileName = `backup_${timestamp}.sql`;
+//         backupFilePath = path.join(backupsDirPath, backupFileName);
+
+//         // Asegurar que el directorio existe
+//         if (!fs.existsSync(backupsDirPath)) {
+//             fs.mkdirSync(backupsDirPath, { recursive: true });
+//         }
+
+//         writeStream = fs.createWriteStream(backupFilePath);
+        
+//         // Escribir encabezado del backup
+//         writeStream.write(`-- Backup generado el ${new Date().toISOString()}\n`);
+//         writeStream.write(`-- Sistema de Gestión de Soporte Técnico\n\n`);
+//         writeStream.write(`SET FOREIGN_KEY_CHECKS = 0;\n`);
+//         writeStream.write(`SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";\n\n`);
+
+//         const conn = await getConnection();
+        
+//         try {
+//             // Obtener todas las tablas
+//             const tables = await conn.query('SHOW TABLES');
+//             const tableNames = tables.map(row => Object.values(row)[0]);
+            
+//             console.log(`📊 Generando backup de ${tableNames.length} tablas...`);
+
+//             // Para cada tabla, generar CREATE TABLE y datos
+//             for (const tableName of tableNames) {
+//                 console.log(`  📝 Procesando tabla: ${tableName}`);
+                
+//                 // Obtener CREATE TABLE statement
+//                 const createTableResult = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
+//                 const createTableSQL = normalizeSqlForTarget(createTableResult[0]['Create Table']);
+                
+//                 // Escribir DROP TABLE y CREATE TABLE
+//                 writeStream.write(`\n-- --------------------------------------------------------\n`);
+//                 writeStream.write(`-- Estructura de tabla para \`${tableName}\`\n`);
+//                 writeStream.write(`-- --------------------------------------------------------\n\n`);
+//                 writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
+//                 writeStream.write(`${createTableSQL};\n\n`);
+                
+//                 // Obtener datos de la tabla
+//                 const rows = await conn.query(`SELECT * FROM \`${tableName}\``);
+                
+//                 if (rows.length > 0) {
+//                     // Obtener nombres de columnas
+//                     const columns = Object.keys(rows[0]);
+//                     const columnsList = columns.map(col => `\`${col}\``).join(', ');
+                    
+//                     writeStream.write(`-- --------------------------------------------------------\n`);
+//                     writeStream.write(`-- Datos de la tabla \`${tableName}\`\n`);
+//                     writeStream.write(`-- --------------------------------------------------------\n\n`);
+                    
+//                     // Escribir INSERT statements
+//                     for (const row of rows) {
+//                         const values = columns.map(col => {
+//                             const value = row[col];
+//                             if (value === null || value === undefined) {
+//                                 return 'NULL';
+//                             } else if (typeof value === 'string') {
+//                                 // Escapar comillas y caracteres especiales
+//                                 const escaped = value
+//                                     .replace(/\\/g, '\\\\')
+//                                     .replace(/'/g, "\\'")
+//                                     .replace(/"/g, '\\"')
+//                                     .replace(/\n/g, '\\n')
+//                                     .replace(/\r/g, '\\r')
+//                                     .replace(/\t/g, '\\t');
+//                                 return `'${escaped}'`;
+//                             } else if (value instanceof Date) {
+//                                 return `'${value.toISOString().slice(0, 19).replace('T', ' ')}'`;
+//                             } else {
+//                                 return value;
+//                             }
+//                         }).join(', ');
+                        
+//                         writeStream.write(`INSERT INTO \`${tableName}\` (${columnsList}) VALUES (${values});\n`);
+//                     }
+//                     writeStream.write(`\n`);
+//                 }
+//             }
+            
+//             // Rehabilitar verificaciones de clave foránea
+//             writeStream.write(`SET FOREIGN_KEY_CHECKS = 1;\n`);
+            
+//             writeStream.end();
+            
+//             // Esperar a que el stream termine de escribir
+//             await new Promise((resolve, reject) => {
+//                 writeStream.on('finish', resolve);
+//                 writeStream.on('error', reject);
+//             });
+            
+//             console.log(`✅ Backup generado exitosamente: ${backupFileName}`);
+            
+//         } finally {
+//             conn.release();
+//         }
+
+//         if (!fs.existsSync(backupFilePath)) {
+//             throw new Error('El archivo de respaldo no se generó correctamente');
+//         }
+
+//         const stats = fs.statSync(backupFilePath);
+//         if (stats.size === 0) {
+//             fs.unlinkSync(backupFilePath);
+//             throw new Error('El respaldo generado está vacío');
+//         }
+
+//         // Guardar también en el directorio de backups para listado
+//         // (el archivo ya está guardado)
+
+//         res.setHeader('Content-Type', 'application/sql');
+//         res.setHeader('Content-Disposition', `attachment; filename="${backupFileName}"`);
+        
+//         const fileStream = fs.createReadStream(backupFilePath);
+//         fileStream.pipe(res);
+
+//         fileStream.on('error', (error) => {
+//             console.error('Error al enviar archivo:', error);
+//             if (!res.headersSent) {
+//                 sendError(res, 'Error al enviar el archivo de respaldo', null, 500);
+//             }
+//         });
+
+//     } catch (error) {
+//         console.error('Error al generar respaldo:', error);
+//         console.error('Stack trace:', error.stack);
+        
+//         if (writeStream && !writeStream.destroyed) {
+//             writeStream.destroy();
+//         }
+        
+//         if (backupFilePath && fs.existsSync(backupFilePath)) {
+//             try {
+//                 fs.unlinkSync(backupFilePath);
+//             } catch (unlinkError) {
+//                 console.error('Error al eliminar archivo temporal:', unlinkError);
+//             }
+//         }
+
+//         if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
+//             return sendError(res, 'La operación de respaldo excedió el tiempo límite', null, 500);
+//         }
+
+//         sendError(res, error.message || 'Error al generar el respaldo de la base de datos', null, 500);
+//     }
+// };
 
 /**
  * Ejecuta un archivo SQL usando la conexión de MariaDB
@@ -593,5 +659,34 @@ export const downloadBackup = async (req, res) => {
     } catch (error) {
         console.error('Error al descargar respaldo:', error);
         sendError(res, 'Error al descargar el archivo de respaldo', null, 500);
+    }
+};
+
+/**
+ * Descarga un archivo de respaldo específico
+ */
+export const deleteBackup = async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        if (!filename) {
+            return sendError(res, 'El nombre del archivo es requerido', null, 400);
+        }
+
+        const backupFilePath = path.join(backupsDirPath, filename);
+
+        if (!fs.existsSync(backupFilePath)) {
+            return sendError(res, 'El archivo de respaldo no existe', null, 404);
+        }
+
+        fs.unlinkSync(backupFilePath);
+
+        sendSuccess(res, 'Archivo de respaldo eliminado exitosamente', {
+            filename: filename
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar respaldo:', error);
+        sendError(res, 'Error al eliminar el archivo de respaldo', null, 500);
     }
 };

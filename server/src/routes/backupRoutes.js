@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateBackup, restoreBackup, listBackups, restoreBackupFromFile, downloadBackup } from '../controllers/backupController.js';
+import { generateBackup, restoreBackup, listBackups, restoreBackupFromFile, downloadBackup, deleteBackup } from '../controllers/backupController.js';
 import { authenticate } from '../utils/jwt.js';
 import { uploadSqlBackup } from '../config/backup.js';
 
@@ -21,6 +21,7 @@ router.use(isAdmin);
 router.get('/list', listBackups);
 router.get('/generate', generateBackup);
 router.get('/download/:filename', downloadBackup);
+router.delete('/delete/:filename', deleteBackup);
 router.post('/restore', uploadSqlBackup.single('backupFile'), restoreBackup);
 router.post('/restore-file', restoreBackupFromFile);
 
