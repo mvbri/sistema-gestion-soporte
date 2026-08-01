@@ -15,6 +15,7 @@ import materialRequestRoutes from './routes/materialRequestRoutes.js';
 import { assertSchemaReady, evaluateSchemaStatus } from './lib/startupSchemaCheck.js';
 import { verifyDbConnection } from './lib/verifyDbConnection.js';
 import { getCorsOrigins, createCorsOriginValidator } from './lib/corsConfig.js';
+import { getEmailConfigStatus } from './lib/debugLog.js';
 
 dotenv.config();
 
@@ -23,7 +24,10 @@ const PORT = process.env.PORT || 5000;
 const corsOrigins = getCorsOrigins();
 
 // Middlewares
-app.use(helmet());
+// Permite que el frontend (Vercel) embeba imágenes de /uploads servidas desde otro origen (Render).
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
     origin: createCorsOriginValidator(corsOrigins),
     credentials: true,
@@ -71,6 +75,7 @@ app.get('/api/health', async (req, res) => {
                 pendingMigrations: schema.pendingMigrations,
                 missingColumnsCount: schema.missingColumns.length,
             },
+            email: getEmailConfigStatus(),
         });
     } catch (err) {
         res.status(500).json({

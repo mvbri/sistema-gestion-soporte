@@ -49,6 +49,9 @@ export const RequestPasswordRecovery: React.FC = () => {
         }
 
         const response = await authService.requestPasswordRecovery(data.email, turnstileToken);
+        // #region agent log
+        fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b589dc'},body:JSON.stringify({sessionId:'b589dc',location:'RequestPasswordRecovery.tsx:onSubmit',message:'recovery API response',data:{success:response.success,statusMessage:response.message},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+        // #endregion
         if (response.success) {
           toast.success('Se ha enviado un email con las instrucciones para recuperar tu contraseña.');
         } else {
@@ -69,6 +72,10 @@ export const RequestPasswordRecovery: React.FC = () => {
         }
       }
     } catch (err: unknown) {
+      // #region agent log
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      fetch('http://127.0.0.1:7304/ingest/20b01933-ba4f-418f-881b-434a9d7e19c8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b589dc'},body:JSON.stringify({sessionId:'b589dc',location:'RequestPasswordRecovery.tsx:catch',message:'recovery API error',data:{httpStatus:axiosErr.response?.status,apiMessage:axiosErr.response?.data?.message,clientMessage:getApiErrorMessage(err,'')},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
       toast.error(getApiErrorMessage(err, 'Error al solicitar recuperación'));
     } finally {
       if (method === 'email') {
