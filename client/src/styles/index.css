@@ -681,6 +681,17 @@
   border-color: #e5e7eb;
 }
 
+/* Tablas con tema oscuro (respaldos, etc.) */
+.app-shell .data-table-dark thead {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 -1px 0 rgba(56, 189, 248, 0.2);
+}
+
+.app-shell .data-table-dark tbody tr:hover {
+  background-color: rgba(14, 165, 233, 0.1);
+}
+
 /* Listas con fondo claro (tickets, etc.) */
 .app-shell .tickets-list-light .text-gray-900 {
   color: #111827;
