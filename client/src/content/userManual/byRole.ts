@@ -34,7 +34,7 @@ const endUserSections: ManualSection[] = [
   },
   {
     id: 'loans',
-    title: 'Préstamos',
+    title: 'Préstamo de equipos',
     paragraphs: [
       'En Solicitar préstamo (/loans/create) pedís el préstamo de equipos u otros recursos según el flujo de la pantalla.',
       'En Historial de préstamos (/loans/history) consultás préstamos anteriores y el estado de los actuales. Si un préstamo requiere acción desde una pantalla de entrega o devolución, seguí el enlace que te indique el sistema desde el listado o el detalle.',

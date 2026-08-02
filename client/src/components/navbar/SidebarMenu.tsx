@@ -299,7 +299,7 @@ export const SidebarMenu: React.FC = () => {
                 <LoansHandsIcon
                   className={`flex-shrink-0 h-5 w-5 ${loansActive ? 'text-white' : 'text-blue-200/80'}`}
                 />
-                <span>Préstamos</span>
+                <span>Préstamo de equipos</span>
               </span>
               <svg
                 className={`h-4 w-4 transform transition-transform ${loansOpen ? 'rotate-90' : ''}`}
