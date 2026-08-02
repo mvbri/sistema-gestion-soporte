@@ -76,3 +76,20 @@ export const useRestoreBackupFromFile = () => {
     },
   });
 };
+
+export const useDeleteBackup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (filename: string) => backupService.deleteBackup(filename),
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['backups'] });
+        toast.success('Respaldo eliminado exitosamente');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar el respaldo');
+    },
+  });
+};

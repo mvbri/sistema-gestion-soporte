@@ -79,4 +79,11 @@ export const backupService = {
     );
     return response.data;
   },
+
+  async deleteBackup(filename: string): Promise<ApiResponse<{ filename: string }>> {
+    const response = await api.delete<ApiResponse<{ filename: string }>>(
+      `/admin/backup/delete/${filename}`
+    );
+    return response.data;
+  },
 };
